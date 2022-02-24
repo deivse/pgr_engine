@@ -4,17 +4,25 @@
 #include "events/event.h"
 
 namespace npgr {
-struct mouse_moved_evt_t : public event_t
+struct cursor_pos_evt_t : public event_t
 {
     double x = 0, y = 0;
-    mouse_moved_evt_t(double x, double y) : x(x), y(y){};
-    EVENT_CLASS_TYPE(MouseMoved);
+    cursor_pos_evt_t(double x, double y) : x(x), y(y){};
+    EVENT_CLASS_TYPE(CursorMoved);
 };
 
-struct mouse_btn_evt_t : public event_t
+
+struct mouse_btn_down_evt_t : public event_t
 {
-    int button, action, mods;
-    mouse_btn_evt_t(int button, int action, int mods) : button(button), action(action), mods(mods){};
-    EVENT_CLASS_TYPE(MouseButtonPressed);
+    int button, mods;
+    mouse_btn_down_evt_t(int button, int mods) : button(button), mods(mods){};
+    EVENT_CLASS_TYPE(MouseButtonDown);
+};
+
+struct mouse_btn_up_evt_t : public event_t
+{
+    int button, mods;
+    mouse_btn_up_evt_t(int button, int mods) : button(button), mods(mods){};
+    EVENT_CLASS_TYPE(MouseButtonUp);
 };
 } // namespace npgr

@@ -31,9 +31,8 @@ namespace detail {
         }
     }
 
-    constexpr auto get_app = [](GLFWwindow* window){
-        return reinterpret_cast<app_t*>(glfwGetWindowUserPointer(window));
-    };
+    constexpr auto get_app
+      = [](GLFWwindow* window) { return reinterpret_cast<app_t*>(glfwGetWindowUserPointer(window)); };
 
 } // namespace detail
 
@@ -49,25 +48,42 @@ app_t::app_t(uint16_t width, uint16_t height, const char* title, bool vsync, uin
     define_event_handlers();
 }
 
-void app_t::define_event_handlers(){
+void app_t::define_event_handlers() {
     glfwSetCursorPosCallback(_window, [](GLFWwindow* window, double x, double y) {
-        mouse_moved_evt_t evt(x, y);
+        cursor_pos_evt_t evt(x, y);
         detail::get_app(window)->on_event(evt);
     });
-    glfwSetMouseButtonCallback(_window, [](GLFWwindow* window, int btn, int action, int mods){
-        mouse_btn_evt_t evt(btn, action, mods);
-        detail::get_app(window)->on_event(evt);
+    glfwSetMouseButtonCallback(_window, [](GLFWwindow* window, int btn, int action, int mods) {
+        if (action == GLFW_PRESS) {
+            mouse_btn_down_evt_t evt(btn, mods);
+            detail::get_app(window)->on_event(evt);
+        } else {
+            mouse_btn_up_evt_t evt(btn, mods);
+            detail::get_app(window)->on_event(evt);
+        }
     });
 }
 
-void app_t::on_event(event_t& x){
+void app_t::push_layer(std::unique_ptr<layer_t>&& layer){
+    layer->on_attach();
+    _layers.push_layer(std::move(layer));
+}
+
+void app_t::push_overlay(std::unique_ptr<layer_t>&& overlay){
+    overlay->on_attach();
+    _layers.push_overlay(std::move(overlay));
+}
+
+void app_t::on_event(event_t& evt) {
     using evt_t = npgr::event_type;
 
-    event_dispatcher_t dispatcher(x);
-    dispatcher.dispatch<mouse_moved_evt_t>([](mouse_moved_evt_t& e){
-        spdlog::info(e.to_string());
-        return true;
-    });
+    event_dispatcher_t dispatcher(evt);
+
+    for (auto it = _layers.rbegin(); !evt.handled && it != _layers.rend(); it++) {
+        if ((*it)->subscribed_event_types().contains(evt.get_type())) {
+            (*it)->on_event(evt);
+        }
+    }
 }
 
 void app_t::main_loop() {
@@ -79,7 +95,7 @@ void app_t::main_loop() {
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(_window)) {
-        for (auto&& layer: _layers){
+        for (auto&& layer : _layers) {
             layer->on_update(std::chrono::seconds(timer.seconds()));
         }
 

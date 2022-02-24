@@ -3,16 +3,20 @@
 #include <vector>
 #include <memory>
 #include <chrono>
+#include <set>
 
 #include "events/event.h"
 
 namespace npgr {
 class layer_t
 {
+protected:
 		std::string_view _debug_name;
 public:
 		explicit layer_t(std::string_view name = "Layer");
 		virtual ~layer_t() = default;
+
+        virtual std::set<event_type> subscribed_event_types() { return {}; }
 
 		virtual void on_attach() {}
 		virtual void on_detach() {}

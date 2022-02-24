@@ -17,9 +17,9 @@ enum class event_type
     KeyPressed,
     KeyReleased,
     KeyTyped,
-    MouseButtonPressed,
-    MouseButtonReleased,
-    MouseMoved,
+    MouseButtonDown,
+    MouseButtonUp,
+    CursorMoved,
     MouseScrolled
 };
 
