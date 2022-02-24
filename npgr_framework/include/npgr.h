@@ -9,8 +9,9 @@
 #include <GLFW/glfw3.h>
 
 #include "error_handling.h"
+#include "events/mouse_events.h"
 #include "layers.h"
-#include "events.h"
+#include "timer.h"
 
 namespace npgr {
 
@@ -49,9 +50,13 @@ class app_t
 {
     GLFWwindow* _window;
     layer_stack_t _layers;
+
+    void define_event_handlers();
 public:
     app_t(uint16_t width, uint16_t height, const char* title, bool vsync = true, uint8_t ogl_v_major = 3,
-          uint8_t ogl_v_minor = 1);
+          uint8_t ogl_v_minor = 2);
+
+    void on_event(event_t &x);
     void push_layer(std::unique_ptr<layer_t>);
     void push_overlay(std::unique_ptr<layer_t>);
     

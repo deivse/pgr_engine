@@ -4,7 +4,7 @@
 #include <memory>
 #include <chrono>
 
-#include "events.h"
+#include "events/event.h"
 
 namespace npgr {
 class layer_t
@@ -14,13 +14,12 @@ public:
 		explicit layer_t(std::string_view name = "Layer");
 		virtual ~layer_t() = default;
 
-		virtual void OnAttach() {}
-		virtual void OnDetach() {}
-		virtual void OnUpdate(std::chrono::milliseconds ts) {}
-		virtual void OnImGuiRender() {}
-		virtual void OnEvent(event_t& event) {}
+		virtual void on_attach() {}
+		virtual void on_detach() {}
+		virtual void on_update(std::chrono::seconds delta) {}
+		virtual void on_event(event_t& event) {}
 
-		std::string_view GetName() const { return _debug_name; } // NOLINT(modernize-use-nodiscard)
+		std::string_view get_name() const { return _debug_name; } // NOLINT(modernize-use-nodiscard)
 };
 
 class layer_stack_t
@@ -29,7 +28,7 @@ class layer_stack_t
     uint16_t _layer_insert_index = 0;
 
 public:
-    layer_stack_t();
+    layer_stack_t() = default;
 
     void push_layer(std::unique_ptr<layer_t>&& layer_t);
     void push_overlay(std::unique_ptr<layer_t>&& overlay);
