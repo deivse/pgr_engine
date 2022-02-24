@@ -6,7 +6,11 @@
  imgui/1.87
  jasper/2.0.33
  libsquish/1.15
+ spdlog/1.8.0
 
  [generators]
  cmake
  cmake_find_package
+
+ [options]
+ spdlog:shared=False

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.0)
 
 project(DevIL)
 
@@ -230,8 +230,10 @@ if(IL_USE_DXTC_SQUISH)
 endif(IL_USE_DXTC_SQUISH)
 
 
-include_directories(${incs})
-target_link_libraries(IL ${libs})
+
+
+target_include_directories(IL PUBLIC ${incs} ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+target_link_libraries(IL PUBLIC ${libs})
 
 # generate config.h
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.cmake.in ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h)

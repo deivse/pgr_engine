@@ -8,3 +8,10 @@ conan_basic_setup()
 
 add_subdirectory(third-party)
 
+set(CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17)
+
+add_subdirectory(npgr_framework)
+
+add_subdirectory(test)
+
