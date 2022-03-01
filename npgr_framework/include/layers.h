@@ -8,6 +8,7 @@
 #include "events/event.h"
 
 namespace npgr {
+using delta_ms = std::chrono::milliseconds;
 class layer_t
 {
 protected:
@@ -20,7 +21,7 @@ public:
 
 		virtual void on_attach() {}
 		virtual void on_detach() {}
-		virtual void on_update(std::chrono::seconds delta) {}
+		virtual void on_update(const delta_ms& delta) {}
 		virtual void on_event(event_t& event) {}
 
 		std::string_view get_name() const { return _debug_name; } // NOLINT(modernize-use-nodiscard)

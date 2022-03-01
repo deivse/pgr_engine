@@ -41,6 +41,4 @@ struct shader_program
     GLint _program_id;
     explicit shader_program(const std::filesystem::path& file_path);
 };
-
-GLint link_shader_program(std::vector<GLint /*pair with type??*/> shaders);
 } // namespace npgr

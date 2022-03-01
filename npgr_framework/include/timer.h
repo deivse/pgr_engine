@@ -9,7 +9,7 @@ class timer_t
 public:
     timer_t();
     void reset();
-    int64_t seconds();
-    int64_t milliseconds();
+    std::chrono::seconds seconds();
+    std::chrono::milliseconds milliseconds();
 };
 } // namespace npgr

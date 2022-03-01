@@ -1,4 +1,4 @@
-#include <npgr.h>
+#include <app.h>
 
 namespace npgr {
 namespace detail {
@@ -17,7 +17,7 @@ namespace detail {
     }
 
     GLFWwindow* create_window(uint16_t width, uint16_t height, const char* title) {
-        auto* window = glfwCreateWindow(640, 480, title, nullptr, nullptr);
+        auto* window = glfwCreateWindow(width, height, title, nullptr, nullptr);
         if (!window) {
             glfwTerminate();
             throw std::runtime_error("Failed to create window.");
@@ -95,16 +95,15 @@ void app_t::main_loop() {
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(_window)) {
+        std::chrono::milliseconds delta = timer.milliseconds();
+        timer.reset();
         for (auto&& layer : _layers) {
-            layer->on_update(std::chrono::seconds(timer.seconds()));
+            layer->on_update(delta);
         }
-
         /* Swap front and back buffers */
         glfwSwapBuffers(_window);
         /* Poll for and process events */
         glfwPollEvents();
-        glfwSetTime(0);
-        timer.reset();
     }
     glfwTerminate();
 }
