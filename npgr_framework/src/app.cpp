@@ -36,6 +36,8 @@ namespace detail {
 
 } // namespace detail
 
+app_t* app_t::_instance = nullptr; //NOLINT
+
 app_t::app_t(uint16_t width, uint16_t height, const char* title, bool vsync, uint8_t ogl_v_major, uint8_t ogl_v_minor) {
     spdlog::set_default_logger(spdlog::stdout_color_mt(title));
     detail::init_glfw();
@@ -46,6 +48,8 @@ app_t::app_t(uint16_t width, uint16_t height, const char* title, bool vsync, uin
     if (vsync) glfwSwapInterval(1);
     glfwSetWindowUserPointer(_window, this);
     define_event_handlers();
+    if (_instance) throw std::runtime_error("Trying to create a second app_t instance");
+    _instance = this;
 }
 
 void app_t::define_event_handlers() {
@@ -64,12 +68,12 @@ void app_t::define_event_handlers() {
     });
 }
 
-void app_t::push_layer(std::unique_ptr<layer_t>&& layer){
+void app_t::push_layer(std::unique_ptr<layers::basic_layer_t>&& layer){
     layer->on_attach();
     _layers.push_layer(std::move(layer));
 }
 
-void app_t::push_overlay(std::unique_ptr<layer_t>&& overlay){
+void app_t::push_overlay(std::unique_ptr<layers::basic_layer_t>&& overlay){
     overlay->on_attach();
     _layers.push_overlay(std::move(overlay));
 }
@@ -80,9 +84,7 @@ void app_t::on_event(event_t& evt) {
     event_dispatcher_t dispatcher(evt);
 
     for (auto it = _layers.rbegin(); !evt.handled && it != _layers.rend(); it++) {
-        if ((*it)->subscribed_event_types().contains(evt.get_type())) {
-            (*it)->on_event(evt);
-        }
+        (*it)->on_event(evt);
     }
 }
 
@@ -106,6 +108,15 @@ void app_t::main_loop() {
         glfwPollEvents();
     }
     glfwTerminate();
+}
+
+app_t& app_t::get_instance() {
+#ifndef NPGR_DISABLE_DEBUG_CHECKS
+    if (!_instance) {
+        throw std::runtime_error("app_t::get_instance() called before creating an app instance.");
+    }
+#endif
+    return *_instance;
 }
 
 } // namespace npgr

@@ -48,6 +48,7 @@ namespace detail {
 
 class app_t
 {
+    static app_t* _instance;
     GLFWwindow* _window;
     layer_stack_t _layers;
 
@@ -57,10 +58,12 @@ public:
           uint8_t ogl_v_minor = 2);
 
     void on_event(event_t &evt);
-    void push_layer(std::unique_ptr<layer_t>&& layer);
-    void push_overlay(std::unique_ptr<layer_t>&& overlay);
+    void push_layer(std::unique_ptr<layers::basic_layer_t>&& layer);
+    void push_overlay(std::unique_ptr<layers::basic_layer_t>&& overlay);
     
     void main_loop();
+    static GLFWwindow* get_window() {return _instance->_window;};
+    static app_t& get_instance();
 };
 
 } // namespace npgr
