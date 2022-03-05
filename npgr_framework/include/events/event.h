@@ -43,10 +43,10 @@ class event_dispatcher_t
 public:
     explicit event_dispatcher_t(event_t& event) : _event(event) {}
 
-    template<typename T, typename F>
-    bool dispatch(const F& func) {
-        if (_event.get_type() == T::get_static_type()) {
-            _event.handled |= func(static_cast<T&>(_event));
+    template<typename EventType, typename HandlerCallable>
+    bool dispatch(const HandlerCallable& func) {
+        if (_event.get_type() == EventType::get_static_type()) {
+            _event.handled |= func(static_cast<EventType&>(_event));
             return true;
         }
         return false;

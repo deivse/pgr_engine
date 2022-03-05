@@ -11,3 +11,5 @@ target_compile_definitions(npgr PUBLIC GLFW_INCLUDE_NONE)
 target_include_directories(npgr PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include 
                                        ${CMAKE_CURRENT_SOURCE_DIR}/third-party/imgui/include)
 target_link_libraries(npgr ${CONAN_LIBS} IL)
+
+target_compile_options(npgr PUBLIC -g)
