@@ -110,6 +110,12 @@ void app_t::main_loop() {
     glfwTerminate();
 }
 
+window_t& app_t::get_window()
+{
+    static window_t window{_instance->_window};
+    return window;
+}
+
 app_t& app_t::get_instance() {
 #ifndef NPGR_DISABLE_DEBUG_CHECKS
     if (!_instance) {

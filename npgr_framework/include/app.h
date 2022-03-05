@@ -12,6 +12,7 @@
 #include "events/mouse_events.h"
 #include "layers.h"
 #include "timer.h"
+#include "window_wrapper.h"
 
 namespace npgr {
 
@@ -62,7 +63,7 @@ public:
     void push_overlay(std::unique_ptr<layers::basic_layer_t>&& overlay);
     
     void main_loop();
-    static GLFWwindow* get_window() {return _instance->_window;};
+    static window_t& get_window();
     static app_t& get_instance();
 };
 
