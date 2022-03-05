@@ -39,7 +39,7 @@ public:
                   CallableParams... callable_params) {
         ImGui_ImplOpenGL3_NewFrame();
         imgui::NewFrame();
-        imgui::GetIO().DeltaTime = static_cast<float>(delta.count());
+        imgui::GetIO().DeltaTime = static_cast<float>(delta.count())/1000;
 
         gui_definer(callable_params...);
 
