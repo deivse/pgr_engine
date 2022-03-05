@@ -40,5 +40,7 @@ struct shader_program
 {
     GLint _program_id;
     explicit shader_program(const std::filesystem::path& file_path);
+
+    //TODO: uniform utility funcs
 };
 } // namespace npgr
