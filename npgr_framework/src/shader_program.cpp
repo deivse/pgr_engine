@@ -1,4 +1,4 @@
-#include "shader.h"
+#include "shader_program.h"
 
 namespace npgr {
 namespace detail {
