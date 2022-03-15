@@ -1,3 +1,4 @@
+
 #include <app.h>
 
 namespace npgr {
@@ -24,18 +25,19 @@ namespace detail {
 
     constexpr auto get_app
       = [](GLFWwindow* window) { return reinterpret_cast<app_t*>(glfwGetWindowUserPointer(window)); };
-
 } // namespace detail
 
-app_t* app_t::_instance = nullptr; //NOLINT
+app_t* app_t::_instance = nullptr; // NOLINT
 
-app_t::app_t(uint16_t width, uint16_t height, const std::string& title, bool vsync, uint8_t ogl_v_major, uint8_t ogl_v_minor) {
+app_t::app_t(uint16_t width, uint16_t height, const std::string& title, bool vsync, uint8_t ogl_v_major,
+             uint8_t ogl_v_minor) {
     spdlog::set_default_logger(spdlog::stdout_color_mt(title));
     detail::init_glfw();
     detail::set_required_opengl_version(ogl_v_major, ogl_v_minor);
     _window = std::make_unique<npgr::window_t>(width, height, title);
     glfwMakeContextCurrent(*_window);
     detail::load_gl_funcs();
+    err::setup_ogl_debug_callback();
     if (vsync) glfwSwapInterval(1);
     glfwSetWindowUserPointer(*_window, this);
     define_event_handlers();
@@ -64,12 +66,12 @@ app_t::~app_t() {
     glfwTerminate();
 }
 
-void app_t::push_layer(std::unique_ptr<layers::basic_layer_t>&& layer){
+void app_t::push_layer(std::unique_ptr<layers::basic_layer_t>&& layer) {
     layer->on_attach();
     _layers.push_layer(std::move(layer));
 }
 
-void app_t::push_overlay(std::unique_ptr<layers::basic_layer_t>&& overlay){
+void app_t::push_overlay(std::unique_ptr<layers::basic_layer_t>&& overlay) {
     overlay->on_attach();
     _layers.push_overlay(std::move(overlay));
 }

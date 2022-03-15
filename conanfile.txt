@@ -14,3 +14,4 @@
 
  [options]
  spdlog:shared=False
+ glad:gl_version=4.3

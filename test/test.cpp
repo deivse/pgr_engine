@@ -51,7 +51,7 @@ class imgui_overlay : public npgr::layers::imgui_layer_t {
 
 int main() {
     try {
-        npgr::app_t app(100, 100, "tesst");
+        npgr::app_t app(480, 240, "tesst");
         npgr::shader_program program("../../test.shader");
         app.push_layer(std::make_unique<test_layer>());
         app.push_layer(std::make_unique<test_layer_2>());
