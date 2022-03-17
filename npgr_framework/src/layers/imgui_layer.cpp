@@ -13,7 +13,7 @@ void imgui_layer_t::on_attach() {
     imgui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; 
 
 	// Setup Platform/Renderer bindings
-    ImGui_ImplGlfw_InitForOpenGL(app_t::get_window().get_native_window(), true);
+    ImGui_ImplGlfw_InitForOpenGL(app_t::get_window().get_native(), true);
     ImGui_ImplOpenGL3_Init();
 }
 

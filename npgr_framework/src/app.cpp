@@ -35,22 +35,22 @@ app_t::app_t(uint16_t width, uint16_t height, const std::string& title, bool vsy
     detail::init_glfw();
     detail::set_required_opengl_version(ogl_v_major, ogl_v_minor);
     _window = std::make_unique<npgr::window_t>(width, height, title);
-    glfwMakeContextCurrent(*_window);
+    glfwMakeContextCurrent(_window->get_native());
     detail::load_gl_funcs();
     err::setup_ogl_debug_callback();
     if (vsync) glfwSwapInterval(1);
-    glfwSetWindowUserPointer(*_window, this);
+    glfwSetWindowUserPointer(_window->get_native(), this);
     define_event_handlers();
     if (_instance) throw std::runtime_error("Trying to create a second app_t instance");
     _instance = this;
 }
 
 void app_t::define_event_handlers() {
-    glfwSetCursorPosCallback(*_window, [](GLFWwindow* window, double x, double y) {
+    glfwSetCursorPosCallback(_window->get_native(), [](GLFWwindow* window, double x, double y) {
         cursor_pos_evt_t evt(x, y);
         detail::get_app(window)->on_event(evt);
     });
-    glfwSetMouseButtonCallback(*_window, [](GLFWwindow* window, int btn, int action, int mods) {
+    glfwSetMouseButtonCallback(_window->get_native(), [](GLFWwindow* window, int btn, int action, int mods) {
         if (action == GLFW_PRESS) {
             mouse_btn_down_evt_t evt(btn, mods);
             detail::get_app(window)->on_event(evt);
@@ -77,7 +77,7 @@ void app_t::push_overlay(std::unique_ptr<layers::basic_layer_t>&& overlay) {
 }
 
 void app_t::on_event(event_t& evt) {
-    using evt_t = npgr::event_type;
+    using evt_t = npgr::event_type_t;
 
     event_dispatcher_t dispatcher(evt);
 
@@ -89,19 +89,20 @@ void app_t::on_event(event_t& evt) {
 void app_t::main_loop() {
     int width = 0;
     int height = 0;
-    glfwGetFramebufferSize(*_window, &width, &height);
+    auto* native_window = _window->get_native();
+    glfwGetFramebufferSize(native_window, &width, &height);
     glViewport(0, 0, width, height);
     npgr::timer_t timer;
 
     /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(*_window)) {
+    while (!glfwWindowShouldClose(native_window)) {
         std::chrono::milliseconds delta = timer.milliseconds();
         timer.reset();
         for (auto&& layer : _layers) {
             layer->on_update(delta);
         }
         /* Swap front and back buffers */
-        glfwSwapBuffers(*_window);
+        glfwSwapBuffers(native_window);
         /* Poll for and process events */
         glfwPollEvents();
     }

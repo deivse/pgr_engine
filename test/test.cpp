@@ -23,7 +23,7 @@ public:
     bool on_event(npgr::event_t& evt) override {
         npgr::event_dispatcher_t ev_d(evt);
         ev_d.dispatch<npgr::cursor_pos_evt_t>([this](npgr::cursor_pos_evt_t& evt){
-            spdlog::info("{} handled event: {}({};{})", _debug_name, evt.get_name(), evt.x, evt.y);
+            // spdlog::info("{} handled event: {}({};{})", _debug_name, evt.get_name(), evt.x, evt.y);
             return true;
         });
         return false;
@@ -39,7 +39,7 @@ public:
     bool on_event(npgr::event_t& evt) override{
         npgr::event_dispatcher_t ev_d(evt);
         ev_d.dispatch<npgr::mouse_btn_down_evt_t>([this](npgr::mouse_btn_down_evt_t& evt){
-            spdlog::info("{} handled event: {}({};{})", _debug_name, evt.get_name(), evt.button, evt.mods);
+            // spdlog::info("{} handled event: {}({};{})", _debug_name, evt.get_name(), evt.button, evt.mods);
             return true;
         });
         return false;
@@ -50,9 +50,12 @@ class imgui_overlay : public npgr::layers::imgui_layer_t {
 };
 
 int main() {
+    spdlog::set_level(spdlog::level::warn);
     try {
         npgr::app_t app(480, 240, "tesst");
-        npgr::shader_program program("../../test.shader");
+        npgr::shader_program_t program("./test.shader");
+        program.set_uniform(glUniform1f, "test", 1.F);
+        
         app.push_layer(std::make_unique<test_layer>());
         app.push_layer(std::make_unique<test_layer_2>());
         app.push_overlay(std::make_unique<imgui_overlay>());

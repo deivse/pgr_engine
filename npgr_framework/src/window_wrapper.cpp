@@ -35,7 +35,7 @@ namespace npgr
         return retval;
     }
     
-    GLFWwindow* window_t::get_native_window()
+    GLFWwindow* window_t::get_native()
     {
         return _window;
     }

@@ -1,8 +1,10 @@
 shader::fragment {
     #version 400
+    uniform float test;
+    out float y;
 
     void main(){
-
+        y = test;
     }
 } shader::fragment
 

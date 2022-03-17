@@ -27,10 +27,7 @@ public:
     ~window_t();
 
     window_dimensions_t get_dimensions();
-    GLFWwindow* get_native_window();
-    operator GLFWwindow*(){
-        return _window;
-    }
+    GLFWwindow* get_native();
 };
 
 } // namespace npgr

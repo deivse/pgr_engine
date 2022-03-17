@@ -3,7 +3,7 @@
 #include <string>
 
 namespace npgr {
-enum class event_type
+enum class event_type_t
 {
     None = 0,
     WindowClose,
@@ -24,8 +24,8 @@ enum class event_type
 };
 
 #define EVENT_CLASS_TYPE(type)                                                 \
-    static event_type get_static_type() { return event_type::type; }           \
-    virtual event_type get_type() const override { return get_static_type(); } \
+    static event_type_t get_static_type() { return event_type_t::type; }           \
+    virtual event_type_t get_type() const override { return get_static_type(); } \
     virtual const char* get_name() const override { return #type; }
 
 struct event_t
@@ -33,7 +33,7 @@ struct event_t
     virtual ~event_t() = default;
 
     bool handled = false;
-    [[nodiscard]] virtual event_type get_type() const = 0;
+    [[nodiscard]] virtual event_type_t get_type() const = 0;
     [[nodiscard]] virtual const char* get_name() const = 0;
     [[nodiscard]] virtual std::string to_string() const { return get_name(); }
 };
