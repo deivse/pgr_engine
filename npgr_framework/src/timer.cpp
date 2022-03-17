@@ -1,4 +1,4 @@
-#include "timer.h"
+#include <timer.h>
 
 namespace npgr {
 timer_t::timer_t() { reset(); }
