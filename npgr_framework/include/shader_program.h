@@ -18,6 +18,11 @@ struct shader_type_t
     constexpr static std::array<uint32_t, 2> list = {VERTEX, FRAGMENT};
 };
 
+class shader_attrib_inactive_error: public std::runtime_error {
+public:
+    explicit shader_attrib_inactive_error(const std::string& what);
+};
+
 namespace detail {
     /**
      * @brief Get the location of a uniform from an oGl shader program.
@@ -40,7 +45,8 @@ namespace detail {
 
 struct shader_program_t
 {
-    int _program_id;
+    int _program_id{0};
+    shader_program_t() = default;
     explicit shader_program_t(const std::filesystem::path& shader_file_path);
     explicit shader_program_t(std::stringstream& shader_data);
     explicit shader_program_t(std::stringstream&& shader_data);
@@ -85,6 +91,14 @@ struct shader_program_t
 
     inline void bind() const {glUseProgram(_program_id);}
     static inline void unbind() {glUseProgram(0);}
+
+    /**
+     * @brief Get the location of the specified shader attribute.
+     * 
+     * @param glsl_name glsl attrib identifier
+     * @return unsigned int 
+     */
+    [[nodiscard]] unsigned int get_attrib_location(const std::string& glsl_name) const;
     
 private:
     bool compile_shader_program(std::map<uint32_t, std::stringstream>& source_map) const;

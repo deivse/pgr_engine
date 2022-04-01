@@ -1,6 +1,9 @@
 #include <shader_program.h>
 
 namespace npgr {
+shader_attrib_inactive_error::shader_attrib_inactive_error(const std::string& what)
+  : std::runtime_error(what){};
+
 namespace {
     const std::map<uint32_t, std::string_view> tag_by_shader_type{
       {shader_type_t::VERTEX, "vertex"},
@@ -57,6 +60,7 @@ bool shader_program_t::compile_shader_program(std::map<uint32_t, std::stringstre
 
         glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);
         if (!success) return false;
+        GL_VERTEX_SHADER;
         compiled_shader_ids.push_back(shader_id);
         glAttachShader(_program_id, shader_id);
     }
@@ -89,4 +93,11 @@ shader_program_t::shader_program_t(std::stringstream& shader_data) : _program_id
         throw ::std::runtime_error("Shader program compilation failed. (No path provided)");
 }
 
+unsigned int shader_program_t::get_attrib_location(const std::string& glsl_name) const {
+    if (auto loc = glGetAttribLocation(_program_id, glsl_name.c_str()); loc >=0){
+        return loc;
+    }
+    throw npgr::shader_attrib_inactive_error(
+      fmt::format("Shader attrib \"{}\" inactive or doesn't exist.", glsl_name));
+}
 } // namespace npgr

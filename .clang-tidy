@@ -17,6 +17,6 @@ Checks:          '*,-google-runtime-references,
                     -llvm-include-order,
                     -readability-static-accessed-through-instance,
                     -google-readability-todo,
-                    -llvm-header-guard'
+                    -llvm-header-guard''
 AnalyzeTemporaryDtors: false
 FormatStyle:     file
