@@ -9,59 +9,39 @@
 
 
 namespace pgre::layers {
-namespace imgui = ImGui;
-
-
 class imgui_layer_t : public basic_layer_t
 {
-    bool _propagate_events = true;
+    bool _enable_docking;
+    bool _enable_viewports;
+
+    /**
+     * @brief Called before your ImGui UI definition.
+     */
+    void begin_gui();
+    /**
+     * @brief Called after your ImGui UI definition.
+     */
+    void end_gui();
 public:
-    explicit imgui_layer_t(std::string_view name = "ImGUI Layer");
+    /**
+     * @brief Construct a new imgui layer.
+     * 
+     * @param enable_docking if true, enables imgui's docking feature.
+     * @param enable_viewports if true, enables imgui's viewports feature.
+     * @param name layer name
+     */
+    explicit imgui_layer_t(std::string_view name = "ImGUI Layer", bool enable_docking = true, bool enable_viewports = true);
 
     void on_attach() override;
     void on_detach() override;
 
-    void on_update(const delta_ms& delta) override {
-        draw_gui(delta, []() {
-            static bool open = true;
-            imgui::ShowDemoWindow(&open);
-        });
-    };
+    void on_update(const delta_ms& delta) final;
 
     /**
-     * @brief w
-     * 
-     * @tparam CallableTy 
-     * @param gui_definer 
+     * @brief Override this function to define your gui, and any update logic. 
+     * It will be called on each update.
      */
-    template<typename CallableTy, typename... CallableParams>
-    void draw_gui(const delta_ms& delta, CallableTy&& gui_definer, 
-                  CallableParams... callable_params) {
-        ImGui_ImplOpenGL3_NewFrame();
-        imgui::NewFrame();
-        imgui::GetIO().DeltaTime = static_cast<float>(delta.count())/1000;
-
-        gui_definer(callable_params...);
-
-        imgui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(imgui::GetDrawData());
-
-        ImGuiIO& io = ImGui::GetIO();
-        auto dimensions = app_t::get_window().get_dimensions();
-        io.DisplaySize = ImVec2(static_cast<float>(dimensions.width), static_cast<float>(dimensions.height));
-
-        // Rendering
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    }
-
-    /**
-     * @brief Routes events .
-     *
-     * @return true if event has been handled
-     * @return false otherwise
-     */
-    // bool on_event(event_t& ev) override;
+    virtual void on_gui_update(const delta_ms& delta);
 };
 
 } // namespace pgre::layers
