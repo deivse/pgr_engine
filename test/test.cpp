@@ -8,11 +8,11 @@
 #include <layers/basic_layer.h>
 #include <gl_wrappers/vertex_array.h>
 
-namespace glwr = npgr::gl_wrappers;
+namespace glwr = pgre::gl_wrappers;
 
-class test_layer: public npgr::layers::basic_layer_t {
+class test_layer: public pgre::layers::basic_layer_t {
     std::unique_ptr<glwr::vertex_array_t> vao;
-    npgr::shader_program_t program;
+    pgre::shader_program_t program;
     std::shared_ptr<glwr::buffer_t> buffer;
     glm::vec3 color{1.0, 0.0, 0.0};
 
@@ -24,11 +24,11 @@ class test_layer: public npgr::layers::basic_layer_t {
     float velocity = 1.F; 
 
 public:
-    test_layer(): npgr::layers::basic_layer_t("test_layer_1") {};
+    test_layer(): pgre::layers::basic_layer_t("test_layer_1") {};
 
     void on_attach() override{
         buffer = std::make_shared<glwr::buffer_t>(GL_ARRAY_BUFFER);
-        program = npgr::shader_program_t("./test.shader");
+        program = pgre::shader_program_t("./test.shader");
         vao = std::make_unique<glwr::vertex_array_t>();
 
         vao->add_attribute(*buffer, program.get_attrib_location("position"), GL_FLOAT, 3, false, 0, 0);
@@ -36,7 +36,7 @@ public:
         buffer->unbind();        
     }
 
-    void on_update(const npgr::layers::delta_ms& delta) override {
+    void on_update(const pgre::layers::delta_ms& delta) override {
         glClear(GL_COLOR_BUFFER_BIT);
         program.bind();
         color.b += velocity * (delta.count() / 1000.F);
@@ -52,9 +52,9 @@ public:
         vao->draw_arrays();
     }
 
-    bool on_event(npgr::event_t& evt) override {
-        npgr::event_dispatcher_t ev_d(evt);
-        ev_d.dispatch<npgr::cursor_pos_evt_t>([this](npgr::cursor_pos_evt_t& evt){
+    bool on_event(pgre::event_t& evt) override {
+        pgre::event_dispatcher_t ev_d(evt);
+        ev_d.dispatch<pgre::cursor_pos_evt_t>([this](pgre::cursor_pos_evt_t& evt){
             // spdlog::info("{} handled event: {}({};{})", _debug_name, evt.get_name(), evt.x, evt.y);
             return true;
         });
@@ -62,15 +62,15 @@ public:
     }
 };
 
-class test_layer_2: public npgr::layers::basic_layer_t {
+class test_layer_2: public pgre::layers::basic_layer_t {
 
 public:
-    test_layer_2(): npgr::layers::basic_layer_t("test_layer_2") {};
+    test_layer_2(): pgre::layers::basic_layer_t("test_layer_2") {};
 
 
-    bool on_event(npgr::event_t& evt) override{
-        npgr::event_dispatcher_t ev_d(evt);
-        ev_d.dispatch<npgr::mouse_btn_down_evt_t>([this](npgr::mouse_btn_down_evt_t& evt){
+    bool on_event(pgre::event_t& evt) override{
+        pgre::event_dispatcher_t ev_d(evt);
+        ev_d.dispatch<pgre::mouse_btn_down_evt_t>([this](pgre::mouse_btn_down_evt_t& evt){
             // spdlog::info("{} handled event: {}({};{})", _debug_name, evt.get_name(), evt.button, evt.mods);
             return true;
         });
@@ -78,13 +78,13 @@ public:
     }
 };
 
-class imgui_overlay : public npgr::layers::imgui_layer_t {
+class imgui_overlay : public pgre::layers::imgui_layer_t {
 };
 
 int main() {
     // spdlog::set_level(spdlog::level::warn);
     try {
-        npgr::app_t app(480, 240, "tesst");
+        pgre::app_t app(480, 240, "tesst");
         
         app.push_overlay(std::make_unique<imgui_overlay>());
         app.push_layer(std::make_unique<test_layer>());
