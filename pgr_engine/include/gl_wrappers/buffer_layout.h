@@ -32,7 +32,7 @@ struct buffer_element_t {
      */
     uintptr_t start_offset_bytes = 0;
 
-    unsigned int shader_location;
+    unsigned int shader_location = 0;
 
     buffer_element_t(GLenum type, uintptr_t items_per_vertex, std::string_view name,
                        bool normalize = false);
@@ -56,18 +56,8 @@ public:
      */
     // template<typename... Args>
     buffer_layout_t(const shader_program_t& shader,
-                    std::initializer_list<buffer_element_t> elements)
-      : _elements(elements) {
-        int offset = 0;
-        for (auto& element : _elements) {
-            element.start_offset_bytes = offset;
-            element.shader_location
-              = shader.get_attrib_location(std::string(element.glsl_name));
-            offset += element.get_size();
-        }
-        _stride = offset;
-    }
-    
+                    std::initializer_list<buffer_element_t> elements);
+
     [[nodiscard]] inline uintptr_t get_stride() const { return _stride; }
     /**
      * @brief Enables vertex attrib array, and calls glVertexAttribPointer for each element.

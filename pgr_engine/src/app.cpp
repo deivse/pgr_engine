@@ -32,6 +32,8 @@ app_t* app_t::_instance = nullptr; // NOLINT
 app_t::app_t(uint16_t width, uint16_t height, const std::string& title, bool vsync, uint8_t ogl_v_major,
              uint8_t ogl_v_minor) {
     spdlog::set_default_logger(spdlog::stdout_color_mt(title));
+    spdlog::set_pattern("%^===[ %l ]===%$ %v");
+
     detail::init_glfw();
     detail::set_required_opengl_version(ogl_v_major, ogl_v_minor);
     _window = std::make_unique<pgre::window_t>(width, height, title);

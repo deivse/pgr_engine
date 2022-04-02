@@ -3,28 +3,33 @@
 namespace pgre::gl_wrappers {
 
 vertex_array_t::vertex_array_t() { glGenVertexArrays(1, &_gl_id); }
+vertex_array_t::~vertex_array_t() { glDeleteVertexArrays(1, &_gl_id); }
 
 void vertex_array_t::bind() const { glBindVertexArray(_gl_id); }
 
-void vertex_array_t::add_attribute(const buffer_t& buffer, GLuint shader_attr_pos,
-                                   GLenum type, GLint items_per_vertex, bool normalize,
-                                   GLsizei stride, uint64_t start_offset_bytes) {
-    attributes.emplace_back(shader_attr_pos, type, items_per_vertex, normalize, stride,
-                            start_offset_bytes);
+void vertex_array_t::add_vertex_buffer(const std::shared_ptr<vertex_buffer_t>& buffer,
+                                       buffer_layout_t& layout) {
     this->bind();
-    auto element = attributes.rbegin();
-    buffer.bind();
-    element->enable_array();
-    element->point();
+    buffer->bind();
+    layout.enable_and_point();
+
+    _vertex_buffers.push_back(buffer);
 }
 
-void vertex_array_t::draw_arrays(GLenum drawing_mode, int start_index) const {
+void vertex_array_t::add_vertex_buffer(const std::shared_ptr<vertex_buffer_t>& buffer,
+                                       buffer_layout_t&& layout) {
     this->bind();
-    glDrawArrays(drawing_mode, start_index, _vertex_count);
+    buffer->bind();
+    layout.enable_and_point();
+
+    _vertex_buffers.push_back(buffer);
 }
 
-void vertex_array_t::set_vertex_count(int vertex_count){
-    _vertex_count = vertex_count;
+void vertex_array_t::set_index_buffer(const std::shared_ptr<index_buffer_t>& buffer) {
+    this->bind();
+    buffer->bind();
+
+    _index_buffer = buffer;
 }
 
 } // namespace pgre::gl_wrappers
