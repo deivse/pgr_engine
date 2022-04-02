@@ -100,4 +100,47 @@ unsigned int shader_program_t::get_attrib_location(const std::string& glsl_name)
     throw pgre::shader_attrib_inactive_error(
       fmt::format("Shader attrib \"{}\" inactive or doesn't exist.", glsl_name));
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////// Uniform Setters ////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool shader_program_t::set_uniform(const std::string& glsl_name, const glm::mat3& x) {
+    int loc{};
+    if (!detail::get_uniform_loc(_program_id, glsl_name, loc)) return false;
+    glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(x));
+    return true;
+}
+bool shader_program_t::set_uniform(const std::string& glsl_name, const glm::mat4& x) {
+    int loc{};
+    if (!detail::get_uniform_loc(_program_id, glsl_name, loc)) return false;
+    glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(x));
+    return true;
+}
+bool shader_program_t::set_uniform(const std::string& glsl_name, const glm::vec3& x) {
+    int loc{};
+    if (!detail::get_uniform_loc(_program_id, glsl_name, loc)) return false;
+    glUniform3f(loc, x.r, x.g, x.b);
+    return true;
+}
+bool shader_program_t::set_uniform(const std::string& glsl_name, const glm::vec4& x) {
+    int loc{};
+    if (!detail::get_uniform_loc(_program_id, glsl_name, loc)) return false;
+    glUniform4f(loc, x.r, x.g, x.b, x.a);
+    return true;
+}
+bool shader_program_t::set_uniform(const std::string& glsl_name, float x) {
+    int loc{};
+    if (!detail::get_uniform_loc(_program_id, glsl_name, loc)) return false;
+    glUniform1f(loc, x);
+    return true;
+}
+bool shader_program_t::set_uniform(const std::string& glsl_name, int x) {
+    int loc{};
+    if (!detail::get_uniform_loc(_program_id, glsl_name, loc)) return false;
+    glUniform1i(loc, x);
+    return true;
+}
+
 } // namespace pgre

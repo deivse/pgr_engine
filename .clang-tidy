@@ -1,4 +1,4 @@
-Checks:          '*,-google-runtime-references,
+Checks:            '-google-runtime-references,
                     -fuchsia*,
                     -modernize-use-trailing-return-type,
                     -readability-implicit-bool-conversion,

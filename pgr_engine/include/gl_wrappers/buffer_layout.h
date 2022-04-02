@@ -61,7 +61,7 @@ public:
     [[nodiscard]] inline uintptr_t get_stride() const { return _stride; }
     /**
      * @brief Enables vertex attrib array, and calls glVertexAttribPointer for each element.
-     * @remark A VAO and buffer must be bound!
+     * @warning A VAO and buffer must be BOUND before calling this!
      */
     void enable_and_point();
     

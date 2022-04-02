@@ -8,6 +8,8 @@
 
 #include <spdlog/spdlog.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <glad/glad.h>
 
 namespace pgre {
@@ -53,6 +55,7 @@ struct shader_program_t
 
     /**
      * @brief Sets a uniform for this shader program. Thin wrapper for the oGl uniform function that's passed in.
+     * @warning The program must be BOUND before calling this.
      * 
      * @tparam Args parameter pack of arguments which will be passed to gl_uni_func
      * @tparam GlUniformFunc the oGl unform function type (usually inferred)
@@ -62,32 +65,19 @@ struct shader_program_t
      * @return false if unknown uniform name (may have been optimized out)
      */
     template<typename ...Args, typename GlUniformFunc>
-    bool set_uniform(GlUniformFunc gl_uni_func, const std::string& glsl_name, Args... args) {
+    bool set_uniform(const std::string& glsl_name, GlUniformFunc gl_uni_func, Args... args) {
         int loc{};
         if (!detail::get_uniform_loc(_program_id, glsl_name, loc)) return false;
-        this->bind();
         gl_uni_func(loc, args...);
-        return true;
+        return true;    
     }
-    /**
-     * @brief Sets a uniform for this shader program. Takes a vector of DataType to simplify setting uniform arrays of non-matrix types. 
-     * 
-     * @tparam DataType the DataType of the data. (usually inferred)
-     * @tparam GlUniformFunc the oGl unform function type (usually inferred)
-     * @param gl_uni_func the oGl uniform setter
-     * @param glsl_name uniform variable name as declared in the shader source 
-     * @param data std::vector of DataType. The unform function will
-     * @return true if uniform succesfully set
-     * @return false if unknown uniform name (may have been optimized out)
-     */
-    template<typename DataType, typename GlUniformFunc>
-    bool set_uniform_arr(GlUniformFunc gl_uni_func, const std::string& glsl_name, const std::vector<DataType> data) {
-        int loc{};
-        if (!detail::get_uniform_loc(_program_id, glsl_name, loc)) return false;
-        this->bind();
-        gl_uni_func(loc, data.size(), data.data());
-        return true;
-    }
+
+    bool set_uniform(const std::string& glsl_name, const glm::mat3& x);
+    bool set_uniform(const std::string& glsl_name, const glm::mat4& x);
+    bool set_uniform(const std::string& glsl_name, const glm::vec3& x);
+    bool set_uniform(const std::string& glsl_name, const glm::vec4& x);
+    bool set_uniform(const std::string& glsl_name, float x);
+    bool set_uniform(const std::string& glsl_name, int x);
 
     inline void bind() const {glUseProgram(_program_id);}
     static inline void unbind() {glUseProgram(0);}
