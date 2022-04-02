@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <glad/glad.h>
+#include <stdexcept>
 #include <vector>
 
 namespace pgre::gl_wrappers {
@@ -9,20 +10,23 @@ namespace pgre::gl_wrappers {
 /**
  * @brief Thin wrapper for an OpenGL buffer object.
  */
+template <GLenum binding_target>
 struct buffer_t
 {
     unsigned int _gl_id{};
-    GLenum _target;
     GLsizeiptr _current_data_offset = 0;
     GLsizeiptr _current_allocated_size = 0;
 
     /**
      * @brief Calls glGenBuffers and stores the binding target for future use.
-     *
-     * @param binding_target buffer binding target, e.g. GL_ARRAY_BUFFER
      */
-    explicit buffer_t(GLenum binding_target);
-    ~buffer_t();
+    buffer_t() { glGenBuffers(1, &_gl_id); }
+    ~buffer_t() { glDeleteBuffers(1, &_gl_id); }
+
+    buffer_t(buffer_t& other) = delete;
+    buffer_t(buffer_t&& other) noexcept = default;
+    buffer_t & operator = (buffer_t& other) = delete;
+    buffer_t & operator = (buffer_t&& other)  noexcept = default;
 
     /**
      * @brief Set all data in one call. Overwrites previous buffer data.
@@ -31,15 +35,21 @@ struct buffer_t
      * @param data pointer to data
      * @param usage OpenGL usage hint
      */
-    void set_data(GLsizeiptr size, GLvoid* data, GLenum usage = GL_STATIC_DRAW);
+    void set_data(GLsizeiptr size, GLvoid* data, GLenum usage = GL_STATIC_DRAW) {
+        glBindBuffer(binding_target, _gl_id);
+        glBufferData(binding_target, size, data, usage);
+        _current_data_offset = size;
+        _current_allocated_size = size;
+    }
     /**
      * @brief Set all data in one call. Overwrites previous buffer data.
      *
      * @param data std::vector of bytes
      * @param usage OpenGL usage hint
      */
-    void set_data(std::vector<uint8_t>& data, GLenum usage = GL_STATIC_DRAW);
-
+    void set_data(std::vector<uint8_t>& data, GLenum usage = GL_STATIC_DRAW) {
+        buffer_t::set_data(static_cast<GLsizeiptr>(data.size()), data.data(), usage);
+    }
 
     /**
      * @brief Ask OpenGL to alloc space for size bytes for subsequent push_back() calls
@@ -47,7 +57,12 @@ struct buffer_t
      * @param size number of bytes that will be allocated.
      * @param usage OpenGL usage hint for data that will be provided.
      */
-    void allocate(GLsizeiptr size, GLenum usage = GL_STATIC_DRAW);
+    void allocate(GLsizeiptr size, GLenum usage = GL_STATIC_DRAW) {
+        glBindBuffer(binding_target, _gl_id);
+        glBufferData(binding_target, size, nullptr, usage);
+        _current_allocated_size = size;
+        _current_data_offset = 0;
+    }
 
     /**
      * @brief Push back data to the buffer. Enough space for ALL push_back calls must be
@@ -56,36 +71,49 @@ struct buffer_t
      * @param size size bytes.
      * @param data
      */
-    void push_back(GLsizeiptr size, GLvoid* data);
+    void push_back(GLsizeiptr size, GLvoid* data) {
+#ifndef pgre_DISABLE_DEBUG_CHECKS
+        if (_current_data_offset + size > _current_allocated_size)
+            throw std::runtime_error("Trying to push_back more data to a buffer_t object "
+                                     "than it has space alloced for.");
+#endif
+        glBufferSubData(binding_target, _current_data_offset, size, data);
+        _current_data_offset += size;
+    }
+
     /**
      * @brief Push back data to the buffer. Enough space for ALL push_back calls must be
      * allocated (using allocate()) beforehand.
      *
      * @param data std::vector of bytes
      */
-    void push_back(std::vector<uint8_t>& data);
-
-    /**
-     * @brief Changes the binding target this buffer will be bound to when calling other
-     * member functions.
-     */
-    void update_binding_target(GLenum target);
+    void push_back(std::vector<uint8_t>& data) {
+        buffer_t::push_back(static_cast<GLsizeiptr>(data.size()), data.data());
+    }
 
     /**
      * @brief Unbinds the buffer (if any) bound to the specified target.
-     * 
+     *
      * @param target buffer binding target.
      */
-    inline void unbind() const {
-        glBindBuffer(_target, 0);
-    }
+    inline void unbind() const { glBindBuffer(binding_target, 0); }
 
     /**
      * @brief Binds the buffer to the target assigned in constructor.
      */
-    inline void bind() const {
-        glBindBuffer(_target, _gl_id);   
-    }
+    inline void bind() const { glBindBuffer(binding_target, _gl_id); }
+
+    /**
+     * @brief Get the size, in bytes, of data currently in the buffer.
+     */
+    inline GLsizeiptr get_size() { return _current_data_offset; }
+    /**
+     * @brief Get the buffer's actual size, in bytes.
+     */
+    inline GLsizeiptr get_allocated_size() { return _current_allocated_size; }
 };
+
+using vertex_buffer_t = buffer_t<GL_ARRAY_BUFFER>;
+using index_buffer_t = buffer_t<GL_ELEMENT_ARRAY_BUFFER>;
 
 } // namespace pgre::gl_wrappers

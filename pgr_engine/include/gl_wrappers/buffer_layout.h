@@ -1,0 +1,82 @@
+#pragma once
+
+#include <glad/glad.h>
+#include <string>
+#include "buffer.h"
+#include "../shader_program.h"
+
+namespace pgre::gl_wrappers {
+
+/**
+ * @brief Holds all the information required for a call to glVertexAttribPointer.
+ */
+struct buffer_element_t {
+    std::string_view glsl_name;
+    /**
+     * @brief element data type
+     */
+    GLenum type;
+    /**
+     * @brief Specifies the number of components per generic vertex attribute, 
+     * e.g. 3 for a vec3.
+     */
+    GLsizei items_per_vertex;
+    /**
+     * @brief specifies whether fixed-point data values should be normalized
+     * or converted directly as fixed-point values when they are accessed
+     */
+    bool normalize;
+    /**
+     * @brief offset of the first component of the first generic vertex
+     * attribute in the array in the data store of the buffer.
+     */
+    uintptr_t start_offset_bytes = 0;
+
+    unsigned int shader_location;
+
+    buffer_element_t(GLenum type, uintptr_t items_per_vertex, std::string_view name,
+                       bool normalize = false);
+    
+    [[nodiscard]] int get_size() const;
+} __attribute__((aligned(64)));
+
+class buffer_layout_t {
+    std::vector<buffer_element_t> _elements;
+    /**
+     * @brief specifies the byte offset between consecutive generic vertex
+     * attributes
+     */
+    GLsizei _stride = 0;
+public:
+    /**
+     * @brief Construct a new buffer_layout_t and calculates stride and offset (interleaving assumed).
+     * 
+     * @param shader shader program to get attribute locations from
+     * @param elements initializer list of buffer_element_t
+     */
+    // template<typename... Args>
+    buffer_layout_t(const shader_program_t& shader,
+                    std::initializer_list<buffer_element_t> elements)
+      : _elements(elements) {
+        int offset = 0;
+        for (auto& element : _elements) {
+            element.start_offset_bytes = offset;
+            element.shader_location
+              = shader.get_attrib_location(std::string(element.glsl_name));
+            offset += element.get_size();
+        }
+        _stride = offset;
+    }
+    
+    [[nodiscard]] inline uintptr_t get_stride() const { return _stride; }
+    /**
+     * @brief Enables vertex attrib array, and calls glVertexAttribPointer for each element.
+     * @remark A VAO and buffer must be bound!
+     */
+    void enable_and_point();
+    
+    [[nodiscard]] decltype(_elements.cbegin()) begin() const {return _elements.cbegin();}
+    [[nodiscard]] decltype(_elements.cend()) end() const {return _elements.cend();}
+};
+
+} // namespace pgre::gl_wrappers

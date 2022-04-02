@@ -13,13 +13,13 @@ namespace glwr = pgre::gl_wrappers;
 class test_layer: public pgre::layers::basic_layer_t {
     std::unique_ptr<glwr::vertex_array_t> vao;
     pgre::shader_program_t program;
-    std::shared_ptr<glwr::buffer_t> buffer;
+    std::shared_ptr<glwr::vertex_buffer_t> buffer;
     glm::vec3 color{1.0, 0.0, 0.0};
 
-    float data[9] = {
-      0.5F,  0.5F,  0.0F, // top right
-      0.5F,  -0.5F, 0.0F, // bottom right
-      -0.5F, 0.5F,  0.0F,
+    float data[24] = {
+      0.5F,  0.5F,  0.0F, 0.8F, 0.1F, 0.2F, 1.0F, // top right
+      0.5F,  -0.5F, 0.0F, 0.8F, 0.1F, 0.7F, 1.0F, // bottom right
+      -0.5F, 0.5F,  0.0F, 0.2F, 0.5F, 0.7F, 1.0F,
     };
     float velocity = 1.F; 
 
@@ -27,29 +27,25 @@ public:
     test_layer(): pgre::layers::basic_layer_t("test_layer_1") {};
 
     void on_attach() override{
-        buffer = std::make_shared<glwr::buffer_t>(GL_ARRAY_BUFFER);
         program = pgre::shader_program_t("./test.shader");
+        buffer = std::make_shared<glwr::vertex_buffer_t>();
+        buffer->set_data(sizeof(data), data, GL_DYNAMIC_DRAW);
         vao = std::make_unique<glwr::vertex_array_t>();
-
-        vao->add_attribute(*buffer, program.get_attrib_location("position"), GL_FLOAT, 3, false, 0, 0);
-        vao->set_vertex_count(3);
-        buffer->unbind();        
+        auto layout = std::make_shared<glwr::buffer_layout_t>(
+            program, std::initializer_list<glwr::buffer_element_t>{{GL_FLOAT, 3, "position"}}
+        );
+        vao->add_vertex_buffer(buffer, {program, {
+            {GL_FLOAT, 3, "position"},
+            {GL_FLOAT, 4, "color"},
+        }});
+        buffer->unbind();
     }
 
     void on_update(const pgre::layers::delta_ms& delta) override {
         glClear(GL_COLOR_BUFFER_BIT);
         program.bind();
-        color.b += velocity * (delta.count() / 1000.F);
-        color.r -= 2 * velocity * (delta.count() / 1000.F);
-
-        program.set_uniform(glUniform3f, "color", color.r, color.g, color.b);
-
-        for (int i = 0; i < 3; i++) {
-            data[i] += velocity * (delta.count() / 1000.F);
-            if (data[i]>1.F || data[i] < -1.F) velocity = -velocity;
-        }
-        buffer->set_data(sizeof(data), data, GL_DYNAMIC_DRAW);
-        vao->draw_arrays();
+        vao->bind();
+        glDrawArrays(GL_TRIANGLES, 0, buffer->get_size()/sizeof(float));
     }
 
     bool on_event(pgre::event_t& evt) override {

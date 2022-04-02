@@ -6,11 +6,9 @@
 #include <glad/glad.h>
 
 #include "buffer.h"
-#include "vertex_attribute.h"
+#include "gl_wrappers/buffer_layout.h"
 
 namespace pgre::gl_wrappers {
-
-//TODO: indexed buffers?
 
 /**
  * @brief Wrapper for a VAO and a buffer layout builder.
@@ -18,53 +16,48 @@ namespace pgre::gl_wrappers {
 class vertex_array_t
 {
     unsigned int _gl_id{};
-    int _vertex_count = 0;
-    std::vector<vertex_attribute_t> attributes;
+    std::vector<std::shared_ptr<vertex_buffer_t>> _vertex_buffers {};
+    std::shared_ptr<index_buffer_t> _index_buffer;
 public:
     /**
      * @brief Creates a VAO. The layout and buffer associations should be specified using
      * add_attribute calls.
      */
     explicit vertex_array_t();
+    ~vertex_array_t();
 
     /**
-     * @brief Adds a vertex attribute to the VAO, associated with the specified buffer.
+     * @brief Associates a buffer layout with the vertex array and the buffer, stores the
+     * buffer pointer cpu-side in the vertex_array_t object.
      *
-     * @param buffer the buffer that will be associated with this vertex attribute.
-     * @param shader_attr_pos Position 
-     * @param type oGL data type.
-     * @param items_per_vertex Specifies the number of components per generic vertex attribute, 
-     * e.g. 3 for a vec3.
-     * @param normalize specifies whether fixed-point data values should be normalized
-     * or converted directly as fixed-point values when they are accessed
-     * @param stride specifies the byte offset between consecutive generic vertex
-     * attributes
-     * @param start_offset_bytes offset of the first component of the first generic vertex
-     * attribute in the array in the data store of the buffer.
+     * @param buffer
+     * @param layout
      */
-    void add_attribute(const buffer_t& buffer, GLuint shader_attr_pos, GLenum type, GLint items_per_vertex,
-                       bool normalize, GLsizei stride, uint64_t start_offset_bytes);
+    void add_vertex_buffer(const std::shared_ptr<vertex_buffer_t>& buffer, buffer_layout_t& layout);
+    /**
+     * @brief Associates a buffer layout with the vertex array and the buffer, stores the
+     * buffer pointer cpu-side in the vertex_array_t object.
+     *
+     * @param buffer
+     * @param layout
+     */
+    void add_vertex_buffer(const std::shared_ptr<vertex_buffer_t>& buffer, buffer_layout_t&& layout);
+    /**
+     * @brief Associates an index buffer with this VAO and stores the
+     * buffer pointer cpu-side in the vertex_array_t object.
+     * 
+     * @param buffer 
+     */
+    void set_index_buffer(const std::shared_ptr<index_buffer_t>& buffer);
 
     /**
      * @brief Binds the VAO
      */
     void bind() const;
 
-    /**
-     * @brief Binds this vertex array and issuses a draw call with specified arguments.
-     * A VBO must be bound before this call!
-     *
-     * @param start_index index of first vertex that should be drawn
-     * @param vertex_count vertex count to be drawn
-     * @param drawing_mode oGL drawing mode, e.g. GL_TRIANGLES
-     */
-    void draw_arrays(GLenum drawing_mode = GL_TRIANGLES, int start_index = 0) const;
-
-    /**
-     * @brief Sets how many vertices will be rendered when calling draw_arrays.
-     */
-    void set_vertex_count(int vertex_count);
-
+    inline decltype(_vertex_buffers) get_vertex_buffers() { return _vertex_buffers; }
+    inline decltype(_index_buffer) get_index_buffer() { return _index_buffer; }
+ 
     /**
      * @brief Unbinds the VAO (binds VAO 0)
      */
