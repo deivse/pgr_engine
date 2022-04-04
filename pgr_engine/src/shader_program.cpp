@@ -90,7 +90,7 @@ shader_program_t::shader_program_t(std::stringstream& shader_data) : _program_id
     int success = 0;
     auto source_map = load_shader_source_from_stream(shader_data);
     if (!compile_shader_program(source_map))
-        throw ::std::runtime_error("Shader program compilation failed. (No path provided)");
+        throw ::std::runtime_error("Shader program compilation failed. (File not loaded from disk.)");
 }
 
 unsigned int shader_program_t::get_attrib_location(const std::string& glsl_name) const {

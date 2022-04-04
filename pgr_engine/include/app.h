@@ -54,7 +54,7 @@ class app_t
     std::unique_ptr<window_t> _window;
     layer_stack_t _layers;
 
-    void define_event_handlers();
+    void register_event_handlers();
 public:
     app_t(uint16_t width, uint16_t height, const std::string& title, bool vsync = true, uint8_t ogl_v_major = 3,
           uint8_t ogl_v_minor = 2);

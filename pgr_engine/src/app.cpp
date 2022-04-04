@@ -1,4 +1,5 @@
 
+#include "events/keyboard_events.h"
 #include <app.h>
 
 namespace pgre {
@@ -42,12 +43,12 @@ app_t::app_t(uint16_t width, uint16_t height, const std::string& title, bool vsy
     err::setup_ogl_debug_callback();
     if (vsync) glfwSwapInterval(1);
     glfwSetWindowUserPointer(_window->get_native(), this);
-    define_event_handlers();
+    register_event_handlers();
     if (_instance) throw std::runtime_error("Trying to create a second app_t instance");
     _instance = this;
 }
 
-void app_t::define_event_handlers() {
+void app_t::register_event_handlers() {
     glfwSetCursorPosCallback(_window->get_native(), [](GLFWwindow* window, double x, double y) {
         cursor_pos_evt_t evt(x, y);
         detail::get_app(window)->on_event(evt);
@@ -58,6 +59,15 @@ void app_t::define_event_handlers() {
             detail::get_app(window)->on_event(evt);
         } else {
             mouse_btn_up_evt_t evt(btn, mods);
+            detail::get_app(window)->on_event(evt);
+        }
+    });
+    glfwSetKeyCallback(_window->get_native(), [](GLFWwindow* window, int key, int scancode, int action, int mods){
+        if (action == GLFW_RELEASE) {
+            key_released_evt_t evt(key, mods);
+            detail::get_app(window)->on_event(evt);
+        } else {
+            key_pressed_evt_t evt(key, action == GLFW_REPEAT, mods);
             detail::get_app(window)->on_event(evt);
         }
     });

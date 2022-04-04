@@ -30,8 +30,10 @@ namespace pgre
 
     window_dimensions_t window_t::get_dimensions()
     {
-        window_dimensions_t retval{};
-        glfwGetWindowSize(_window, &retval.width, &retval.height);
+        int x = 0;
+        int y = 0;
+        glfwGetWindowSize(_window, &x, &y);
+        window_dimensions_t retval{static_cast<float>(x), static_cast<float>(y)};
         return retval;
     }
     

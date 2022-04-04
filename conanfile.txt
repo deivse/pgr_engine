@@ -5,6 +5,7 @@
  glfw/3.3.6
  imgui/cci.20220207+1.87.docking
  jasper/2.0.33
+ stb/cci.20210910
  libsquish/1.15
  spdlog/1.8.0
 
@@ -14,4 +15,6 @@
 
  [options]
  spdlog:shared=False
- glad:gl_version=4.3
+ glad:gl_version=4.5
+ glad:gl_profile=core
+ stb:with_deprecated=False

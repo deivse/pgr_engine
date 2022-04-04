@@ -1,4 +1,11 @@
-Checks:            '-google-runtime-references,
+Checks:            '*,-llvm-namespace-comment,
+                    -cppcoreguidelines-non-private-member-variables-in-classes,
+                    -google-readability-todo,
+                    -bugprone-easily-swappable-parameters,
+                    -readability-isolate-declaration,
+                    -google-readability-namespace-comments
+                    -modernize-*,
+                    -google-runtime-references,
                     -fuchsia*,
                     -modernize-use-trailing-return-type,
                     -readability-implicit-bool-conversion,
@@ -15,8 +22,7 @@ Checks:            '-google-runtime-references,
                     -llvmlibc-*,
                     -llvm-header-guard,
                     -llvm-include-order,
-                    -readability-static-accessed-through-instance,
-                    -google-readability-todo,
-                    -llvm-header-guard''
+                    -llvm-header-guard,
+                    ''
 AnalyzeTemporaryDtors: false
 FormatStyle:     file

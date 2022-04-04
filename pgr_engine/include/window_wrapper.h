@@ -8,7 +8,7 @@
 namespace pgre {
 struct window_dimensions_t
 {
-    int width, height;
+    float width, height;
 };
 
 class window_t
