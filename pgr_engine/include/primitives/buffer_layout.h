@@ -5,7 +5,7 @@
 #include "buffer.h"
 #include "../shader_program.h"
 
-namespace pgre::gl_wrappers {
+namespace pgre::primitives {
 
 /**
  * @brief Holds all the information required for a call to glVertexAttribPointer.
@@ -69,4 +69,4 @@ public:
     [[nodiscard]] decltype(_elements.cend()) end() const {return _elements.cend();}
 };
 
-} // namespace pgre::gl_wrappers
+} // namespace pgre::primitives

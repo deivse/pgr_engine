@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace pgre::gl_wrappers {
+namespace pgre::primitives {
 
 /**
  * @brief Thin wrapper for an OpenGL buffer object.
@@ -116,4 +116,4 @@ struct buffer_t
 using vertex_buffer_t = buffer_t<GL_ARRAY_BUFFER>;
 using index_buffer_t = buffer_t<GL_ELEMENT_ARRAY_BUFFER>;
 
-} // namespace pgre::gl_wrappers
+} // namespace pgre::primitives

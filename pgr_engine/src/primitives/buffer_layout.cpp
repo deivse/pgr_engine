@@ -1,6 +1,6 @@
-#include <gl_wrappers/buffer_layout.h>
+#include <primitives/buffer_layout.h>
 
-namespace pgre::gl_wrappers {
+namespace pgre::primitives {
 
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 buffer_element_t::buffer_element_t(GLenum type, uintptr_t items_per_vertex,
@@ -55,4 +55,4 @@ buffer_layout_t::buffer_layout_t(const shader_program_t& shader,
     _stride = offset;
 }
 
-} // namespace pgre::gl_wrappers
+} // namespace pgre::primitives

@@ -6,9 +6,9 @@
 #include <glad/glad.h>
 
 #include "buffer.h"
-#include "gl_wrappers/buffer_layout.h"
+#include "primitives/buffer_layout.h"
 
-namespace pgre::gl_wrappers {
+namespace pgre::primitives {
 
 /**
  * @brief Wrapper for a VAO and a buffer layout builder.
@@ -66,4 +66,4 @@ public:
     }
 };
 
-} // namespace pgre::gl_wrappers
+} // namespace pgre::primitives

@@ -1,6 +1,6 @@
-#include <gl_wrappers/vertex_array.h>
+#include <primitives/vertex_array.h>
 
-namespace pgre::gl_wrappers {
+namespace pgre::primitives {
 
 vertex_array_t::vertex_array_t() { glGenVertexArrays(1, &_gl_id); }
 vertex_array_t::~vertex_array_t() { glDeleteVertexArrays(1, &_gl_id); }
@@ -32,4 +32,4 @@ void vertex_array_t::set_index_buffer(const std::shared_ptr<index_buffer_t>& buf
     _index_buffer = buffer;
 }
 
-} // namespace pgre::gl_wrappers
+} // namespace pgre::primitives
