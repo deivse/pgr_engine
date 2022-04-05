@@ -2,8 +2,9 @@
 
 #include <glad/glad.h>
 #include <string>
+
+#include <assets/shader_program.h>
 #include "buffer.h"
-#include "../shader_program.h"
 
 namespace pgre::primitives {
 

@@ -1,4 +1,4 @@
-#include <shader_program.h>
+#include <assets/shader_program.h>
 
 namespace pgre {
 shader_attrib_inactive_error::shader_attrib_inactive_error(const std::string& what)
@@ -50,7 +50,7 @@ namespace {
 
 bool shader_program_t::compile_shader_program(std::map<uint32_t, std::stringstream>& source_map) const{
     int success = 0;
-    std::vector<int> compiled_shader_ids;
+    std::vector<int> compiled_shader_ids; //FIXME: heap bad, vector bad, stack good, array good
     for (const auto& glID_src : source_map) {
         GLint shader_id = glCreateShader(glID_src.first);
         auto shader_src_str = glID_src.second.str();

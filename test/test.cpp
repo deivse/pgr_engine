@@ -6,7 +6,7 @@
 
 #include <app.h>
 #include <glm/glm.hpp>
-#include <shader_program.h>
+#include <assets/shader_program.h>
 #include <layers.h>
 #include <layers/imgui_layer.h>
 #include <layers/basic_layer.h>
@@ -20,7 +20,6 @@ std::stringstream shader_source(R"(
 shader::vertex {
     #version 400
     uniform mat4 PVMmatrix;
-    uniform mat4 Vmatrix;
     in vec3 position;
     in vec4 color;
 
@@ -29,7 +28,7 @@ shader::vertex {
     smooth out vec2 v_tex_coord;
     
     void main() {
-	  gl_Position = Vmatrix * vec4(position, 1.0);
+	  gl_Position = PVMmatrix * vec4(position, 1.0);
 	  theColor = color;
       ver_position = gl_Position;
       v_tex_coord = position.xy / 2 + 0.5 ;
@@ -57,8 +56,12 @@ class test_layer: public pgre::layers::basic_layer_t {
     std::shared_ptr<glwr::vertex_buffer_t> buffer;
     glm::vec3 color{1.0, 0.0, 0.0};
     pgre::camera_t camera;
-    std::shared_ptr<texture2D_t> texture = std::make_shared<texture2D_t>(
+
+    std::shared_ptr<texture2D_t> test_texture = std::make_shared<texture2D_t>(
       "/home/deivse/Documents/sem6/PGR/desiaiva_framework/test/assets/test_texture.png",
+      GL_NEAREST);
+    std::shared_ptr<texture2D_t> cross_texture = std::make_shared<texture2D_t>(
+      "/home/deivse/Documents/sem6/PGR/desiaiva_framework/test/assets/cross.png",
       GL_NEAREST);
 
     static constexpr float camera_speed = 2.;
@@ -118,12 +121,15 @@ public:
         auto win_dims = pgre::app_t::get_window().get_dimensions();
         
         auto projectionMatrix = glm::perspective(glm::radians(60.0F), win_dims.width/win_dims.height, 0.1F, 10.0F);
-        glm::mat4 PVM = projectionMatrix * camera.get_view_matrix();
+        glm::mat4 PV = projectionMatrix * camera.get_view_matrix();
 
-        program.set_uniform("Vmatrix", PVM);
+        program.set_uniform("PVMmatrix", PV);
 
-        texture->bind(0);
         vao->bind();
+        test_texture->bind(0);
+        glDrawArrays(GL_TRIANGLES, 0, buffer->get_size()/sizeof(float));
+        cross_texture->bind(0);
+        program.set_uniform("PVMmatrix", glm::translate(PV, {-0.25, -0.25, 0.5}));
         glDrawArrays(GL_TRIANGLES, 0, buffer->get_size()/sizeof(float));
     }
 

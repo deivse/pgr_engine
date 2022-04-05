@@ -1,5 +1,6 @@
 
-#include "events/keyboard_events.h"
+#include <events/keyboard_events.h>
+#include <renderer/renderer.h>
 #include <app.h>
 
 namespace pgre {
@@ -51,6 +52,8 @@ app_t::app_t(uint16_t width, uint16_t height, const std::string& title, bool vsy
     err::setup_ogl_debug_callback();
 
     if (vsync) glfwSwapInterval(1);
+
+    renderer::init();
 
     register_event_handlers();
     
