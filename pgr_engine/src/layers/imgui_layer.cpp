@@ -9,14 +9,14 @@ imgui_layer_t::imgui_layer_t(std::string_view name, bool enable_docking,
     _enable_docking(enable_docking),
     _enable_viewports(enable_viewports){};
 
-void imgui_layer_t::on_update(const delta_ms &delta) {
-    imgui::GetIO().DeltaTime = static_cast<float>(delta.count())/1000;
+void imgui_layer_t::on_update(const interval_t &delta) {
+    imgui::GetIO().DeltaTime = delta.seconds;
     begin_gui();
     on_gui_update(delta);
     end_gui();
 }
 
-void imgui_layer_t::on_gui_update(const delta_ms& /*unused*/){
+void imgui_layer_t::on_gui_update(const interval_t& /*unused*/){
     static bool open = true;
     imgui::ShowDemoWindow(&open);
 }

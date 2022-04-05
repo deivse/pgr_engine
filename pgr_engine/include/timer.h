@@ -2,6 +2,12 @@
 #include <chrono>
 
 namespace pgre {
+
+struct interval_t {
+    int64_t milliseconds;
+    float seconds;
+} __attribute__((aligned(16)));
+
 class timer_t
 {
     std::chrono::time_point<std::chrono::high_resolution_clock> _start_time;
@@ -9,7 +15,10 @@ class timer_t
 public:
     timer_t();
     void reset();
-    std::chrono::seconds seconds();
-    std::chrono::milliseconds milliseconds();
+    interval_t get_interval();
+    float get_seconds();
+    int64_t get_milliseconds();
 };
+
+
 } // namespace pgre

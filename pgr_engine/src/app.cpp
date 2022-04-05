@@ -24,6 +24,11 @@ namespace detail {
         }
     }
 
+    void setup_spdlog(const std::string& title) {
+        spdlog::set_default_logger(spdlog::stdout_color_mt(title));
+        spdlog::set_pattern("%^===[ %l ]===%$ %v");
+    }
+
     constexpr auto get_app
       = [](GLFWwindow* window) { return reinterpret_cast<app_t*>(glfwGetWindowUserPointer(window)); };
 } // namespace detail
@@ -32,23 +37,30 @@ app_t* app_t::_instance = nullptr; // NOLINT
 
 app_t::app_t(uint16_t width, uint16_t height, const std::string& title, bool vsync, uint8_t ogl_v_major,
              uint8_t ogl_v_minor) {
-    spdlog::set_default_logger(spdlog::stdout_color_mt(title));
-    spdlog::set_pattern("%^===[ %l ]===%$ %v");
+    debug_assert(!_instance, "Trying to create a second app_t instance");
+
+    detail::setup_spdlog(title);
 
     detail::init_glfw();
     detail::set_required_opengl_version(ogl_v_major, ogl_v_minor);
+
     _window = std::make_unique<pgre::window_t>(width, height, title);
-    glfwMakeContextCurrent(_window->get_native());
+    _window->make_context_current();
+
     detail::load_gl_funcs();
     err::setup_ogl_debug_callback();
+
     if (vsync) glfwSwapInterval(1);
-    glfwSetWindowUserPointer(_window->get_native(), this);
+
     register_event_handlers();
-    if (_instance) throw std::runtime_error("Trying to create a second app_t instance");
+    
     _instance = this;
 }
 
 void app_t::register_event_handlers() {
+    // set user data pointer to the app instance;
+    glfwSetWindowUserPointer(_window->get_native(), this);
+
     glfwSetCursorPosCallback(_window->get_native(), [](GLFWwindow* window, double x, double y) {
         cursor_pos_evt_t evt(x, y);
         detail::get_app(window)->on_event(evt);
@@ -108,7 +120,7 @@ void app_t::main_loop() {
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(native_window)) {
-        std::chrono::milliseconds delta = timer.milliseconds();
+        auto delta = timer.get_interval();
         timer.reset();
         for (auto&& layer : _layers) {
             layer->on_update(delta);

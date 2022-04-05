@@ -35,13 +35,13 @@ public:
     void on_attach() override;
     void on_detach() override;
 
-    void on_update(const delta_ms& delta) final;
+    void on_update(const interval_t& delta) final;
 
     /**
      * @brief Override this function to define your gui, and any update logic. 
      * It will be called on each update.
      */
-    virtual void on_gui_update(const delta_ms& delta);
+    virtual void on_gui_update(const interval_t& delta);
 };
 
 } // namespace pgre::layers

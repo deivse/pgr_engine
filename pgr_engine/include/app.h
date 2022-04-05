@@ -15,7 +15,6 @@
 #include "window_wrapper.h"
 
 namespace pgre {
-using delta_ms = std::chrono::milliseconds;
 
 namespace detail {
     /**

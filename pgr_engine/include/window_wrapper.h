@@ -13,7 +13,7 @@ struct window_dimensions_t
 
 class window_t
 {
-    GLFWwindow* _window = nullptr;
+    GLFWwindow* _window_ptr = nullptr;
 
 public:
     explicit window_t(GLFWwindow* window);
@@ -27,6 +27,7 @@ public:
     ~window_t();
 
     window_dimensions_t get_dimensions();
+    void make_context_current();
     GLFWwindow* get_native();
 };
 

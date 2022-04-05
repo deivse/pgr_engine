@@ -7,14 +7,17 @@ void timer_t::reset() {
     _start_time = std::chrono::high_resolution_clock::now();
 }
 
-std::chrono::seconds timer_t::seconds() {
-    return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now()
-                                                                 - _start_time);
+float timer_t::get_seconds() {
+    return static_cast<float>(get_milliseconds())/1000;
 }
 
-std::chrono::milliseconds timer_t::milliseconds() {
+int64_t timer_t::get_milliseconds() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()
-                                                                 - _start_time);
+                                                                 - _start_time).count();
+}
+
+interval_t timer_t::get_interval() {
+    return {get_milliseconds(), get_seconds()};
 }
 
 } // namespace pgre

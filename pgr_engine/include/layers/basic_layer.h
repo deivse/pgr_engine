@@ -5,6 +5,7 @@
 #include <string_view>
 
 #include "events/event.h"
+#include "timer.h"
 
 namespace pgre::layers {
 using delta_ms = std::chrono::milliseconds;
@@ -20,7 +21,7 @@ public:
 
     virtual void on_attach() {}
     virtual void on_detach() {}
-    virtual void on_update(const delta_ms& delta) {}
+    virtual void on_update(const interval_t& delta) {}
     /**
      * @brief Event handler/router.
      *

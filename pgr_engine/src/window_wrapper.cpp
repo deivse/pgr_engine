@@ -2,43 +2,47 @@
 
 namespace pgre
 {
-    window_t::window_t(GLFWwindow* window) : _window(window) {}
+    window_t::window_t(GLFWwindow* window) : _window_ptr(window) {}
     window_t::window_t(uint16_t width, uint16_t height, const std::string& title)
-      : _window(glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr)) {
-        if (!_window) {
+      : _window_ptr(glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr)) {
+        if (!_window_ptr) {
             glfwTerminate();
             throw std::runtime_error("Failed to create window.");
         }
     }
     
-    window_t::window_t(window_t&& other) noexcept : _window(other._window)
+    window_t::window_t(window_t&& other) noexcept : _window_ptr(other._window_ptr)
     {
-        other._window = nullptr;
+        other._window_ptr = nullptr;
     }
     
     window_t& window_t::operator = (window_t&& rhs) noexcept 
     {
-        this->_window = rhs._window;
-        rhs._window = nullptr;
+        this->_window_ptr = rhs._window_ptr;
+        rhs._window_ptr = nullptr;
         return *this;
     }
     
     window_t::~window_t()
     {
-        if (_window) glfwDestroyWindow(_window);
+        if (_window_ptr) glfwDestroyWindow(_window_ptr);
     }
 
     window_dimensions_t window_t::get_dimensions()
     {
         int x = 0;
         int y = 0;
-        glfwGetWindowSize(_window, &x, &y);
+        glfwGetWindowSize(_window_ptr, &x, &y);
         window_dimensions_t retval{static_cast<float>(x), static_cast<float>(y)};
         return retval;
+    }
+
+    void window_t::make_context_current(){
+        glfwMakeContextCurrent(_window_ptr);
     }
     
     GLFWwindow* window_t::get_native()
     {
-        return _window;
+        return _window_ptr;
     }
 } // namespace pgre

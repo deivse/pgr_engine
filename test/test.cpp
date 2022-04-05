@@ -109,10 +109,10 @@ public:
         program.set_uniform("u_texture", 0);
     }
 
-    void on_update(const pgre::layers::delta_ms& delta) override {
+    void on_update(const pgre::interval_t& delta) override {
         glClear(GL_COLOR_BUFFER_BIT);
 
-        process_input(delta.count()/1000.F);
+        process_input(delta.seconds);
         program.bind();
         //TODO: perspective
         auto win_dims = pgre::app_t::get_window().get_dimensions();
@@ -163,7 +163,7 @@ int main() {
     // spdlog::set_level(spdlog::level::warn);
     try {
         spdlog::set_level(spdlog::level::level_enum::trace);
-        pgre::app_t app(1280, 720, "tesst");
+        pgre::app_t app(1280, 720, "tesst", false);
         
         app.push_overlay(std::make_unique<imgui_overlay>());
         app.push_layer(std::make_unique<test_layer>());
