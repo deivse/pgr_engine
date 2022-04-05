@@ -1,3 +1,4 @@
+#include "error_handling.h"
 #include <assets/texture.h>
 
 #include <fmt/format.h>
@@ -25,6 +26,7 @@ texture2D_t::texture2D_t(const std::string& path, GLint upscaling_algo,
     if (!data) throw image_loading_error(fmt::format("Failed to load image at path {}", path));
     _width = width; 
     _height = height;
+    debug_assert(channels >=3, "Trying to load texture with unsupported number of channels");
 
     glCreateTextures(GL_TEXTURE_2D, 1, &_gl_id);
     glTextureStorage2D(_gl_id, 1, channels == 4 ? GL_RGBA8 : GL_RGB8, width, height); // TODO: mimmaps?

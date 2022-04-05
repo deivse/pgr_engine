@@ -123,11 +123,7 @@ void app_t::main_loop() {
 window_t& app_t::get_window() { return *(_instance->_window); }
 
 app_t& app_t::get_instance() {
-#ifndef pgre_DISABLE_DEBUG_CHECKS
-    if (!_instance) {
-        throw std::runtime_error("app_t::get_instance() called before creating an app instance.");
-    }
-#endif
+    debug_assert(_instance, "app_t::get_instance() called before creating an app instance.");
     return *_instance;
 }
 

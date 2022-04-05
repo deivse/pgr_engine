@@ -7,6 +7,10 @@ add_library(pgre STATIC ${headers} ${cpps} ${third_party_headers} ${third_party_
 
 set_property(TARGET pgre PROPERTY CXX_STANDARD 20)
 
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_compile_definitions(pgre PUBLIC "NPGR_DISABLE_DEBUG_CHECKS")
+endif()
+
 target_compile_definitions(pgre PUBLIC GLFW_INCLUDE_NONE)
 target_include_directories(pgre PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include 
                                        ${CMAKE_CURRENT_SOURCE_DIR}/third-party/imgui/include)
