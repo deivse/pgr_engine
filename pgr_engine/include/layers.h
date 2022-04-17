@@ -34,5 +34,8 @@ public:
         return _layers.rbegin();
     }
     [[nodiscard]] std::vector<std::unique_ptr<layers::basic_layer_t>>::const_reverse_iterator rend() const { return _layers.rend(); }
+
+    inline auto& operator[](size_t ix) { return _layers[ix]; }
+    inline auto size() { return _layers.size(); }
 };
 } // namespace pgre
