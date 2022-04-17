@@ -10,7 +10,7 @@ namespace pgre::primitives {
 /**
  * @brief Thin wrapper for an OpenGL buffer object.
  */
-template <GLenum binding_target>
+template <GLenum binding_target, typename DataTy>
 struct buffer_t
 {
     unsigned int _gl_id{};
@@ -47,8 +47,8 @@ struct buffer_t
      * @param data std::vector of bytes
      * @param usage OpenGL usage hint
      */
-    void set_data(std::vector<uint8_t>& data, GLenum usage = GL_STATIC_DRAW) {
-        buffer_t::set_data(static_cast<GLsizeiptr>(data.size()), data.data(), usage);
+    void set_data(std::vector<DataTy>& data, GLenum usage = GL_STATIC_DRAW) {
+        buffer_t::set_data(static_cast<GLsizeiptr>(data.size() * sizeof(DataTy)), data.data(), usage);
     }
 
     /**
@@ -87,8 +87,8 @@ struct buffer_t
      *
      * @param data std::vector of bytes
      */
-    void push_back(std::vector<uint8_t>& data) {
-        buffer_t::push_back(static_cast<GLsizeiptr>(data.size()), data.data());
+    void push_back(std::vector<DataTy>& data) {
+        buffer_t::push_back(static_cast<GLsizeiptr>(data.size() * sizeof(DataTy)), data.data());
     }
 
     /**
@@ -107,13 +107,17 @@ struct buffer_t
      * @brief Get the size, in bytes, of data currently in the buffer.
      */
     inline GLsizeiptr get_size() { return _current_data_offset; }
+
+    inline int get_count() {
+        return _current_data_offset / sizeof(DataTy);
+    }
     /**
      * @brief Get the buffer's actual size, in bytes.
      */
     inline GLsizeiptr get_allocated_size() { return _current_allocated_size; }
 };
 
-using vertex_buffer_t = buffer_t<GL_ARRAY_BUFFER>;
-using index_buffer_t = buffer_t<GL_ELEMENT_ARRAY_BUFFER>;
+using vertex_buffer_t = buffer_t<GL_ARRAY_BUFFER, uint8_t>;
+using index_buffer_t = buffer_t<GL_ELEMENT_ARRAY_BUFFER, GLuint>;
 
 } // namespace pgre::primitives
