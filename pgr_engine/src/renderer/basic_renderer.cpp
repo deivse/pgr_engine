@@ -12,6 +12,18 @@ void basic_renderer_t::init() {
 
 void basic_renderer_t::begin_scene(camera_t& camera) {}
 void basic_renderer_t::end_scene() {}
-void basic_renderer_t::submit() {}
+void basic_renderer_t::submit(std::shared_ptr<primitives::vertex_array_t> vao,
+                              std::shared_ptr<primitives::index_buffer_t> ix_buf,
+                              std::shared_ptr<material_t> material) {
+    vao->bind();
+    ix_buf->bind();
+    //TODO material;
+    glDrawElements(GL_TRIANGLES, ix_buf->get_count(), GL_UNSIGNED_INT, nullptr);
+
+#ifndef PGRE_DISABLE_DEBUG_CHECKS
+    vao->unbind();
+    ix_buf->unbind();
+#endif
+}
 
 }  // namespace pgre

@@ -6,12 +6,13 @@ namespace pgre {
     
     class basic_renderer_t : public renderer_i {
     public:
-        ~basic_renderer_t() override = default;
         void init() override;
         void begin_scene(camera_t& camera) override;
-        void submit() override;
+        void submit(std::shared_ptr<primitives::vertex_array_t> vao,
+                    std::shared_ptr<primitives::index_buffer_t> ix_buf,
+                    std::shared_ptr<material_t> material) override;
         void end_scene() override;
     };
-}
+}  // namespace pgre
 
 

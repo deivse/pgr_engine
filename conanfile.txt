@@ -8,6 +8,7 @@
  stb/cci.20210910
  libsquish/1.15
  spdlog/1.8.0
+ entt/3.9.0
 
  [generators]
  cmake

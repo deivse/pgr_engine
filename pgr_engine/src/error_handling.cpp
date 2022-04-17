@@ -107,7 +107,7 @@ void GLAPIENTRY gl_debug_msg_callback(GLenum source, GLenum type, GLuint id, GLe
 
 void glfw_error_callback(int err_code, const char* err_str) { spdlog::error("Error #{}: {}", err_code, err_str); }
 
-#ifndef NPGR_DISABLE_DEBUG_CHECKS
+#ifndef PGRE_DISABLE_DEBUG_CHECKS
 void setup_ogl_debug_callback() {
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(detail::gl_debug_msg_callback, 0);

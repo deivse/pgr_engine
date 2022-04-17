@@ -8,7 +8,7 @@ add_library(pgre STATIC ${headers} ${cpps} ${third_party_headers} ${third_party_
 set_property(TARGET pgre PROPERTY CXX_STANDARD 20)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_definitions(pgre PUBLIC "NPGR_DISABLE_DEBUG_CHECKS")
+    target_compile_definitions(pgre PUBLIC "PGRE_DISABLE_DEBUG_CHECKS")
 endif()
 
 target_compile_definitions(pgre PUBLIC GLFW_INCLUDE_NONE)
