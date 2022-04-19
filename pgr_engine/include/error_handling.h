@@ -10,7 +10,11 @@ namespace err {
 
     void glfw_error_callback(int err_code, const char* err_str);
 
+#ifndef PGRE_DISABLE_DEBUG_CHECKS
     void setup_ogl_debug_callback();
+#else 
+    constexpr auto setup_ogl_debug_callback = [](){};
+#endif
 
 } // namespace err
 
@@ -32,9 +36,8 @@ constexpr auto debug_assert = [](bool condition, const char* err_msg) {
 };
 
 #ifdef PGRE_DISABLE_DEBUG_CHECKS
-    #define debug_assert
-    #define debug_assert_any
-    #define setup_ogl_debug_callback
+    #define debug_assert(x...)
+    #define debug_assert_any(x...)
 #endif
 
 } // namespace pgre

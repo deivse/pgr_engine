@@ -1,7 +1,3 @@
-#include "events/keyboard_events.h"
-#include "input/keyboard.h"
-#include "assets/texture.h"
-#include "renderer/camera.h"
 #include <spdlog/spdlog.h>
 
 #include <app.h>
@@ -11,6 +7,12 @@
 #include <layers/imgui_layer.h>
 #include <layers/basic_layer.h>
 #include <primitives/vertex_array.h>
+#include <events/keyboard_events.h>
+#include <input/keyboard.h>
+#include <assets/texture.h>
+#include <renderer/camera.h>
+#include <scene/scene.h>
+#include <scene/entity.h>
 
 using pgre::assets::texture2D_t;
 
@@ -146,11 +148,20 @@ public:
     }
 };
 
-class test_layer_2: public pgre::layers::basic_layer_t {
+struct test_component_t {
+    float vel;
+};
 
+class test_layer_2: public pgre::layers::basic_layer_t {
+    pgre::scene::scene_t scene;
 public:
     test_layer_2(): pgre::layers::basic_layer_t("test_layer_2") {};
 
+    void on_attach() override {
+        auto entity = scene.create_entity();
+        auto x = entity.add_component<test_component_t>();
+        x.vel = 0.4;
+    }
 
     bool on_event(pgre::event_t& evt) override{
         pgre::event_dispatcher_t ev_d(evt);
