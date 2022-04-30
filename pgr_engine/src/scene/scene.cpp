@@ -1,3 +1,4 @@
+#include "renderer/renderer.h"
 #include <filesystem>
 #include <scene/scene.h>
 
@@ -5,125 +6,277 @@
 #include <scene/entity.h>
 
 #include <assimp/Importer.hpp>
+#include <assimp/scene.h>
 #include <assimp/postprocess.h>
+
+namespace {
+    glm::vec3 vec3_cast(const aiColor3D &v) { return glm::vec3(v.r, v.g, v.b); } 
+    glm::vec3 vec3_cast(const aiVector3D &v) { return glm::vec3(v.x, v.y, v.z); } 
+    glm::vec2 vec2_cast(const aiVector3D &v) { return glm::vec2(v.x, v.y); } // it's aiVector3D because assimp's texture coordinates use that
+    glm::quat quat_cast(const aiQuaternion &q) { return glm::quat(q.w, q.x, q.y, q.z); } 
+    glm::mat4 mat4_cast(const aiMatrix4x4 &m) { return glm::transpose(glm::make_mat4(&m.a1)); }
+}
 
 namespace pgre::scene {
 
-scene_t::scene_t() = default;
+scene_t::scene_t() {
+    _registry.on_destroy<component::camera_component_t>()
+      .connect<&scene_t::on_camera_component_remove>(this);
+}
 
-entity_t scene_t::create_entity(const std::string& name) {
+entity_t scene_t::create_entity(const std::string& name, const glm::mat4& transform) {
     entity_t entity = {_registry.create(), this};
     entity.add_component<component::tag_t>(name);
-    entity.add_component<component::transform_t>();
+    entity.add_component<component::transform_t>(transform);
     entity.add_component<component::hierarchy_t>();
     return entity;
 }
 
-std::optional<entity_t> load_from_file (const std::filesystem::path& scene_file) {
+void scene_t::set_active_camera_entity(entt::entity camera_owner){
+    entity_t e{camera_owner, this};
+    if (!e.has_component<component::camera_component_t>()){
+        throw std::runtime_error(
+          "set_active_camera_entity called with an entity not owning a camera component.");
+    }
+    active_camera_owner = camera_owner;
+}
+
+std::optional<entity_t> scene_t::add_from_file (const std::filesystem::path& scene_file) {
     static Assimp::Importer importer;
+    if (scene_file.extension() != ".dae") throw std::runtime_error("Collada is the only scene format currently supported.");
     importer.SetPropertyInteger(AI_CONFIG_PP_PTV_NORMALIZE, 1);
 
-
-    const aiScene* scn
+    const aiScene* ai_scene
       = importer.ReadFile(scene_file.c_str(), 0 | aiProcess_Triangulate | aiProcess_GenSmoothNormals
                                                 | aiProcess_JoinIdenticalVertices);
 
     // abort if the loader fails
-    if (scn == NULL) {
+    if (ai_scene == NULL) {
         spdlog::error("Scene/object failed: {}", importer.GetErrorString());
         return std::nullopt;
     }
 
-    // in this phase we know we have one mesh in our loaded scene, we can directly copy its data to
-    // OpenGL ...
-    // const aiMesh* mesh = scn->mMeshes[0];
+    debug_assert(ai_scene->mNumTextures == 0, "Wtf, how are there embedded textures in a Collada file...");
 
-    // *geometry = new MeshGeometry;
+    ////// MATERIALS //////
+    std::vector<std::shared_ptr<phong_material_t>> materials(ai_scene->mNumMaterials, nullptr);
+    for (unsigned int i = 0; i < ai_scene->mNumMaterials; i++){
+        aiMaterial& ai_material = *ai_scene->mMaterials[i];
+        static aiColor3D ambient{0.0f}, diffuse{0.0f}, specular{0.0f}, transparent{0.0f};
+        float shininess{}, transparency{};
+        if (ai_material.Get(AI_MATKEY_COLOR_AMBIENT, ambient) != AI_SUCCESS)
+            spdlog::error("Import: Failed to get material ambient color.");
+        if (ai_material.Get(AI_MATKEY_COLOR_DIFFUSE, diffuse) != AI_SUCCESS)
+            spdlog::error("Import: Failed to get material diffuse color.");
+        if (ai_material.Get(AI_MATKEY_COLOR_SPECULAR, specular) != AI_SUCCESS)
+            spdlog::error("Import: Failed to get material specular color.");
+        if (ai_material.Get(AI_MATKEY_SHININESS, shininess) != AI_SUCCESS)
+            spdlog::error("Import: Failed to get material shininess.");
+            
+        // if (ai_material.Get(AI_MATKEY_OPACITY, transparency) == AI_SUCCESS){ //TODO: transparency not working
+        //     transparency = 1.0f - transparency;
+        // } else {
+        //     if (ai_material.Get(AI_MATKEY_TRANSPARENCYFACTOR, transparency) != AI_SUCCESS)
+        //         spdlog::error("Import: Failed to get material opacity and transparency.");
+        // }
 
-    // // vertex buffer object, store all vertex positions and normals
-    // glGenBuffers(1, &((*geometry)->vertexBufferObject));
-    // glBindBuffer(GL_ARRAY_BUFFER, (*geometry)->vertexBufferObject);
-    // glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float) * mesh->mNumVertices, 0,
-    //              GL_STATIC_DRAW); // allocate memory for vertices, normals, and texture coordinates
-    // // first store all vertices
-    // glBufferSubData(GL_ARRAY_BUFFER, 0, 3 * sizeof(float) * mesh->mNumVertices, mesh->mVertices);
-    // // then store all normals
-    // glBufferSubData(GL_ARRAY_BUFFER, 3 * sizeof(float) * mesh->mNumVertices,
-    //                 3 * sizeof(float) * mesh->mNumVertices, mesh->mNormals);
+        std::shared_ptr<texture2D_t> color_texture{nullptr};
+        if (ai_material.GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+            aiString path;
+            if (ai_material.GetTexture(aiTextureType_DIFFUSE, 0, &path, nullptr, nullptr, nullptr,
+                                       nullptr, nullptr)
+                == AI_SUCCESS) {
+                color_texture = std::make_shared<texture2D_t>(std::filesystem::absolute(scene_file.parent_path()) / path.C_Str());
+            } else {
+                spdlog::error("Import: failed to get diffuse texture for material.");
+            }
+        }
 
-    // // just texture 0 for now
-    // float* textureCoords = new float[2 * mesh->mNumVertices]; // 2 floats per vertex
-    // float* currentTextureCoord = textureCoords;
+        if (color_texture) {
+            materials[i] = std::make_shared<phong_material_t>(
+              std::move(color_texture), glm::vec3{diffuse.r, diffuse.g, diffuse.b},
+              glm::vec3{ambient.r, ambient.g, ambient.b},
+              glm::vec3{specular.r, specular.g, specular.b}, shininess, transparency);
+        } else {
+            materials[i] = std::make_shared<phong_material_t>(
+                  glm::vec3{diffuse.r, diffuse.g, diffuse.b},
+                  glm::vec3{ambient.r, ambient.g, ambient.b},
+                  glm::vec3{specular.r, specular.g, specular.b}, shininess, transparency);
+        }
+    }
+    
+    ////// MESHES (VAOS) //////
+    std::vector<std::shared_ptr<primitives::vertex_array_t>> vertex_arrays(ai_scene->mNumMeshes);
+    for (unsigned int i = 0; i < ai_scene->mNumMeshes; i++){
+        auto vertex_buffer = std::make_shared<primitives::vertex_buffer_t>();
+        auto index_buffer = std::make_shared<primitives::index_buffer_t>();
 
-    // // copy texture coordinates
-    // aiVector3D vect;
+        auto* ai_mesh = ai_scene->mMeshes[i];
 
-    // if (mesh->HasTextureCoords(0)) {
-    //     // we use 2D textures with 2 coordinates and ignore the third coordinate
-    //     for (unsigned int idx = 0; idx < mesh->mNumVertices; idx++) {
-    //         vect = (mesh->mTextureCoords[0])[idx];
-    //         *currentTextureCoord++ = vect.x;
-    //         *currentTextureCoord++ = vect.y;
-    //     }
-    // }
+        if (!ai_mesh->HasNormals()) throw std::runtime_error("Mesh has no normals!");
+        bool tex_coords = ai_mesh->HasTextureCoords(0);
 
-    // // finally store all texture coordinates
-    // glBufferSubData(GL_ARRAY_BUFFER, 6 * sizeof(float) * mesh->mNumVertices,
-    //                 2 * sizeof(float) * mesh->mNumVertices, textureCoords);
+        /*                            \/ -- position + normals                                        .*/
+        uint8_t floats_per_vertex = (6 + (tex_coords ? 2 : 0));
+        std::vector<float> interleaved_data(floats_per_vertex * ai_mesh->mNumVertices); 
 
-    // // copy all mesh faces into one big array (assimp supports faces with ordinary number of
-    // // vertices, we use only 3 -> triangles)
-    // unsigned int* indices = new unsigned int[mesh->mNumFaces * 3];
-    // for (unsigned int f = 0; f < mesh->mNumFaces; ++f) {
-    //     indices[f * 3 + 0] = mesh->mFaces[f].mIndices[0];
-    //     indices[f * 3 + 1] = mesh->mFaces[f].mIndices[1];
-    //     indices[f * 3 + 2] = mesh->mFaces[f].mIndices[2];
-    // }
+        for (size_t vertex_ix = 0; vertex_ix < ai_mesh->mNumVertices; vertex_ix++){
+            memcpy(interleaved_data.data()+vertex_ix*floats_per_vertex, &ai_mesh->mVertices[vertex_ix], 3*sizeof(float));
+            memcpy(interleaved_data.data()+vertex_ix*floats_per_vertex+3, &ai_mesh->mNormals[vertex_ix], 3*sizeof(float));
+            if (tex_coords) {
+                interleaved_data[vertex_ix*floats_per_vertex+6] = ai_mesh->mTextureCoords[0][vertex_ix].x;
+                interleaved_data[vertex_ix*floats_per_vertex+7] = ai_mesh->mTextureCoords[0][vertex_ix].y;
+            }
+        }
 
-    // // copy our temporary index array to OpenGL and free the array
-    // glGenBuffers(1, &((*geometry)->elementBufferObject));
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (*geometry)->elementBufferObject);
-    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * sizeof(unsigned) * mesh->mNumFaces, indices,
-    //              GL_STATIC_DRAW);
+        vertex_buffer->set_data(interleaved_data.size() *sizeof(float), interleaved_data.data());
 
-    // delete[] indices;
+        auto layout = primitives::buffer_layout_t( // INTERLEAVED!!!
+          phong_material_t::get_shader_s(),
+          tex_coords
+            ? std::initializer_list<primitives::buffer_element_t>{{GL_FLOAT, 3, "position"},
+                                                                  {GL_FLOAT, 3, "normal"},
+                                                                  {GL_FLOAT, 2, "tex_coords"}}
+            : std::initializer_list<primitives::buffer_element_t>{{GL_FLOAT, 3, "position"},
+                                                                  {GL_FLOAT, 3, "normal"}});
 
-    // // copy the material info to MeshGeometry structure
-    // const aiMaterial* mat = scn->mMaterials[mesh->mMaterialIndex];
-    // aiColor4D color;
-    // aiString name;
-    // aiReturn retValue = AI_SUCCESS;
+        std::vector<unsigned int> indices(ai_mesh->mNumFaces * 3);
+        for (unsigned int face_ix = 0; face_ix < ai_mesh->mNumFaces; face_ix++) {
+            debug_assert(ai_mesh->mFaces[face_ix].mNumIndices == 3, "Sorry to say bro... Non triangular mesh :(");
+            memcpy(indices.data() + static_cast<size_t>(face_ix) * 3,
+                   ai_mesh->mFaces[face_ix].mIndices, 3 * sizeof(unsigned int));
+        }
+        index_buffer->set_data(indices);
 
-    // // Get returns: aiReturn_SUCCESS 0 | aiReturn_FAILURE -1 | aiReturn_OUTOFMEMORY -3
-    // mat->Get(AI_MATKEY_NAME,
-    //          name); // may be "" after the input mesh processing. Must be aiString type!
+        vertex_arrays[i] = std::make_shared<primitives::vertex_array_t>();
+        vertex_arrays[i]->set_index_buffer(index_buffer);
+        vertex_arrays[i]->add_vertex_buffer(vertex_buffer, layout);
+    }
 
-    // if ((retValue = aiGetMaterialColor(mat, AI_MATKEY_COLOR_DIFFUSE, &color)) != AI_SUCCESS)
-    //     color = aiColor4D(0.0f, 0.0f, 0.0f, 0.0f);
+    ////// NODES (ENTITIES) //////
+    auto* ai_root = ai_scene->mRootNode;
+    entity_t root = this->create_entity(ai_root->mName.C_Str(), glm::mat4{1.0f});
+    if (ai_root->mNumMeshes != 0){
+        root.add_component<component::mesh_t>(
+          vertex_arrays[ai_root->mMeshes[0]],
+          materials[ai_scene->mMeshes[ai_root->mMeshes[0]]->mMaterialIndex]);
+    }
 
-    // glGenVertexArrays(1, &((*geometry)->vertexArrayObject));
-    // glBindVertexArray((*geometry)->vertexArrayObject);
+    for (unsigned int child_ix = 0; child_ix < ai_root->mNumChildren; child_ix++) {
+        hierarchy_import_rec(root, ai_root->mChildren[child_ix], glm::mat4{1.0f}, materials, vertex_arrays, ai_scene);
+    }
 
-    // glBindBuffer(
-    //   GL_ELEMENT_ARRAY_BUFFER,
-    //   (*geometry)->elementBufferObject); // bind our element array buffer (indices) to vao
-    // glBindBuffer(GL_ARRAY_BUFFER, (*geometry)->vertexBufferObject);
+    for (unsigned int i = 0; i < ai_scene->mNumLights; i++){
+        auto* ai_light = ai_scene->mLights[i];
+        auto named = _registry.view<component::tag_t>();
+        entt::entity light_owner = entt::null;
+        for (auto entity: named){
+            if (_registry.get<component::tag_t>(entity).tag == ai_light->mName.C_Str()) {
+                light_owner = entity;
+                break;
+            }
+        }
+        debug_assert(light_owner != entt::null, "Each light was supposed to have a node...");
+        auto light_entity = entity_t{light_owner, this};
+        switch (ai_light->mType) {
+            case aiLightSource_DIRECTIONAL:
+                light_entity.add_component<component::sun_light_t>(
+                  vec3_cast(ai_light->mColorAmbient), vec3_cast(ai_light->mColorDiffuse),
+                  vec3_cast(ai_light->mColorSpecular), vec3_cast(ai_light->mDirection));
+                break;
+            case aiLightSource_POINT:
+                light_entity.add_component<component::point_light_t>(
+                  vec3_cast(ai_light->mColorAmbient), vec3_cast(ai_light->mColorDiffuse),
+                  vec3_cast(ai_light->mColorSpecular),
+                  glm::vec3{ai_light->mAttenuationConstant, ai_light->mAttenuationLinear,
+                            ai_light->mAttenuationQuadratic});
+                break;
+            case aiLightSource_SPOT:
+                light_entity.add_component<component::spot_light_t>(
+                  vec3_cast(ai_light->mColorAmbient), vec3_cast(ai_light->mColorDiffuse),
+                  vec3_cast(ai_light->mColorSpecular), vec3_cast(ai_light->mDirection),
+                  ai_light->mAngleOuterCone,
+                  0.5f * (ai_light->mAngleOuterCone / ai_light->mAngleInnerCone));
+                break;
+            default:
+                light_entity.destroy();
+                spdlog::warn("Trying to import unsupported light type.");
+                break;
+        }
+    }
 
-    // glEnableVertexAttribArray(shader.posLocation);
-    // glVertexAttribPointer(shader.posLocation, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    return root;
+}
 
-    // glDisableVertexAttribArray(shader.colorLocation);
-    // // following line is problematic on AMD/ATI graphic cards
-    // // -> if you see black screen (no objects at all) than try to set color manually in vertex
-    // // shader to see at least something
-    // glVertexAttrib3f(shader.colorLocation, color.r, color.g, color.b);
-    // CHECK_GL_ERROR();
+void scene_t::hierarchy_import_rec(
+  entity_t& parent, aiNode* ai_node, glm::mat4 acc_transform,
+  std::vector<std::shared_ptr<phong_material_t>>& materials,
+  std::vector<std::shared_ptr<primitives::vertex_array_t>>& vertex_arrays, const aiScene* ai_scene) 
+{
+    auto transform = acc_transform * mat4_cast(ai_node->mTransformation);
+    auto new_entity = this->create_entity(ai_node->mName.C_Str(), transform);
+    parent.add_child(new_entity);
+    
+    if (ai_node->mNumMeshes != 0){
+        new_entity.add_component<component::mesh_t>(
+          vertex_arrays[ai_node->mMeshes[0]],
+          materials[ai_scene->mMeshes[ai_node->mMeshes[0]]->mMaterialIndex]);
+    }
 
-    // glBindVertexArray(0);
+    for (unsigned int child_ix = 0; child_ix < ai_node->mNumChildren; child_ix++) {
+        hierarchy_import_rec(new_entity, ai_node->mChildren[child_ix], transform, materials, vertex_arrays, ai_scene);
+    }
+}
 
-    // (*geometry)->numTriangles = mesh->mNumFaces;
+std::pair<std::shared_ptr<camera_t>, const glm::mat4&> scene_t::get_active_camera() const {
+    return std::pair<std::shared_ptr<camera_t>, const glm::mat4&>{
+      _registry.get<component::camera_component_t>(active_camera_owner).camera,
+      _registry.get<component::transform_t>(active_camera_owner)};
+}
 
-    // return true;
+
+void scene_t::update(const interval_t& delta){
+    /* -------- TODO: -----------
+        -update all updatable components
+    */
+    _registry.view<component::script_component_t>().each([&delta](auto /*entity*/, component::script_component_t& script_c){
+        script_c.update(delta);
+    });
+}
+    
+void scene_t::render() {
+    if (active_camera_owner == entt::null) return;
+    renderer::begin_scene(*this);
+    auto view = _registry.view<component::transform_t, component::mesh_t>();
+    for (entt::entity entity: view ){
+        auto& mesh_component = _registry.get<component::mesh_t>(entity);
+
+        // auto color = mesh_component.material->get_diffuse(); //TODO:DEBUG
+        // spdlog::info("Submitting to render, diffuse color: {} {} {}", color.r, color.g, color.b);
+
+        renderer::submit(_registry.get<component::transform_t>(entity), mesh_component.v_array, mesh_component.material);
+    }
+    renderer::end_scene();
+}
+
+scene_lights_t& scene_t::get_lights(){
+    _lights.point_lights.clear();
+    _lights.sun_lights.clear();
+    _lights.spot_lights.clear();
+
+    _registry.view<component::sun_light_t>().each(
+      [this](auto entity, component::sun_light_t& component) {
+          _lights.sun_lights.push_back(&component);
+      });
+    _registry.view<component::point_light_t>().each(
+      [this](auto entity, component::point_light_t& component) {
+          _lights.point_lights.push_back(&component);
+      });
+    _registry.view<component::spot_light_t>().each(
+      [this](auto entity, component::spot_light_t& component) {
+          _lights.spot_lights.push_back(&component);
+      });
+    return _lights;
 }
 
 }  // namespace pgre::scene

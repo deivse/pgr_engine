@@ -3,7 +3,7 @@
 #include <glad/glad.h>
 #include <string>
 
-#include <assets/shader_program.h>
+#include <primitives/shader_program.h>
 #include "buffer.h"
 
 namespace pgre::primitives {
@@ -64,7 +64,7 @@ public:
      * @brief Enables vertex attrib array, and calls glVertexAttribPointer for each element.
      * @warning A VAO and buffer must be BOUND before calling this!
      */
-    void enable_and_point();
+    void enable_and_point() const;
     
     [[nodiscard]] decltype(_elements.cbegin()) begin() const {return _elements.cbegin();}
     [[nodiscard]] decltype(_elements.cend()) end() const {return _elements.cend();}

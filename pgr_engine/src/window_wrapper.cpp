@@ -28,13 +28,12 @@ namespace pgre
         if (_window_ptr) glfwDestroyWindow(_window_ptr);
     }
 
-    window_dimensions_t window_t::get_dimensions()
+    glm::vec2 window_t::get_dimensions()
     {
         int x = 0;
         int y = 0;
         glfwGetWindowSize(_window_ptr, &x, &y);
-        window_dimensions_t retval{static_cast<float>(x), static_cast<float>(y)};
-        return retval;
+        return {static_cast<float>(x), static_cast<float>(y)};
     }
 
     void window_t::make_context_current(){

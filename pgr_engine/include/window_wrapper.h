@@ -1,15 +1,12 @@
 #pragma once
 
+#include <glm/ext/vector_float2.hpp>
 #include <string>
 #include <stdexcept>
 
 #include <GLFW/glfw3.h>
 
 namespace pgre {
-struct window_dimensions_t
-{
-    float width, height;
-};
 
 class window_t
 {
@@ -26,7 +23,7 @@ public:
 
     ~window_t();
 
-    window_dimensions_t get_dimensions();
+    glm::vec2 get_dimensions();
     void make_context_current();
     GLFWwindow* get_native();
 };

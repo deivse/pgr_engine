@@ -33,7 +33,7 @@ public:
      * @param buffer
      * @param layout
      */
-    void add_vertex_buffer(const std::shared_ptr<vertex_buffer_t>& buffer, buffer_layout_t& layout);
+    vertex_array_t& add_vertex_buffer(const std::shared_ptr<vertex_buffer_t>& buffer, const buffer_layout_t& layout);
     /**
      * @brief Associates a buffer layout with the vertex array and the buffer, stores the
      * buffer pointer cpu-side in the vertex_array_t object.
@@ -41,14 +41,14 @@ public:
      * @param buffer
      * @param layout
      */
-    void add_vertex_buffer(const std::shared_ptr<vertex_buffer_t>& buffer, buffer_layout_t&& layout);
+    vertex_array_t& add_vertex_buffer(const std::shared_ptr<vertex_buffer_t>& buffer, buffer_layout_t&& layout);
     /**
      * @brief Associates an index buffer with this VAO and stores the
      * buffer pointer cpu-side in the vertex_array_t object.
      * 
      * @param buffer 
      */
-    void set_index_buffer(const std::shared_ptr<index_buffer_t>& buffer);
+    vertex_array_t& set_index_buffer(const std::shared_ptr<index_buffer_t>& buffer);
 
     /**
      * @brief Binds the VAO

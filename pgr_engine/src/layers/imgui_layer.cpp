@@ -29,7 +29,7 @@ void imgui_layer_t::begin_gui() {
 void imgui_layer_t::end_gui() {
     ImGuiIO& io = ImGui::GetIO();
     auto dimensions = app_t::get_window().get_dimensions();
-    io.DisplaySize = ImVec2(static_cast<float>(dimensions.width), static_cast<float>(dimensions.height));
+    io.DisplaySize = ImVec2{dimensions.x, dimensions.y};
     
     // Rendering
 	ImGui::Render();

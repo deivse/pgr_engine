@@ -7,14 +7,22 @@
 
 namespace pgre::component {
 
-struct transform_t
+class transform_t
 {
-    glm::mat4 transform;
-    transform_t(const glm::mat4& transform) : transform(transform) {}
-    transform_t() : transform(glm::mat4(1)) {}
+    glm::mat4 _transform;
 
-    operator glm::mat4&() { return transform; }
-    operator const glm::mat4&() const { return transform; }
+public:
+    transform_t(const glm::mat4& transform) : _transform(transform) {}
+    transform_t() : _transform(glm::mat4(1)) {}
+
+    void update(const glm::mat4& transform) {
+        _transform = transform;
+        //TODO: update children
+    }
+    const glm::mat4& get() {return _transform;}
+
+    operator glm::mat4&() { return _transform; }
+    operator const glm::mat4&() const { return _transform; }
 };
 
 struct tag_t

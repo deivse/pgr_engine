@@ -8,7 +8,6 @@
 #include "timer.h"
 
 namespace pgre::layers {
-using delta_ms = std::chrono::milliseconds;
 
 class basic_layer_t
 {

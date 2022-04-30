@@ -5,6 +5,12 @@
 #include <components/hierarchy_component.h>
 #include <entt/entt.hpp>
 
+namespace pgre::component {
+class script_component_t;
+}
+namespace pgre {
+class entity_script_t;
+}
 namespace pgre::scene {
 
 /**
@@ -61,10 +67,18 @@ public:
 
     ///////////// COMPONENT HELEPERS //////////////
 
+    /**
+     * @brief Adds a script to this entity.
+     * 
+     * @param script 
+     * @return component::script_component_t& 
+     */
+    component::script_component_t& add_script(std::unique_ptr<entity_script_t> script);
+
     template <typename ComponentTy>
     bool has_component() {
         return scene->_registry.all_of<ComponentTy>(handle);
-    }
+    } 
 
     /**
      * @brief Get a component from the entity
@@ -131,7 +145,7 @@ public:
     operator entt::entity() const { return handle; }
 
     /**
-     * @brief Destroys (and invalidates) the entity. 
+     * @brief Destroys (and invalidates) the entity == removes from scene. 
      * 
      */
     void destroy() {

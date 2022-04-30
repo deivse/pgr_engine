@@ -23,6 +23,10 @@ Checks:            '*,-llvm-namespace-comment,
                     -llvm-header-guard,
                     -llvm-include-order,
                     -llvm-header-guard,
+                    -readability-identifier-length,
+                    -readability-uppercase-literal-suffix,
+                    -hicpp-uppercase-literal-suffix,
+                    -cppcoreguidelines-pro-type-union-access,
                     ''
 AnalyzeTemporaryDtors: false
 FormatStyle:     file

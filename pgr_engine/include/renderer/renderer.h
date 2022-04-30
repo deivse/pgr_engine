@@ -1,8 +1,8 @@
 #pragma once
 
 #include "./camera.h"
-#include "primitives/vertex_array.h"
-#include "renderer/material.h"
+#include <assets/material.h>
+#include <primitives/vertex_array.h>
 #include <memory>
 #include <utility>
 
@@ -12,29 +12,30 @@ namespace pgre {
     public:
         virtual ~renderer_i() = default;
         virtual void init() = 0;
-        virtual void begin_scene(camera_t& camera) = 0;
-        virtual void submit(std::shared_ptr<primitives::vertex_array_t> vao,
-                            std::shared_ptr<primitives::index_buffer_t> ix_buf,
-                            std::shared_ptr<material_t> material) = 0;
+        virtual void begin_scene(scene::scene_t& scene) = 0;
+        virtual void submit(const glm::mat4& transform,
+                            std::shared_ptr<primitives::vertex_array_t> vao,
+                            std::shared_ptr<material_t> material)
+          = 0;
         virtual void end_scene() = 0;
     };
 
     class renderer {
-        static std::unique_ptr<renderer_i> _instance;
+        const static std::unique_ptr<renderer_i> _instance;
 
     public:
         inline static void init(){
             _instance->init();
         }
         
-        inline static void begin_scene(camera_t& camera){
-            _instance->begin_scene(camera);
+        inline static void begin_scene(scene::scene_t& scene){
+            _instance->begin_scene(scene);
         }
 
-        inline static void submit(std::shared_ptr<primitives::vertex_array_t> vao,
-                                  std::shared_ptr<primitives::index_buffer_t> ix_buf,
+        inline static void submit(const glm::mat4& transform,
+                                  std::shared_ptr<primitives::vertex_array_t> vao,
                                   std::shared_ptr<material_t> material) {
-            _instance->submit(std::move(vao), std::move(ix_buf), std::move(material));
+            _instance->submit(transform, std::move(vao), std::move(material));
         }
 
         inline static void end_scene(){

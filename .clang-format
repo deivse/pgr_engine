@@ -53,7 +53,7 @@ BreakInheritanceList: BeforeColon
 BreakStringLiterals: true
 
 ColumnLimit: 100
-CompactNamespaces: true
+CompactNamespaces: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 2
 ContinuationIndentWidth: 2

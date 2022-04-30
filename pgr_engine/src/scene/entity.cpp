@@ -23,7 +23,6 @@ void entity_t::add_child(entt::entity child_handle){
         return;
     }
     
-    this_hierarchy_c.children++;
     auto curr = this_hierarchy_c.first_child;
     for (size_t i = 1; i < this_hierarchy_c.children; i++) {
         curr = scene->_registry.get<c::hierarchy_t>(curr).next_sibling;
@@ -32,6 +31,7 @@ void entity_t::add_child(entt::entity child_handle){
     debug_assert(last_childs_hierarchy_c.next_sibling==entt::null, "Child appending algo wrong.");
     last_childs_hierarchy_c.next_sibling = child_handle;
     child_hierarchy_c.prev_sibling = curr;
+    this_hierarchy_c.children++;
 }
 
 bool entity_t::remove_parent() {
@@ -87,6 +87,10 @@ bool entity_t::has_child(entt::entity child_handle) {
         curr = scene->_registry.get<c::hierarchy_t>(curr).next_sibling;
     }
     return curr == child_handle;
+}
+
+component::script_component_t& entity_t::add_script(std::unique_ptr<entity_script_t> script){
+    return this->add_component<component::script_component_t>(*this, std::move(script));
 }
 
 } // namespace pgre::scene

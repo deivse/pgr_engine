@@ -7,29 +7,32 @@ vertex_array_t::~vertex_array_t() { glDeleteVertexArrays(1, &_gl_id); }
 
 void vertex_array_t::bind() const { glBindVertexArray(_gl_id); }
 
-void vertex_array_t::add_vertex_buffer(const std::shared_ptr<vertex_buffer_t>& buffer,
-                                       buffer_layout_t& layout) {
+vertex_array_t& vertex_array_t::add_vertex_buffer(const std::shared_ptr<vertex_buffer_t>& buffer,
+                                       const buffer_layout_t& layout) {
     this->bind();
     buffer->bind();
     layout.enable_and_point();
 
     _vertex_buffers.push_back(buffer);
+    return *this;
 }
 
-void vertex_array_t::add_vertex_buffer(const std::shared_ptr<vertex_buffer_t>& buffer,
+vertex_array_t& vertex_array_t::add_vertex_buffer(const std::shared_ptr<vertex_buffer_t>& buffer,
                                        buffer_layout_t&& layout) {
     this->bind();
     buffer->bind();
     layout.enable_and_point();
 
     _vertex_buffers.push_back(buffer);
+    return *this;
 }
 
-void vertex_array_t::set_index_buffer(const std::shared_ptr<index_buffer_t>& buffer) {
+vertex_array_t& vertex_array_t::set_index_buffer(const std::shared_ptr<index_buffer_t>& buffer) {
     this->bind();
     buffer->bind();
 
     _index_buffer = buffer;
+    return *this;
 }
 
 } // namespace pgre::primitives
