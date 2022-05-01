@@ -1,6 +1,7 @@
 #include <assets/phong_material.h>
 #include <scene/scene.h>
 #include <math.h>
+#include <components/transform_component.h>
 
 namespace pgre {
 namespace {
@@ -15,14 +16,12 @@ namespace {
     }
 } // namespace
 
-void phong_material_t::init(){
-    _shader_program = phong_shader_init();
-}
+void phong_material_t::init() { _shader_program = phong_shader_init(); }
 
 void phong_material_t::use(scene::scene_t& scene) {
     debug_assert(_shader_program != nullptr, "phong_material_t::init never called");
     _shader_program->bind();
-    
+
     this->set_scene_uniforms(scene);
 
     _shader_program->set_uniform("material.ambient", _ambient);
@@ -31,7 +30,7 @@ void phong_material_t::use(scene::scene_t& scene) {
     _shader_program->set_uniform("material.shininess", _shininess);
     _shader_program->set_uniform("material.transparency", _transparency);
 
-    if(_color_texture) {
+    if (_color_texture) {
         _color_texture->bind(1);
         _shader_program->set_uniform("material.use_texture", true);
 
@@ -51,16 +50,56 @@ void phong_material_t::set_scene_uniforms(scene::scene_t& scene) {
       "num_sun_lights", std::min(static_cast<int>(lights.sun_lights.size()), max_sun_lights));
     _shader_program->set_uniform(
       "num_spot_lights", std::min(static_cast<int>(lights.spot_lights.size()), max_spot_lights));
-    _shader_program->set_uniform("num_point_lights", std::min(static_cast<int>(lights.point_lights.size()), max_point_lights));
+    _shader_program->set_uniform(
+      "num_point_lights", std::min(static_cast<int>(lights.point_lights.size()), max_point_lights));
 
-    for (auto i = 0; i < std::min(static_cast<int>(lights.sun_lights.size()), max_sun_lights); i++) {
-        lights.sun_lights[i]->set_uniforms(*_shader_program, fmt::format("sun_lights[{}]", i));
+    for (auto i = 0; i < std::min(static_cast<int>(lights.sun_lights.size()), max_sun_lights);
+         i++) {
+        _shader_program->set_uniform(fmt::format("sun_lights[{}]", i) + ".ambient",
+                                     lights.sun_lights[i]->ambient);
+        _shader_program->set_uniform(fmt::format("sun_lights[{}]", i) + ".diffuse",
+                                     lights.sun_lights[i]->diffuse);
+        _shader_program->set_uniform(fmt::format("sun_lights[{}]", i) + ".specular",
+                                     lights.sun_lights[i]->specular);
+        _shader_program->set_uniform(fmt::format("sun_lights[{}]", i) + ".direction",
+                                     lights.sun_lights[i]->direction);
     }
-    for (auto i = 0; i < std::min(static_cast<int>(lights.point_lights.size()), max_point_lights); i++) {
-        // lights.point_lights[i]->set_uniforms(*_shader_program, fmt::format("point_lights[{}]", i)); // TODO in shader then enable
+    for (auto i = 0; i < std::min(static_cast<int>(lights.point_lights.size()), max_point_lights);
+         i++) {
+        // lights.point_lights[i]->set_uniforms(*_shader_program, fmt::format("point_lights[{}]",
+        // i)); // TODO in shader then enable
+        // _shader_program->set_uniform(fmt::format("point_lights[{}]", i) + ".ambient",
+        //                              lights.point_lights[i].first->ambient);
+        // _shader_program->set_uniform(fmt::format("point_lights[{}]", i) + ".diffuse",
+        //                              lights.point_lights[i].first->diffuse);
+        // _shader_program->set_uniform(fmt::format("point_lights[{}]", i) + ".specular",
+        //                              lights.point_lights[i].first->specular);
+        // _shader_program->set_uniform(fmt::format("point_lights[{}]", i) + ".attenuation",
+        //                              lights.point_lights[i].first->attenuation);
+        // _shader_program->set_uniform(
+        //   fmt::format("point_lights[{}]", i) + ".position",
+        //   glm::column(lights.point_lights[i].second->get_transform(), 3).xyz());
     }
-    for (auto i = 0; i < std::min(static_cast<int>(lights.spot_lights.size()), max_spot_lights); i++) {
-        lights.spot_lights[i]->set_uniforms(*_shader_program, fmt::format("spot_lights[{}]", i));
+    for (auto i = 0; i < std::min(static_cast<int>(lights.spot_lights.size()), max_spot_lights);
+         i++) {
+        _shader_program->set_uniform(fmt::format("spot_lights[{}]", i) + ".ambient",
+                                     lights.spot_lights[i].first->ambient);
+        _shader_program->set_uniform(fmt::format("spot_lights[{}]", i) + ".diffuse",
+                                     lights.spot_lights[i].first->diffuse);
+        _shader_program->set_uniform(fmt::format("spot_lights[{}]", i) + ".specular",
+                                     lights.spot_lights[i].first->specular);
+        _shader_program->set_uniform(
+          fmt::format("spot_lights[{}]", i) + ".direction",
+          glm::normalize(glm::row(lights.spot_lights[i].second->get_transform(), 2).xyz()));
+
+        _shader_program->set_uniform(
+          fmt::format("spot_lights[{}]", i) + ".position",
+          glm::column(lights.spot_lights[i].second->get_transform(), 3).xyz());
+
+        _shader_program->set_uniform(fmt::format("spot_lights[{}]", i) + ".cos_half_angle",
+                                     lights.spot_lights[i].first->cone_half_angle_cos);
+        _shader_program->set_uniform(fmt::format("spot_lights[{}]", i) + ".exponent",
+                                     lights.spot_lights[i].first->exponent);
     }
 }
 

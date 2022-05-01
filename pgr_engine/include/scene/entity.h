@@ -2,7 +2,7 @@
 #include <scene/scene.h>
 
 #include <error_handling.h>
-#include <components/hierarchy_component.h>
+#include <components/tag_component.h>
 #include <entt/entt.hpp>
 
 namespace pgre::component {
@@ -21,6 +21,7 @@ namespace pgre::scene {
 class entity_t {
     entt::entity handle = entt::null;
     scene_t* scene = nullptr;
+
 public:
     /**
      * @brief Creates a new entity interface.
@@ -29,6 +30,7 @@ public:
      * @param scene scene containing the entt::registry that owns the entity handle;
      */
     entity_t(entt::entity handle, scene_t* scene);
+    auto get_handle() {return handle;}
 
     // HIERARCHY FUNCS
 
@@ -61,11 +63,38 @@ public:
      */
     bool has_child(entt::entity child_handle);
     /**
-     * @brief Checks if this entity has a parent.
+     * @brief Returns the entitie's parent, may be entt::null if no parent.
      */
-    bool has_parent() {return this->get_component<component::hierarchy_t>().parent != entt::null;}
+    auto get_parent() {return this->get_component<component::hierarchy_t>().parent;}
+    /**
+     * @brief Get the children of this entity.
+     * 
+     * @return std::vector<entity_t>
+     */
+    std::vector<entity_t> get_children();
+    
+    size_t get_num_children() {return this->get_component<component::hierarchy_t>().num_children;}
 
     ///////////// COMPONENT HELEPERS //////////////
+
+    const std::string& get_name(){
+        return this->get_component<component::tag_t>().tag;
+    }
+
+    /**
+     * @brief Visit each component owned by entity.
+     */
+    template<typename... ComponentTypes, typename VisitorTy>
+    requires (std::is_invocable_v<VisitorTy, std::add_lvalue_reference<ComponentTypes>()> && ...)
+    void visit_existing_components(VisitorTy&& func){
+        static const auto l = [this, &func]<typename CompTy>() {
+            if (auto ptr = this->try_get_component<CompTy>(); ptr){
+                func(*ptr);
+            }
+        };
+
+        (l.template operator()<ComponentTypes>(), ...);
+    }
 
     /**
      * @brief Adds a script to this entity.
@@ -86,6 +115,7 @@ public:
      * @warning Undefined behaviour if entity doesn't own a component of type ComponentTy! (Throws in debug mode)
      */
     template <typename ComponentTy>
+    requires (!std::is_const_v<ComponentTy>)
     ComponentTy& get_component() {
         debug_assert(this->has_component<ComponentTy>(), "entity_t::get_component called with ComponentTy not associated with entity!");
         return scene->_registry.get<ComponentTy>(handle);

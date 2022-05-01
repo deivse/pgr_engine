@@ -44,6 +44,8 @@ public:
     explicit event_dispatcher_t(event_t& event) : _event(event) {}
 
     template<typename EventType, typename HandlerCallable>
+    requires std::is_invocable_v<HandlerCallable, std::add_lvalue_reference_t<EventType>>
+    && (std::is_same_v<std::invoke_result_t<HandlerCallable, std::add_lvalue_reference_t<EventType>>, bool>)
     bool dispatch(const HandlerCallable& func) {
         if (_event.get_type() == EventType::get_static_type()) {
             _event.handled |= func(static_cast<EventType&>(_event));

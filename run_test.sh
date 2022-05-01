@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd ./test
-../build/bin/test 
+cd ./pgr_editor
+../build/bin/editor

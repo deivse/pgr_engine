@@ -24,10 +24,8 @@ public:
     /**
      * @brief Event handler/router.
      *
-     * @return true if event has been handled
-     * @return false otherwise
      */
-    virtual bool on_event(event_t& /**unused**/) {return false;}
+    virtual void on_event(event_t& /**unused**/) {}
 
     std::string_view get_name() const { return _debug_name; } // NOLINT(modernize-use-nodiscard)
 };

@@ -6,6 +6,6 @@
 
 namespace pgre::component {
     struct camera_component_t {
-        std::shared_ptr<camera_t> camera;
+        std::shared_ptr<camera_t> camera;        
     }; 
 }

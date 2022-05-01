@@ -23,8 +23,8 @@ void sorting_renderer_t::init() {
 
 void sorting_renderer_t::begin_scene(scene::scene_t& scene) {
     _curr_scene = &scene;
-    auto [camera, camera_transform] = scene.get_active_camera();
-    _curr_v_matrix = glm::inverse(camera_transform);
+    auto [camera, camera_view] = scene.get_active_camera();
+    _curr_v_matrix = camera_view;
     _curr_pv_matrix = camera->get_projection_matrix() * _curr_v_matrix;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  

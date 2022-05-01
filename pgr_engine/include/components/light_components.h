@@ -16,17 +16,11 @@ struct sun_light_t
     glm::vec3 ambient;
     glm::vec3 diffuse;
     glm::vec3 specular;
+    bool enabled{true};
 
     sun_light_t(const glm::vec3& ambient, const glm::vec3& diffuse, const glm::vec3& specular,
                 const glm::vec3& direction)
       : direction(direction), ambient(ambient), diffuse(diffuse), specular(specular) {}
-
-    void set_uniforms(shader_program_t& program, const std::string& prefix) const {
-        program.set_uniform(prefix+".ambient", ambient);
-        program.set_uniform(prefix+".diffuse", diffuse);
-        program.set_uniform(prefix+".specular", specular);
-        program.set_uniform(prefix+".direction", direction);
-    }
 };
 
 /**
@@ -38,17 +32,11 @@ struct point_light_t
     glm::vec3 ambient;
     glm::vec3 diffuse;
     glm::vec3 specular;
+    bool enabled{true};
 
     point_light_t(const glm::vec3& ambient, const glm::vec3& diffuse, const glm::vec3& specular,
                   const glm::vec3& attenuation)
       : attenuation(attenuation), ambient(ambient), diffuse(diffuse), specular(specular) {}
-
-    void set_uniforms(shader_program_t& program, const std::string& prefix) const {
-        program.set_uniform(prefix+".ambient", ambient);
-        program.set_uniform(prefix+".diffuse", diffuse);
-        program.set_uniform(prefix+".specular", specular);
-        program.set_uniform(prefix+".attenuation", attenuation);
-    }
 };
 
 /**
@@ -63,6 +51,8 @@ struct spot_light_t
     glm::vec3 ambient;
     glm::vec3 diffuse;
     glm::vec3 specular;
+    bool enabled{true};
+
 
     spot_light_t(const glm::vec3& ambient, const glm::vec3& diffuse, const glm::vec3& specular,
                  const glm::vec3& direction, float cone_width_degrees, float exponent)
@@ -72,19 +62,6 @@ struct spot_light_t
         ambient(ambient),
         diffuse(diffuse),
         specular(specular) {}
-
-    glm::vec3 get_direction(){
-        //TODO: light direction is relative to parent.
-    }
-
-    void set_uniforms(shader_program_t& program, const std::string& prefix) const {
-        program.set_uniform(prefix+".ambient", ambient);
-        program.set_uniform(prefix+".diffuse", diffuse);
-        program.set_uniform(prefix+".specular", specular);
-        program.set_uniform(prefix+".direction", direction);
-        program.set_uniform(prefix+".cos_half_angle", cone_half_angle_cos);
-        program.set_uniform(prefix+".exponent", exponent);
-    }
 };
 
 } // namespace pgre::component

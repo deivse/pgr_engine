@@ -11,7 +11,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
     target_compile_definitions(pgre PUBLIC "PGRE_DISABLE_DEBUG_CHECKS")
 endif()
 
-target_compile_definitions(pgre PUBLIC GLFW_INCLUDE_NONE)
+target_compile_definitions(pgre PUBLIC GLFW_INCLUDE_NONE GLM_FORCE_SWIZZLE)
 target_include_directories(pgre PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include 
                                        ${CMAKE_CURRENT_SOURCE_DIR}/third-party/imgui/include)
 

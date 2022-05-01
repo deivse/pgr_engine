@@ -44,4 +44,14 @@ namespace pgre
     {
         return _window_ptr;
     }
+
+    bool window_t::enable_raw_mouse_input() {
+        if (glfwRawMouseMotionSupported()) {
+            glfwSetInputMode(_window_ptr, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+        }
+        return glfwRawMouseMotionSupported();
+    }
+    void window_t::disable_raw_mouse_input(){
+        glfwSetInputMode(_window_ptr, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+    }
 } // namespace pgre

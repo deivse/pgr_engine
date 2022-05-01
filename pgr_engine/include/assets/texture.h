@@ -25,6 +25,7 @@ public:
 
     virtual void bind(uint32_t slot) const = 0;
     bool operator == (const texture_t& other) const {return this->_gl_id == other._gl_id;}
+    [[nodiscard]] uint32_t get_gl_id() const { return _gl_id; }
 };
 
 class texture2D_t : public texture_t

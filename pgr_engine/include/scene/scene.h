@@ -1,6 +1,8 @@
 #pragma once
 
 #include "assets/phong_material.h"
+#include "components/hierarchy_component.h"
+#include "components/component_predecl.h"
 #include "layers/basic_layer.h"
 #include "primitives/vertex_array.h"
 #include "renderer/camera.h"
@@ -21,8 +23,8 @@ struct entity_t;
 
 struct scene_lights_t {
     std::vector<component::sun_light_t*> sun_lights;
-    std::vector<component::point_light_t*> point_lights;
-    std::vector<component::spot_light_t*> spot_lights;
+    std::vector<std::pair<component::point_light_t*, component::transform_t*>> point_lights;
+    std::vector<std::pair<component::spot_light_t*, component::transform_t*>> spot_lights;
 };
     
 class scene_t {
@@ -31,8 +33,16 @@ class scene_t {
     entt::entity active_camera_owner{entt::null};
 
     scene_lights_t _lights;
+
 public:
     scene_t();
+
+    /**
+     * @brief Get a vector of entities without parents.
+     * 
+     * @return std::vector<entity_t>
+     */
+    std::vector<entity_t> get_top_level_entities();
 
     /**
      * @brief Create a new handle in the scene's entt::registry.
@@ -54,6 +64,14 @@ public:
     entity_t get_entity_helper(entt::entity handle);
 
     /**
+     * @brief Propagates event to script components. Event is considered handled if one or more
+     * script components accept it.
+     *
+     * @param event
+     */
+    void on_event(event_t& event); 
+
+    /**
      * @brief Updates everything in the scene - scripts, cameras, transforms.
      * 
      * @param delta 
@@ -66,11 +84,13 @@ public:
     void render();
 
     /**
-     * @brief Get the active camera and it's transform.
-     *
+     * @brief Get the active camera and respective view matrix.
+     * 
      * @warning scene must have active camera.
      */
-    std::pair<std::shared_ptr<camera_t>, const glm::mat4&> get_active_camera() const;
+    std::pair<std::shared_ptr<camera_t>, glm::mat4> get_active_camera() const;\
+
+    entt::entity get_active_camera_entity_handle() {return active_camera_owner;}
 
     /**
      * @brief Sets the active camera.
@@ -89,7 +109,7 @@ public:
     friend struct entity_t;
 
 private: //methods
-    void on_camera_component_remove(){}//TODO
+    void on_camera_component_remove(entt::registry& registry, entt::entity newly_not_a_camera_holder);
 
     void
       hierarchy_import_rec(entity_t& parent, aiNode* node, glm::mat4 acc_transform,

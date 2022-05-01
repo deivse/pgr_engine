@@ -8,7 +8,7 @@ namespace pgre::component {
 
 struct hierarchy_t
 {
-    size_t children = 0;
+    size_t num_children = 0;
     entt::entity parent{entt::null};
     entt::entity first_child{entt::null};
     entt::entity prev_sibling{entt::null};

@@ -8,6 +8,10 @@ namespace pgre {
 {
     inline static std::unique_ptr<shader_program_t> _shader_program{nullptr};
 
+
+    static void set_scene_uniforms(scene::scene_t& scene);
+
+public:
     glm::vec3 _diffuse{1.0f};
     glm::vec3 _ambient{1.0f};
     glm::vec3 _specular{1.0f};
@@ -16,9 +20,6 @@ namespace pgre {
     
     std::shared_ptr<texture2D_t> _color_texture;
 
-    static void set_scene_uniforms(scene::scene_t& scene);
-
-public:
     /**
      * @brief Must be called once an OpenGL context is setup (but before rendering)
      * 
@@ -68,8 +69,6 @@ public:
         debug_assert(_shader_program != nullptr, "phong_material_t::init never called");
         return *_shader_program; 
     }
-
-    glm::vec3 get_diffuse() {return _diffuse;}
 };
 
 }
