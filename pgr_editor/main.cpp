@@ -58,7 +58,7 @@ public:
               glm::quat q_yaw = glm::angleAxis(yaw, glm::vec3(1, 0, 0));
     
               transform_c.orientation = glm::normalize(q_pitch * q_yaw);
-              transform_c.update_transform();
+              transform_c.update_parentlocal_transform();
               
               return true;
           });
@@ -110,7 +110,7 @@ public:
             // transform_c.set_from_mat(glm::translate(transform, {0.0, 0.0, -move_speed *
             // delta.seconds}));
         }
-        transform_c.update_transform();
+        transform_c.update_parentlocal_transform();
         auto camera_pos = (transform_c.get_transform() * glm::vec4{0.0f, 0.0f, 0.0f, 1.0f});
         spdlog::info("camera posititon: {}, {}, {}", camera_pos.x, camera_pos.y, camera_pos.z);
     }
@@ -149,7 +149,7 @@ public:
 int main() {
     // spdlog::set_level(spdlog::level::warn);
     try {
-        spdlog::set_level(spdlog::level::level_enum::trace);
+        spdlog::set_level(spdlog::level::level_enum::err);
         auto scene = std::make_shared<pgre::scene::scene_t>();
 
         pgre::app_t app(1280, 720, "tesst", true);

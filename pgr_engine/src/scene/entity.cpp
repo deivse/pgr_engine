@@ -15,7 +15,7 @@ void entity_t::add_child(entt::entity child_handle){
 
     auto& child_hierarchy_c = child.get_component<c::hierarchy_t>();
     child.remove_parent();
-    child.get_component<component::transform_t>().bind_parent_transform(&(this->get_component<component::transform_t>()._transform));
+    child.get_component<component::transform_t>().bind_parent_transform(&(this->get_component<component::transform_t>()._transform_local_to_parent));
     child_hierarchy_c.parent = this->handle;
 
     auto& this_hierarchy_c = this->get_component<c::hierarchy_t>();

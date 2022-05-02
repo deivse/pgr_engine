@@ -151,6 +151,18 @@ bool shader_program_t::set_uniform(const std::string& glsl_name, const glm::vec3
     glUniform3f(loc, x.r, x.g, x.b);
     return true;
 }
+bool shader_program_t::set_uniform(const std::string& glsl_name, const glm::vec2& x) {
+    int loc{};
+    if (!get_uniform_loc(glsl_name, loc)) return false;
+    glUniform2f(loc, x.r, x.g);
+    return true;
+}
+bool shader_program_t::set_uniform(const std::string& glsl_name, const glm::ivec2& x) {
+    int loc{};
+    if (!get_uniform_loc(glsl_name, loc)) return false;
+    glUniform2i(loc, x.r, x.g);
+    return true;
+}
 bool shader_program_t::set_uniform(const std::string& glsl_name, const std::vector<glm::vec3>& x) {
     int loc{};
     if (!get_uniform_loc(glsl_name, loc)) return false;

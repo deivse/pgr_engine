@@ -1,19 +1,15 @@
-shader::vertex {
+shader::fragment {
 #version 410
-
-// IMPORTANT: !!! lighting is evaluated in camera space !!!
 
 struct Material {      // structure that describes currently used material
   vec3  ambient;       // ambient component
   vec3  diffuse;       // diffuse component
   vec3  specular;      // specular component
   float shininess;     // sharpness of specular reflection
-  float transparency;
+  float opacity;
 
-  bool  use_texture;    // defines whether the texture is used or not
+  bool use_texture;    // defines whether the texture is used or not
 };
-
-uniform sampler2D colorTexSampler;  // sampler for the texture access
 
 struct PointLight {
     vec3  ambient;       // intensity & color of the ambient component
@@ -30,7 +26,8 @@ struct SpotLight {         // structure describing light parameters
   vec3  position;      // light position
   vec3  direction;     // spotlight direction
   float cos_half_angle; // cosine of the spotlight's half angle
-  float exponent;  // distribution of the light energy within the reflector's cone (center->cone's edge)
+  float exponent;       // distribution of the light energy within the reflector's cone (center->cone's edge)
+  vec3  attenuation;
 };
 
 struct SunLight {
@@ -39,13 +36,6 @@ struct SunLight {
     vec3 specular;
     vec3 direction;
 };
-
-in vec3 position;           // vertex position in world space
-in vec3 normal;             // vertex normal
-in vec2 tex_coord;           // incoming texture coordinates
-
-uniform float time;         // time used for simulation of moving lights (such as sun)
-uniform Material material;  // current material
 
 #define MAX_SUN_LIGHTS 2
 uniform SunLight sun_lights[MAX_SUN_LIGHTS];
@@ -58,121 +48,129 @@ uniform int num_sun_lights;
 uniform int num_point_lights;
 uniform int num_spot_lights;
 
-uniform mat4 pvm_matrix;     // Projection * View * Model  --> model to clip coordinates
-uniform mat4 view_matrix;       // View                       --> world to eye coordinates
-uniform mat4 model_matrix;       // Model                      --> model to world coordinates
+uniform mat4 pvm_matrix; 
+uniform mat4 view_matrix;
+// uniform mat4 model_matrix;
 uniform mat4 normal_matrix;  // inverse transposed model_matrix
 
-smooth out vec2 tex_coord_v;  // outgoing texture coordinates
-smooth out vec4 color_v;     // outgoing fragment color
+uniform sampler2D color_tex_sampler;
+uniform ivec2 color_tex_dimensions;
 
-vec4 calc_spot(SpotLight light, vec3 ver_pos, vec3 ver_normal) {
+uniform Material material;
+    
+smooth in vec2 v_tex_coord;
+smooth in vec3 v_position_cam;
+smooth in vec3 v_normal_cam;
 
-  vec3 ret = vec3(0.0);
+out vec4       output_color;
 
-  // use the material and light structures to obtain the surface and light properties
-  // the ver_pos and ver_normal variables contain transformed surface position and normal
-  // store the ambient, diffuse and specular terms to the ret variable
-  // for spot lights, light.position contains the light position
-  // everything is expressed in the view coordinate system -> eye/camera is in the origin
-
-  light.position = (inverse(view_matrix) * vec4(light.position, 1.0)).xyz;
-  vec3 L = normalize(light.position - ver_pos);
-  vec3 R = reflect(-L, ver_normal);
-  vec3 V = normalize(-ver_pos);
-  float NdotL = max(0.0, dot(ver_normal, L));
-  float RdotV = max(0.0, dot(R, V));
-  float spotCoef = max(0.0, dot(-L, light.direction));
-
-  ret += material.ambient * light.ambient;
-  ret += material.diffuse * light.diffuse * NdotL;
-  ret += material.specular * light.specular * pow(RdotV, material.shininess);
-
-  if(spotCoef < light.cos_half_angle)
-    ret *= 0.0;
-  else
-    ret *= pow(spotCoef, light.exponent);
-
-  return vec4(ret, 1.0);
+float calc_dist_attenuation(vec3 light_att, float dist_to_light) {
+    return 1.0 / (light_att[0] 
+        + light_att[1] * dist_to_light 
+        + light_att[2] * pow(dist_to_light, 2));
 }
 
-vec4 calc_sun(SunLight light, vec3 ver_pos, vec3 ver_normal) {
+vec3 calc_point_l(PointLight light, vec3 ver_pos_cam, vec3 ver_normal_cam){
+    vec3 light_pos_cam = (view_matrix * vec4(light.position, 1.0)).xyz;
+    float dist_to_light = distance(light_pos_cam, ver_pos_cam);
+    float dist_attenuation = calc_dist_attenuation(light.attenuation, dist_to_light);
 
-  vec3 ret = vec3(0.0);
+    vec3 light_dir = normalize(light_pos_cam - ver_pos_cam);
+    vec3 reflected_light_dir = reflect(-light_dir, ver_normal_cam);
 
-  // use the material and light structures to obtain the surface and light properties
-  // the ver_pos and ver_normal variables contain transformed surface position and normal
-  // store the ambient, diffuse and specular terms to the ret variable
-  // glsl provides some built-in functions, for example: reflect, normalize, pow, dot
-  // for directional lights, light.position contains the direction
-  // everything is expressed in the view coordinate system -> eye/camera is in the origin
+    float cos_light_normal = max(0, dot(ver_normal_cam, light_dir));
+    float cos_reflected_view = max(0, dot(reflected_light_dir, normalize(-ver_pos_cam)));
 
-  vec3 L = normalize(-light.direction);
-  vec3 R = reflect(-L, ver_normal);
-  vec3 V = normalize(-ver_pos);
-  float NdotL = max(0.0, dot(ver_normal, L));
-  float RdotV = max(0.0, dot(R, V));
+    return dist_attenuation * ( material.ambient * light.ambient 
+                              + material.diffuse * light.diffuse * cos_light_normal
+                              + pow(cos_reflected_view, material.shininess) * material.specular * light.specular );
+}
 
-  ret += material.ambient * light.ambient;
-  ret += material.diffuse * light.diffuse * NdotL;
-  ret += material.specular * light.specular * pow(RdotV, material.shininess);
+vec3 calc_sun_l(SunLight light, vec3 ver_pos_cam, vec3 ver_normal_cam){
+    vec3 light_dir = normalize(view_matrix * vec4(light.direction, 0.0)).xyz;
+    vec3 reflected_light_dir = reflect(-light_dir, ver_normal_cam);
+    
+    float cos_light_normal = max(0.0, dot(ver_normal_cam, light_dir));
+    float cos_reflected_view = max(0.0, dot(reflected_light_dir, normalize(-ver_pos_cam)));
 
-  return vec4(ret, 1.0);
+    return ( material.ambient * light.ambient 
+           + material.diffuse * light.diffuse * cos_light_normal
+           + material.specular * light.specular * pow(cos_reflected_view, material.shininess) );
+}
+
+vec3 calc_spot_l(SpotLight light, vec3 ver_pos_cam, vec3 ver_normal_cam){
+    vec3 light_pos_cam = (view_matrix * vec4(light.position, 1.0)).xyz;
+    vec3 spot_light_dir_cam = normalize(view_matrix * vec4(light.direction, 0.0)).xyz;
+
+    float dist_to_light = distance(light_pos_cam, ver_pos_cam);
+    float dist_attenuation = calc_dist_attenuation(light.attenuation, dist_to_light);
+
+    vec3 light_dir = normalize(light_pos_cam - ver_pos_cam);
+    vec3 reflected_light_dir = reflect(-light_dir, ver_normal_cam);
+
+    float cos_light_normal = max(0.0, dot(ver_normal_cam, light_dir));
+    float cos_reflected_view = max(0.0, dot(reflected_light_dir, normalize(-ver_pos_cam)));
+    float spot_coef = max(0.0, dot(-light_dir, spot_light_dir_cam));
+    float spot_attenuation;
+
+    if (spot_coef < light.cos_half_angle) {
+        spot_attenuation = 0.0;
+    } else {
+        spot_attenuation = pow(spot_coef, light.exponent);
+    }
+
+    return spot_attenuation * dist_attenuation 
+           * ( material.ambient * light.ambient 
+             + material.diffuse * light.diffuse * cos_light_normal
+             + material.specular * light.specular * pow(cos_reflected_view, material.shininess) );
 }
 
 void main() {
-  // eye-coordinates position and normal of vertex
-  vec3 ver_pos = (view_matrix * model_matrix * vec4(position, 1.0)).xyz;                // vertex in eye coordinates
-  vec3 ver_normal = normalize( (normal_matrix * vec4(normal, 0.0)).xyz);   // normal in eye coordinates by normal_matrix
+  vec3 normal_cam = normalize(v_normal_cam);
 
   vec3 global_ambient_l = vec3(0.9f);
-  vec4 output_color = vec4(material.ambient * global_ambient_l, 1.0);
-
+  vec3 color = material.ambient * global_ambient_l;
+  
+  for(int i=0;i<num_point_lights;++i)
+  {
+    color += calc_point_l(point_lights[i], v_position_cam, normal_cam);
+  }
   for(int i=0;i<num_sun_lights;++i)
   {
-    output_color += calc_sun(sun_lights[i], ver_pos, ver_normal);
+    color += calc_sun_l(sun_lights[i], v_position_cam, normal_cam);
   }
   for(int i=0;i< num_spot_lights;++i)
   {
-    output_color += calc_spot(spot_lights[i], ver_pos, ver_normal);
+    color += calc_spot_l(spot_lights[i], v_position_cam, normal_cam);
   }
+  output_color = vec4(color, material.opacity);
 
-  //TODO: point lights
-  color_v = output_color;
-  tex_coord_v = tex_coord;
-
-  gl_Position = pvm_matrix * vec4(position, 1);
-
-  // outputs entering the fragment shader
-}
-} shader::vertex
-
-shader::fragment {
-#version 410
-
-struct Material {      // structure that describes currently used material
-  vec3  ambient;       // ambient component
-  vec3  diffuse;       // diffuse component
-  vec3  specular;      // specular component
-  float shininess;     // sharpness of specular reflection
-  float transparency;
-
-  bool  use_texture;    // defines whether the texture is used or not
-};
-
-uniform sampler2D colorTexSampler;  // sampler for the texture access
-
-uniform Material material;     // current material
-
-smooth in vec4 color_v;        // incoming fragment color (includes lighting)
-smooth in vec2 tex_coord_v;    // fragment texture coordinates
-out vec4       color_f;        // outgoing fragment color
-
-void main() {
-  color_f = color_v;
-
-  // if material has a texture -> apply it
-  if(material.use_texture)
-    color_f =  color_v * texture(colorTexSampler, tex_coord_v);
+  if(material.use_texture) {
+    output_color *= texture(color_tex_sampler, v_tex_coord);
+  }
 }
 } shader::fragment
+
+shader::vertex {
+#version 410
+
+in vec3 position;           // vertex position in world space
+in vec3 normal;             // vertex normal
+in vec2 tex_coord;           // incoming texture coordinates
+
+uniform mat4 pvm_matrix; 
+uniform mat4 vm_matrix;
+uniform mat4 v_normal_matrix; 
+
+smooth out vec2 v_tex_coord;  // texture coordinates
+smooth out vec3 v_position_cam;   // fragment coordinates
+smooth out vec3 v_normal_cam;
+
+void main() {
+  gl_Position = pvm_matrix * vec4(position, 1);
+
+  v_tex_coord = tex_coord;
+  v_position_cam = (vm_matrix * vec4(position, 1)).xyz;
+  v_normal_cam = (v_normal_matrix * vec4(normal, 0)).xyz;
+}
+} shader::vertex

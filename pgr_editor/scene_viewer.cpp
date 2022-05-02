@@ -76,7 +76,7 @@ void scene_view_layer::entity_window() {
                   ImGui::Text(transform_c.parent_transform_bound()
                                 ? "Parent Transform Bound: True"
                                 : "Parent Transform Bound: False");
-                  transform_c.update_transform();
+                  transform_c.update_parentlocal_transform();
                   if (ImGui::TreeNode("Transform Matrix")) {
                       auto trans_m = transform_c.get_transform();
                       auto row0 = glm::row(trans_m, 0);
@@ -160,8 +160,23 @@ void scene_view_layer::entity_window() {
                   ImGui::ColorEdit3("Ambient", glm::value_ptr(spot_c.ambient));
                   ImGui::ColorEdit3("Diffuse", glm::value_ptr(spot_c.diffuse));
                   ImGui::ColorEdit3("Specular", glm::value_ptr(spot_c.specular));
+                  ImGui::DragFloat("Attenuation (Constant)", glm::value_ptr(spot_c.attenuation));
+                  ImGui::DragFloat("Attenuation (Linear)", glm::value_ptr(spot_c.attenuation)+1);
+                  ImGui::DragFloat("Attenuation (Quadratic)", glm::value_ptr(spot_c.attenuation)+2);
 
                   ImGui::Checkbox("Enabled", &spot_c.enabled);
+              } else if constexpr (std::is_same_v<std::remove_reference_t<decltype(c)>,
+                                                  pgre::component::point_light_t>) {
+                  component_title("Spot Light");
+                  auto& point_c = static_cast<pgre::component::point_light_t&>(c);
+                  ImGui::ColorEdit3("Ambient", glm::value_ptr(point_c.ambient));
+                  ImGui::ColorEdit3("Diffuse", glm::value_ptr(point_c.diffuse));
+                  ImGui::ColorEdit3("Specular", glm::value_ptr(point_c.specular));
+                  ImGui::DragFloat("Attenuation (Constant)", glm::value_ptr(point_c.attenuation));
+                  ImGui::DragFloat("Attenuation (Linear)", glm::value_ptr(point_c.attenuation)+1);
+                  ImGui::DragFloat("Attenuation (Quadratic)", glm::value_ptr(point_c.attenuation)+2);
+
+                  ImGui::Checkbox("Enabled", &point_c.enabled);
               }
           });
         ImGui::Spacing();

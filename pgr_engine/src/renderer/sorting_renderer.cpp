@@ -37,9 +37,10 @@ void sorting_renderer_t::submit(const glm::mat4& transform,
                                 std::shared_ptr<material_t> material) {
     material->use(*_curr_scene);
     auto shader = material->get_shader();
-    shader.set_uniform("model_matrix", transform);
-    shader.set_uniform("normal_matrix", glm::transpose(glm::inverse(_curr_v_matrix * transform)));
+    // shader.set_uniform("model_matrix", transform);
+    shader.set_uniform("v_normal_matrix",glm::transpose(glm::inverse(_curr_v_matrix * transform)));
     shader.set_uniform("view_matrix", _curr_v_matrix);
+    shader.set_uniform("vm_matrix", _curr_v_matrix * transform);
     shader.set_uniform("pvm_matrix", _curr_pv_matrix * transform);
     vao->bind();
     glDrawElements(GL_TRIANGLES, vao->get_index_buffer()->get_count(), GL_UNSIGNED_INT, nullptr);

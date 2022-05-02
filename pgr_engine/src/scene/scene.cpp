@@ -50,6 +50,9 @@ std::pair<std::shared_ptr<camera_t>, glm::mat4> scene_t::get_active_camera() con
 }
 
 void scene_t::update(const interval_t& delta){
+    _registry.view<component::transform_t>().each([](auto /*entity*/, component::transform_t& transform_c){
+        transform_c.update_global_transform();
+    });
     _registry.view<component::script_component_t>().each([&delta](auto /*entity*/, component::script_component_t& script_c){
         script_c.update(delta);
     });

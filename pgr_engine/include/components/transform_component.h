@@ -17,8 +17,8 @@ namespace pgre::component {
 class transform_t
 {
     const glm::mat4* _parent_transform{nullptr};
-    glm::mat4 _transform{};
-
+    glm::mat4 _transform_local_to_parent{};
+    glm::mat4 _global_transform{};
 public:
     glm::vec3 scale{};
     glm::vec3 translation{};
@@ -27,12 +27,12 @@ public:
     transform_t(const glm::vec3& translation, const glm::quat& orientation = {1.0, 0.0, 0.0, 0.0},
                 const glm::vec3& scale = {1.0, 1.0, 1.0})
       : translation(translation), orientation(orientation), scale(scale) {
-        update_transform();
+        update_parentlocal_transform();
     }
 
     transform_t(const glm::mat4& transform) {
         set_from_mat(transform);
-        update_transform();
+        update_parentlocal_transform();
     }
 
     void set_from_mat(const glm::mat4& transform) {
@@ -42,7 +42,7 @@ public:
             throw std::runtime_error("Failed to decompose transformation matrix to translation, "
                                      "scale and rotation. (`glm::decompose()` returned `false`)");
         }
-        update_transform();
+        update_parentlocal_transform();
     }
 
     [[nodiscard]] glm::vec3 get_orientation_euler() const {
@@ -59,14 +59,18 @@ public:
     }
     void unbind_parent_transform() { _parent_transform = nullptr; }
 
-    void update_transform() {
-        _transform = glm::translate(glm::mat4{1.0f}, translation) * glm::toMat4(orientation)
+    void update_parentlocal_transform() {
+        _transform_local_to_parent = glm::translate(glm::mat4{1.0f}, translation) * glm::toMat4(orientation)
                      * glm::scale(glm::mat4{1.0f}, scale);
     }
 
+    void update_global_transform() {
+        _global_transform = _parent_transform ? *_parent_transform * _transform_local_to_parent : _transform_local_to_parent;
+    }
+
+
     [[nodiscard]] const glm::mat4& get_transform() const {
-        static glm::mat4 retval;
-        return (retval = _parent_transform ? *_parent_transform * _transform : _transform);
+        return _global_transform;
     }
 
     [[nodiscard]] glm::mat4 get_view() const {
@@ -74,7 +78,7 @@ public:
         return glm::inverse(translation_m * glm::toMat4(orientation));
     }
 
-    operator const glm::mat4&() const { return get_transform(); }
+    operator const glm::mat4&() const { return _global_transform; }
 
     friend class scene::entity_t;
 };

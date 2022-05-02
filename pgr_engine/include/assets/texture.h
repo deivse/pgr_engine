@@ -80,7 +80,11 @@ public:
     void set_upscaling_mode(GLint upscaling_algo);
     void set_downscaling_mode(GLint downscaling_algo);
 
-    inline void bind(uint32_t slot = 0) const override { glBindTextureUnit(slot, _gl_id); }
+    inline void bind(uint32_t slot) const override { 
+        // glActiveTexture(GL_TEXTURE0 + slot);
+        // glBindTexture(GL_TEXTURE_2D, _gl_id);
+        glBindTextureUnit(slot, _gl_id); 
+    }
 };
 
 } // namespace pgre

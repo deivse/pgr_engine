@@ -24,7 +24,7 @@ std::optional<entity_t> scene_t::add_from_file(const std::filesystem::path& scen
     importer.SetPropertyInteger(AI_CONFIG_PP_PTV_NORMALIZE, 1);
 
     const aiScene* ai_scene
-      = importer.ReadFile(scene_file.c_str(), 0 | aiProcess_Triangulate | aiProcess_GenSmoothNormals
+      = importer.ReadFile(scene_file.c_str(), 0 | aiProcess_Triangulate 
                                                 | aiProcess_JoinIdenticalVertices);
 
     // abort if the loader fails
@@ -104,7 +104,7 @@ std::optional<entity_t> scene_t::add_from_file(const std::filesystem::path& scen
             memcpy(interleaved_data.data() + vertex_ix * floats_per_vertex,
                    &ai_mesh->mVertices[vertex_ix], 3 * sizeof(float));
             memcpy(interleaved_data.data() + vertex_ix * floats_per_vertex + 3,
-                   &ai_mesh->mNormals[vertex_ix], 3 * sizeof(float));
+                   &ai_mesh->mNormals[vertex_ix], 3 * sizeof(float)); 
             if (tex_coords) {
                 interleaved_data[vertex_ix * floats_per_vertex + 6]
                   = ai_mesh->mTextureCoords[0][vertex_ix].x;
@@ -120,7 +120,7 @@ std::optional<entity_t> scene_t::add_from_file(const std::filesystem::path& scen
           tex_coords
             ? std::initializer_list<primitives::buffer_element_t>{{GL_FLOAT, 3, "position"},
                                                                   {GL_FLOAT, 3, "normal"},
-                                                                  {GL_FLOAT, 2, "tex_coords"}}
+                                                                  {GL_FLOAT, 2, "tex_coord"}}
             : std::initializer_list<primitives::buffer_element_t>{{GL_FLOAT, 3, "position"},
                                                                   {GL_FLOAT, 3, "normal"}});
 
@@ -183,7 +183,9 @@ std::optional<entity_t> scene_t::add_from_file(const std::filesystem::path& scen
                   vec3_cast(ai_light->mColorAmbient), vec3_cast(ai_light->mColorDiffuse),
                   vec3_cast(ai_light->mColorSpecular), vec3_cast(ai_light->mDirection),
                   ai_light->mAngleOuterCone,
-                  0.5f * (ai_light->mAngleOuterCone / ai_light->mAngleInnerCone));
+                  0.5f * (ai_light->mAngleOuterCone / ai_light->mAngleInnerCone),
+                  glm::vec3{ai_light->mAttenuationConstant, ai_light->mAttenuationLinear,
+                            ai_light->mAttenuationQuadratic});
                 break;
             default:
                 light_entity.destroy();

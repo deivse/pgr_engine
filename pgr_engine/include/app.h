@@ -55,8 +55,8 @@ class app_t
 
     void register_event_handlers();
 public:
-    app_t(uint16_t width, uint16_t height, const std::string& title, bool vsync = true, uint8_t ogl_v_major = 3,
-          uint8_t ogl_v_minor = 2);
+    app_t(uint16_t width, uint16_t height, const std::string& title, bool vsync = true, uint8_t ogl_v_major = 4,
+          uint8_t ogl_v_minor = 5);
     ~app_t();
 
     void on_event(event_t &evt);
