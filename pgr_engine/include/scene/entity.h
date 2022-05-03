@@ -160,7 +160,7 @@ public:
     template <typename ComponentTy>
     void erase_component() {
         debug_assert(this->has_component<ComponentTy>(), "Attempting to erase ComponentTy from entity which doesn't own it.");
-        scene->_registry.erase<ComponentTy>(handle) != 0;
+        scene->_registry.erase<ComponentTy>(handle);
     }
 
     template <typename ComponentTy>

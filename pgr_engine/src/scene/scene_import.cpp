@@ -17,7 +17,7 @@ namespace {
 }
 
 namespace pgre::scene {
-std::optional<entity_t> scene_t::add_from_file(const std::filesystem::path& scene_file) {
+std::optional<entity_t> scene_t::import_from_file(const std::filesystem::path& scene_file) {
     static Assimp::Importer importer;
     if (scene_file.extension() != ".dae")
         throw std::runtime_error("Collada is the only scene format currently supported.");
@@ -51,8 +51,8 @@ std::optional<entity_t> scene_t::add_from_file(const std::filesystem::path& scen
         if (ai_material.Get(AI_MATKEY_SHININESS, shininess) != AI_SUCCESS)
             spdlog::error("Import: Failed to get material shininess.");
 
-        // if (ai_material.Get(AI_MATKEY_OPACITY, transparency) == AI_SUCCESS){ //TODO: transparency
-        // not working
+        // if (ai_material.Get(AI_MATKEY_OPACITY, transparency)
+        //     == AI_SUCCESS) { // TODO: transparency not working
         //     transparency = 1.0f - transparency;
         // } else {
         //     if (ai_material.Get(AI_MATKEY_TRANSPARENCYFACTOR, transparency) != AI_SUCCESS)
@@ -116,7 +116,6 @@ std::optional<entity_t> scene_t::add_from_file(const std::filesystem::path& scen
         vertex_buffer->set_data(interleaved_data.size() * sizeof(float), interleaved_data.data());
 
         auto layout = primitives::buffer_layout_t( // INTERLEAVED!!!
-          phong_material_t::get_shader_s(),
           tex_coords
             ? std::initializer_list<primitives::buffer_element_t>{{GL_FLOAT, 3, "position"},
                                                                   {GL_FLOAT, 3, "normal"},
@@ -135,7 +134,7 @@ std::optional<entity_t> scene_t::add_from_file(const std::filesystem::path& scen
 
         vertex_arrays[i] = std::make_shared<primitives::vertex_array_t>();
         vertex_arrays[i]->set_index_buffer(index_buffer);
-        vertex_arrays[i]->add_vertex_buffer(vertex_buffer, layout);
+        vertex_arrays[i]->add_vertex_buffer(vertex_buffer, std::make_shared<primitives::buffer_layout_t>(layout));
     }
 
     ////// NODES (ENTITIES) //////

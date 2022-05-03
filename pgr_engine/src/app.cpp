@@ -93,12 +93,12 @@ app_t::~app_t() {
     glfwTerminate();
 }
 
-void app_t::push_layer(std::unique_ptr<layers::basic_layer_t>&& layer) {
+void app_t::push_layer(std::shared_ptr<layers::basic_layer_t> layer) {
     layer->on_attach();
     _layers.push_layer(std::move(layer));
 }
 
-void app_t::push_overlay(std::unique_ptr<layers::basic_layer_t>&& overlay) {
+void app_t::push_overlay(std::shared_ptr<layers::basic_layer_t> overlay) {
     overlay->on_attach();
     _layers.push_overlay(std::move(overlay));
 }

@@ -5,7 +5,7 @@
 
 namespace pgre::input {
 
-    bool key_down(int key) {
+    inline bool key_down(int key) {
         return glfwGetKey(pgre::app_t::get_window().get_native(), key) == GLFW_PRESS;
     }
 }

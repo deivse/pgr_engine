@@ -8,22 +8,12 @@ vertex_array_t::~vertex_array_t() { glDeleteVertexArrays(1, &_gl_id); }
 void vertex_array_t::bind() const { glBindVertexArray(_gl_id); }
 
 vertex_array_t& vertex_array_t::add_vertex_buffer(const std::shared_ptr<vertex_buffer_t>& buffer,
-                                       const buffer_layout_t& layout) {
+                                       std::shared_ptr<buffer_layout_t> layout) {
     this->bind();
     buffer->bind();
-    layout.enable_and_point();
+    layout->enable_and_point();
 
-    _vertex_buffers.push_back(buffer);
-    return *this;
-}
-
-vertex_array_t& vertex_array_t::add_vertex_buffer(const std::shared_ptr<vertex_buffer_t>& buffer,
-                                       buffer_layout_t&& layout) {
-    this->bind();
-    buffer->bind();
-    layout.enable_and_point();
-
-    _vertex_buffers.push_back(buffer);
+    _vertex_buffers.emplace_back(buffer, layout);
     return *this;
 }
 

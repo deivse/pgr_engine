@@ -5,6 +5,8 @@
 #include <string_view>
 #include <string>
 
+#include <cereal/types/string.hpp>
+
 namespace pgre::component {
 
 struct tag_t
@@ -14,6 +16,11 @@ struct tag_t
 
     operator std::string_view() const { return tag; }
     explicit operator std::string() const {return std::string(tag);}
+
+    template<class Archive>
+    void serialize(Archive& archive){
+        archive(tag);
+    }
 };
 
 }  // namespace pgre::component

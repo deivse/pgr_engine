@@ -1,11 +1,16 @@
 #pragma once
 #include <assimp/texture.h>
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <stdexcept>
 
 #include <glad/glad.h>
 #include <stb_image.h>
+
+#include <cereal/types/polymorphic.hpp>
+#include <cereal/types/string.hpp>
+#include <cerealization/archive_types.h>
 
 namespace pgre {
 
@@ -33,9 +38,12 @@ class texture2D_t : public texture_t
     uint32_t _width, _height;
     bool _has_alpha;
 
-    std::string _path;
+    std::filesystem::path _path{};
+    int _upscaling_algo, _downscaling_algo;
 
+    void load_from_file();
 public:
+    texture2D_t() = default;
     /**
      * @brief Loads texture from specified file.
      *
@@ -85,6 +93,23 @@ public:
         // glBindTexture(GL_TEXTURE_2D, _gl_id);
         glBindTextureUnit(slot, _gl_id); 
     }
+
+    template<class Archive>
+    void save(Archive& archive) const {
+        if (_path.empty()) throw std::runtime_error("Serialization of textures not loaded from file not implemented");
+        archive(std::filesystem::absolute(_path).string(), _upscaling_algo, _downscaling_algo);
+    }
+
+    template<class Archive>
+    void load(Archive& archive) {
+        std::string path;
+        archive(path, _upscaling_algo, _downscaling_algo);
+        _path = std::filesystem::path{path};
+        this->load_from_file();
+    }
 };
 
 } // namespace pgre
+
+CEREAL_REGISTER_TYPE(pgre::texture2D_t);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(pgre::texture_t, pgre::texture2D_t);

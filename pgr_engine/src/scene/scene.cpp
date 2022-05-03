@@ -4,7 +4,9 @@
 
 #include <components/all_components.h>
 #include <scene/entity.h>
-
+#include <cerealization/glm_serializers.h>
+#include <cerealization/std_serializers.h>
+#include <cereal/archives/json.hpp>
 
 
 namespace pgre::scene {
@@ -43,8 +45,8 @@ void scene_t::set_active_camera_entity(entt::entity camera_owner){
     active_camera_owner = camera_owner;
 }
 
-std::pair<std::shared_ptr<camera_t>, glm::mat4> scene_t::get_active_camera() const {
-    return std::pair<std::shared_ptr<camera_t>, const glm::mat4&>{
+std::pair<std::shared_ptr<perspective_camera_t>, glm::mat4> scene_t::get_active_camera() const {
+    return std::pair<std::shared_ptr<perspective_camera_t>, const glm::mat4&>{
       _registry.get<component::camera_component_t>(active_camera_owner).camera,
       _registry.get<component::transform_t>(active_camera_owner).get_view()};
 }
@@ -104,6 +106,29 @@ void scene_t::on_camera_component_remove(entt::registry& /*unused*/,
                                          entt::entity newly_not_a_camera_holder) {
     if (this->active_camera_owner == newly_not_a_camera_holder)
         this->active_camera_owner = entt::null;
+}
+
+void scene_t::serialize(const std::filesystem::path& filename) {
+    std::ofstream out(filename);
+    cereal::JSONOutputArchive output(out);
+    entt::snapshot{_registry}.entities(output).component<PGRE_COMPONENT_TYPES>(output);
+    output(active_camera_owner);
+}
+
+std::shared_ptr<scene_t> scene_t::deserialize(const std::filesystem::path& filename) {
+    auto retval = std::make_shared<scene_t>();
+    std::ifstream in(filename);
+    cereal::JSONInputArchive input(in);
+    entt::snapshot_loader{retval->_registry}.entities(input).component<PGRE_COMPONENT_TYPES>(input);
+    input(retval->active_camera_owner);
+
+    retval->_registry.view<component::transform_t, component::hierarchy_t>().each(
+      [&registry = retval->_registry](auto /*entity*/, component::transform_t& transform_c, component::hierarchy_t& hier_c) {
+          if (hier_c.parent!= entt::null) {
+              transform_c.bind_parent_transform(&(registry.get<component::transform_t>(hier_c.parent)._global_transform));
+          }
+      });
+    return retval;
 }
 
 }  // namespace pgre::scene

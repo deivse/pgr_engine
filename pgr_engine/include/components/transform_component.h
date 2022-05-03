@@ -12,6 +12,8 @@
 
 #include <scene/entity.h>
 
+#include <cerealization/glm_serializers.h>
+
 namespace pgre::component {
 
 class transform_t
@@ -24,7 +26,7 @@ public:
     glm::vec3 translation{};
     glm::quat orientation{};
 
-    transform_t(const glm::vec3& translation, const glm::quat& orientation = {1.0, 0.0, 0.0, 0.0},
+    transform_t(const glm::vec3& translation = glm::vec3{0.0}, const glm::quat& orientation = {1.0, 0.0, 0.0, 0.0},
                 const glm::vec3& scale = {1.0, 1.0, 1.0})
       : translation(translation), orientation(orientation), scale(scale) {
         update_parentlocal_transform();
@@ -80,7 +82,21 @@ public:
 
     operator const glm::mat4&() const { return _global_transform; }
 
+    template <class Archive>
+    void save(Archive& archive) const {
+        archive(scale, translation, orientation);
+        
+    }
+
+    template <class Archive>
+    void load(Archive& archive){
+        archive(scale, translation, orientation);
+        update_parentlocal_transform();
+        update_global_transform();
+    }
+
     friend class scene::entity_t;
+    friend class scene::scene_t;
 };
 
 } // namespace pgre::component

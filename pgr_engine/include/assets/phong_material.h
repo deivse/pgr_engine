@@ -3,6 +3,10 @@
 #include <primitives/shader_program.h>
 #include "material.h"
 
+#include <cerealization/archive_types.h>
+#include <cerealization/glm_serializers.h>
+#include <cereal/types/memory.hpp>
+
 namespace pgre {
 struct fog_settings_t
 {
@@ -18,6 +22,11 @@ struct fog_settings_t
         program.set_uniform("fog.color", _color);
         program.set_uniform("fog.density", _density);
         _settings_updated = false;
+    }
+
+    template <typename Archive>
+    void serialize(Archive& archive) {
+        archive(_enable, _color, _density);
     }
 
 private:
@@ -95,6 +104,15 @@ public:
         debug_assert(_shader_program != nullptr, "phong_material_t::init never called");
         return *_shader_program;
     }
+
+    template <class Archive>
+    void serialize(Archive& archive) {
+        archive(_diffuse, _ambient, _specular, _shininess, _transparency, _color_texture, _fog_settings);
+    }
 };
 
+
 } // namespace pgre
+
+// CEREAL_REGISTER_TYPE(pgre::phong_material_t);
+// CEREAL_REGISTER_POLYMORPHIC_RELATION(pgre::material_t, pgre::phong_material_t);

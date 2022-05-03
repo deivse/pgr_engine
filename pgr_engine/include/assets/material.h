@@ -5,6 +5,10 @@
 #include <primitives/shader_program.h>
 #include <assets/texture.h>
 
+#include <cerealization/archive_types.h>
+#include <cerealization/glm_serializers.h>
+#include <cereal/types/memory.hpp>
+
 namespace pgre {
 
 namespace scene {

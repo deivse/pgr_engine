@@ -6,13 +6,16 @@
 #include <primitives/shader_program.h>
 #include "buffer.h"
 
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
+
 namespace pgre::primitives {
 
 /**
  * @brief Holds all the information required for a call to glVertexAttribPointer.
  */
 struct buffer_element_t {
-    std::string_view glsl_name;
+    std::string glsl_name;
     /**
      * @brief element data type
      */
@@ -35,10 +38,17 @@ struct buffer_element_t {
 
     unsigned int shader_location = 0;
 
+    buffer_element_t() = default;
     buffer_element_t(GLenum type, uintptr_t items_per_vertex, std::string_view name,
                        bool normalize = false);
     
     [[nodiscard]] int get_size() const;
+
+
+    template <class Archive>
+    void serialize(Archive& archive){
+        archive(glsl_name, type, items_per_vertex, normalize, start_offset_bytes, shader_location);
+    }
 } __attribute__((aligned(64)));
 
 class buffer_layout_t {
@@ -49,15 +59,15 @@ class buffer_layout_t {
      */
     GLsizei _stride = 0;
 public:
+    buffer_layout_t() = default;
     /**
      * @brief Construct a new buffer_layout_t and calculates stride and offset (interleaving assumed).
      * 
      * @param shader shader program to get attribute locations from
      * @param elements initializer list of buffer_element_t
      */
-    // template<typename... Args>
-    buffer_layout_t(const shader_program_t& shader,
-                    std::initializer_list<buffer_element_t> elements);
+    buffer_layout_t(std::initializer_list<buffer_element_t> elements);
+    buffer_layout_t(const std::vector<buffer_element_t>& elements);
 
     [[nodiscard]] inline uintptr_t get_stride() const { return _stride; }
     /**
@@ -68,6 +78,18 @@ public:
     
     [[nodiscard]] decltype(_elements.cbegin()) begin() const {return _elements.cbegin();}
     [[nodiscard]] decltype(_elements.cend()) end() const {return _elements.cend();}
+
+    template <class Archive>
+    void save(Archive& archive) const {
+        archive(_elements);
+    }
 };
+
+template<class Archive>
+void load(Archive& archive, buffer_layout_t& layout) {
+    std::vector<buffer_element_t> loaded_elements;
+    archive(loaded_elements);
+    layout = buffer_layout_t(loaded_elements);
+}
 
 } // namespace pgre::primitives

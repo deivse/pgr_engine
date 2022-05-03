@@ -60,8 +60,8 @@ public:
     ~app_t();
 
     void on_event(event_t &evt);
-    void push_layer(std::unique_ptr<layers::basic_layer_t>&& layer);
-    void push_overlay(std::unique_ptr<layers::basic_layer_t>&& overlay);    
+    void push_layer(std::shared_ptr<layers::basic_layer_t> layer);
+    void push_overlay(std::shared_ptr<layers::basic_layer_t> overlay);    
     
     void main_loop();
     static window_t& get_window();

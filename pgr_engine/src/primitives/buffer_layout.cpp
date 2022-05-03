@@ -1,4 +1,5 @@
 #include <primitives/buffer_layout.h>
+#include <assets/phong_material.h>
 
 namespace pgre::primitives {
 
@@ -32,14 +33,16 @@ void buffer_layout_t::enable_and_point() const {
     }
 }
 
-buffer_layout_t::buffer_layout_t(const shader_program_t& shader,
-                                 std::initializer_list<buffer_element_t> elements) {
+buffer_layout_t::buffer_layout_t(std::initializer_list<buffer_element_t> elements)
+  : buffer_layout_t(std::vector<buffer_element_t>{elements}) {}
+
+buffer_layout_t::buffer_layout_t(const std::vector<buffer_element_t>& elements){
     int offset = 0;
     unsigned int shader_loc = 0;
     bool shader_pos_not_found = false;
     for (const auto& element : elements) {
         try {
-            shader_loc = shader.get_attrib_location(std::string(element.glsl_name));
+            shader_loc = phong_material_t::get_shader_s().get_attrib_location(std::string(element.glsl_name));
         } catch (const pgre::shader_attrib_inactive_error& err) {
             spdlog::warn("{} Vertex attribute after this one won't be active.",
                          err.what());
@@ -54,5 +57,6 @@ buffer_layout_t::buffer_layout_t(const shader_program_t& shader,
     }
     _stride = offset;
 }
+
 
 } // namespace pgre::primitives

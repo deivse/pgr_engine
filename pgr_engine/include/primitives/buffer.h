@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include <cereal/types/vector.hpp>
+
 namespace pgre::primitives {
 
 /**
@@ -40,11 +42,15 @@ struct buffer_t
         glBufferData(binding_target, size, data, usage);
         _current_data_offset = size;
         _current_allocated_size = size;
+
+        std::vector<DataTy> debug(size / sizeof(DataTy));
+        glGetBufferSubData(binding_target, 0, size, static_cast<void*>(debug.data())); 
+        sleep(1);
     }
     /**
      * @brief Set all data in one call. Overwrites previous buffer data.
      *
-     * @param data std::vector of bytes
+     * @param data std::vector of DataTy
      * @param usage OpenGL usage hint
      */
     void set_data(std::vector<DataTy>& data, GLenum usage = GL_STATIC_DRAW) {
@@ -106,18 +112,51 @@ struct buffer_t
     /**
      * @brief Get the size, in bytes, of data currently in the buffer.
      */
-    inline GLsizeiptr get_size() { return _current_data_offset; }
+    inline GLsizeiptr get_size() const { return _current_data_offset; }
 
-    inline int get_count() {
+    inline int get_count() const {
         return _current_data_offset / sizeof(DataTy);
     }
     /**
      * @brief Get the buffer's actual size, in bytes.
      */
     inline GLsizeiptr get_allocated_size() { return _current_allocated_size; }
+
 };
 
 using vertex_buffer_t = buffer_t<GL_ARRAY_BUFFER, uint8_t>;
 using index_buffer_t = buffer_t<GL_ELEMENT_ARRAY_BUFFER, GLuint>;
+
+template <class Archive>
+void save(Archive& archive, vertex_buffer_t const& vb) {
+    std::vector<uint8_t> buffer_data(vb.get_count());
+    
+    vb.bind();
+    glGetBufferSubData(GL_ARRAY_BUFFER, 0, vb.get_size(), static_cast<void*>(buffer_data.data()));
+    archive(buffer_data);
+}
+
+template <class Archive>
+void load(Archive& archive, vertex_buffer_t& vb) {
+    std::vector<uint8_t> buffer_data;
+    archive(buffer_data);
+    vb.set_data(buffer_data);
+}
+
+template <class Archive>
+void save(Archive& archive, index_buffer_t const& ib) {
+    std::vector<GLuint> buffer_data(ib.get_count());
+    
+    ib.bind();
+    glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, ib.get_size(), static_cast<void*>(buffer_data.data()));
+    archive(buffer_data);
+}
+
+template <class Archive>
+void load(Archive& archive, index_buffer_t& ib) {
+    std::vector<GLuint> buffer_data;
+    archive(buffer_data);
+    ib.set_data(buffer_data);
+}
 
 } // namespace pgre::primitives

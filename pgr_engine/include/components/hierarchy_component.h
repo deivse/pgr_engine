@@ -13,6 +13,11 @@ struct hierarchy_t
     entt::entity first_child{entt::null};
     entt::entity prev_sibling{entt::null};
     entt::entity next_sibling{entt::null};
+
+    template<typename Archive>
+    void serialize(Archive& archive) {
+        archive(num_children, parent, first_child, prev_sibling, next_sibling);
+    }
 };
 
-}
+} // namespace pgre::component

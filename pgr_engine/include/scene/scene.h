@@ -57,7 +57,7 @@ public:
      * @return std::optional<entity_t> the root entity of the loaded hierarchy or std::nullopt if
      * nothing to load.
      */
-    std::optional<entity_t> add_from_file (const std::filesystem::path& scene_file);
+    std::optional<entity_t> import_from_file (const std::filesystem::path& scene_file);
     /**
      * @brief Make an entity_t helper class instance for the provided in entity handle.
      */
@@ -88,7 +88,7 @@ public:
      * 
      * @warning scene must have active camera.
      */
-    std::pair<std::shared_ptr<camera_t>, glm::mat4> get_active_camera() const;\
+    std::pair<std::shared_ptr<perspective_camera_t>, glm::mat4> get_active_camera() const;\
 
     entt::entity get_active_camera_entity_handle() {return active_camera_owner;}
 
@@ -105,6 +105,21 @@ public:
      * @return scene_lights_t& 
      */
     scene_lights_t& get_lights();
+
+    /**
+     * @brief Saves all entities and components in the scene to a file.
+     * 
+     * @param filename path to the target file (will be created/overwritten);
+     */
+    void serialize(const std::filesystem::path& filename);
+
+    /**
+     * @brief Loads all entities and components into a new scene.
+     * 
+     * @param filename path to the source file (must exist, duh);
+     * @return std::shared_ptr<scene_t> ptr to scene loaded from file.
+     */
+    static std::shared_ptr<scene_t> deserialize(const std::filesystem::path& filename);
 
     friend struct entity_t;
 
