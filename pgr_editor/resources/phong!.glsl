@@ -11,12 +11,18 @@ struct Material {      // structure that describes currently used material
   bool use_texture;    // defines whether the texture is used or not
 };
 
+struct FogSettings {
+  vec4 color;
+  float density;
+  bool enable;
+};
+
 struct PointLight {
-    vec3  ambient;       // intensity & color of the ambient component
-    vec3  diffuse;       // intensity & color of the diffuse component
-    vec3  specular;      // intensity & color of the specular component
-    vec3  position;      // light position
-    vec3  attenuation;
+  vec3  ambient;       // intensity & color of the ambient component
+  vec3  diffuse;       // intensity & color of the diffuse component
+  vec3  specular;      // intensity & color of the specular component
+  vec3  position;      // light position
+  vec3  attenuation;
 };
 
 struct SpotLight {         // structure describing light parameters
@@ -31,10 +37,10 @@ struct SpotLight {         // structure describing light parameters
 };
 
 struct SunLight {
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
-    vec3 direction;
+  vec3 ambient;
+  vec3 diffuse;
+  vec3 specular;
+  vec3 direction;
 };
 
 #define MAX_SUN_LIGHTS 2
@@ -54,9 +60,10 @@ uniform mat4 view_matrix;
 uniform mat4 normal_matrix;  // inverse transposed model_matrix
 
 uniform sampler2D color_tex_sampler;
-uniform ivec2 color_tex_dimensions;
+uniform vec2 tex_coord_offset;
 
 uniform Material material;
+uniform FogSettings fog;
     
 smooth in vec2 v_tex_coord;
 smooth in vec3 v_position_cam;
@@ -68,6 +75,12 @@ float calc_dist_attenuation(vec3 light_att, float dist_to_light) {
     return 1.0 / (light_att[0] 
         + light_att[1] * dist_to_light 
         + light_att[2] * pow(dist_to_light, 2));
+}
+
+vec4 add_fog(vec4 color) {
+    float fog_factor = (fog.density* distance(vec3(0), v_position_cam))/100000;
+    return mix(clamp(color, 0.0, 1.0), fog.color, clamp(fog_factor, 0.0, 1.0));
+    // return vec4(vec3(distance(vec3(0), v_position_cam)/1000), 1);
 }
 
 vec3 calc_point_l(PointLight light, vec3 ver_pos_cam, vec3 ver_normal_cam){
@@ -83,7 +96,8 @@ vec3 calc_point_l(PointLight light, vec3 ver_pos_cam, vec3 ver_normal_cam){
 
     return dist_attenuation * ( material.ambient * light.ambient 
                               + material.diffuse * light.diffuse * cos_light_normal
-                              + pow(cos_reflected_view, material.shininess) * material.specular * light.specular );
+                              + float(bool(cos_light_normal)) * material.specular * light.specular
+                                * pow(cos_reflected_view, material.shininess) );
 }
 
 vec3 calc_sun_l(SunLight light, vec3 ver_pos_cam, vec3 ver_normal_cam){
@@ -95,7 +109,8 @@ vec3 calc_sun_l(SunLight light, vec3 ver_pos_cam, vec3 ver_normal_cam){
 
     return ( material.ambient * light.ambient 
            + material.diffuse * light.diffuse * cos_light_normal
-           + material.specular * light.specular * pow(cos_reflected_view, material.shininess) );
+           + material.specular * light.specular
+             * pow(cos_reflected_view, material.shininess) );
 }
 
 vec3 calc_spot_l(SpotLight light, vec3 ver_pos_cam, vec3 ver_normal_cam){
@@ -122,7 +137,8 @@ vec3 calc_spot_l(SpotLight light, vec3 ver_pos_cam, vec3 ver_normal_cam){
     return spot_attenuation * dist_attenuation 
            * ( material.ambient * light.ambient 
              + material.diffuse * light.diffuse * cos_light_normal
-             + material.specular * light.specular * pow(cos_reflected_view, material.shininess) );
+             + float(bool(cos_light_normal)) * material.specular * light.specular
+               * pow(cos_reflected_view, material.shininess) );
 }
 
 void main() {
@@ -146,7 +162,10 @@ void main() {
   output_color = vec4(color, material.opacity);
 
   if(material.use_texture) {
-    output_color *= texture(color_tex_sampler, v_tex_coord);
+    output_color *= texture(color_tex_sampler, vec2(v_tex_coord.x + tex_coord_offset.x, v_tex_coord.y + tex_coord_offset.y));
+  }
+  if(fog.enable) {
+    output_color = add_fog(output_color);
   }
 }
 } shader::fragment

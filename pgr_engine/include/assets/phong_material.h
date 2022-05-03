@@ -4,12 +4,30 @@
 #include "material.h"
 
 namespace pgre {
-    class phong_material_t : public material_t
+struct fog_settings_t
+{
+    bool _enable = true;
+    glm::vec4 _color{glm::vec3{0.5}, 1.0};
+    float _density = 200;
+
+    void apply_changes() { _settings_updated = true; }
+    void set_uniforms(pgre::shader_program_t& program) {
+        if (!_settings_updated) return;
+        glClearColor(_color.r, _color.g, _color.b, _color.a);
+        program.set_uniform("fog.enable", _enable);
+        program.set_uniform("fog.color", _color);
+        program.set_uniform("fog.density", _density);
+        _settings_updated = false;
+    }
+
+private:
+    bool _settings_updated = true;
+};
+
+class phong_material_t : public material_t
 {
     inline static std::unique_ptr<shader_program_t> _shader_program{nullptr};
-
-
-    static void set_scene_uniforms(scene::scene_t& scene);
+    inline static fog_settings_t _fog_settings{};
 
 public:
     glm::vec3 _diffuse{1.0f};
@@ -17,12 +35,12 @@ public:
     glm::vec3 _specular{1.0f};
     float _shininess = 0.5f;
     float _transparency = 0.0f;
-    
+
     std::shared_ptr<texture2D_t> _color_texture;
 
     /**
      * @brief Must be called once an OpenGL context is setup (but before rendering)
-     * 
+     *
      */
     static void init();
 
@@ -54,21 +72,29 @@ public:
     }
 
     /**
-     * @brief Set all light and material uniforms, and bind shader program.
-     * 
+     * @brief Set all instance-specific material uniforms, and bind shader program.
+     *
      * @param scene the scene to get lights from.
      */
-    void use(scene::scene_t& scene) override;
+    void use(scene::scene_t& /*scene*/) override;
+
+    /**
+     * @brief Sets all scene-global uniforms (lights, fog, etc.)
+     * Should be called once per frame per scene.     
+     * 
+     * @param scene the active scene.
+     */
+    static void set_scene_uniforms(scene::scene_t& scene);
 
     shader_program_t& get_shader() override {
         debug_assert(_shader_program != nullptr, "phong_material_t::init never called");
-        return *_shader_program; 
+        return *_shader_program;
     }
 
     static shader_program_t& get_shader_s() {
         debug_assert(_shader_program != nullptr, "phong_material_t::init never called");
-        return *_shader_program; 
+        return *_shader_program;
     }
 };
 
-}
+} // namespace pgre

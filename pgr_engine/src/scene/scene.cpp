@@ -56,6 +56,7 @@ void scene_t::update(const interval_t& delta){
     _registry.view<component::script_component_t>().each([&delta](auto /*entity*/, component::script_component_t& script_c){
         script_c.update(delta);
     });
+    phong_material_t::set_scene_uniforms(*this);
 }
 
 void scene_t::on_event(event_t& event) {

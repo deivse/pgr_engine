@@ -11,18 +11,18 @@ namespace {
         auto retval = std::make_unique<shader_program_t>("resources/phong!.glsl");
         retval->bind();
         color_texture->bind(0);
-        retval->set_uniform("colorTexSampler", 0);
+        retval->set_uniform("color_tex_sampler", 0);
         return retval;
     }
 } // namespace
 
-void phong_material_t::init() { _shader_program = phong_shader_init(); }
+void phong_material_t::init() { 
+    _shader_program = phong_shader_init();
+}
 
-void phong_material_t::use(scene::scene_t& scene) {
+void phong_material_t::use(scene::scene_t& /*scene*/) {
     debug_assert(_shader_program != nullptr, "phong_material_t::init never called");
     _shader_program->bind();
-
-    pgre::phong_material_t::set_scene_uniforms(scene);
 
     _shader_program->set_uniform("material.ambient", _ambient);
     _shader_program->set_uniform("material.diffuse", _diffuse);
@@ -40,6 +40,9 @@ void phong_material_t::use(scene::scene_t& scene) {
 }
 
 void phong_material_t::set_scene_uniforms(scene::scene_t& scene) {
+    _shader_program->bind();
+    _fog_settings.set_uniforms(*_shader_program);
+
     constexpr auto max_sun_lights = 2;
     constexpr auto max_spot_lights = 50;
     constexpr auto max_point_lights = 50;

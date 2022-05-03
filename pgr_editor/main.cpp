@@ -149,7 +149,7 @@ public:
 int main() {
     // spdlog::set_level(spdlog::level::warn);
     try {
-        spdlog::set_level(spdlog::level::level_enum::err);
+        spdlog::set_level(spdlog::level::level_enum::warn);
         auto scene = std::make_shared<pgre::scene::scene_t>();
 
         pgre::app_t app(1280, 720, "tesst", true);
