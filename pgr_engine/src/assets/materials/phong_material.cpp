@@ -8,7 +8,7 @@ namespace {
     auto phong_shader_init() {
         constexpr const unsigned char texture_data[]{0xFF, 0xFF, 0xFF};
         auto color_texture = std::make_shared<pgre::texture2D_t>(texture_data, 1, 1, false);
-        auto retval = std::make_unique<shader_program_t>("resources/phong!.glsl");
+        auto retval = std::make_unique<shader_program_t>("resources/shaders/phong.glsl");
         retval->bind();
         color_texture->bind(0);
         retval->set_uniform("color_tex_sampler", 0);
