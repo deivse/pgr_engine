@@ -22,7 +22,7 @@ void phong_material_t::init() {
 
 void phong_material_t::use(scene::scene_t& /*scene*/) {
     debug_assert(_shader_program != nullptr, "phong_material_t::init never called");
-    
+
     glDepthMask(GL_TRUE);
     _shader_program->bind();
 
@@ -49,7 +49,7 @@ void phong_material_t::set_matrices(const glm::mat4& M, const glm::mat4& V, cons
     _shader_program->set_uniform("pvm_matrix", PV * M);
 }
 
-void phong_material_t::set_scene_uniforms(scene::scene_t& scene) {
+void phong_material_t::set_scene_uniforms_s(scene::scene_t& scene) {
     _shader_program->bind();
     _fog_settings.set_uniforms(*_shader_program);
 

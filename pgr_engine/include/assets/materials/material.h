@@ -25,6 +25,8 @@ public:
     [[nodiscard]] virtual bool has_transparency() const = 0;
     virtual shader_program_t& get_shader() = 0;
     virtual void set_matrices(const glm::mat4& M, const glm::mat4& V, const glm::mat4& P, const glm::mat4& PV) = 0;
+    virtual uint32_t get_material_sort_index() = 0;
+    virtual void set_scene_uniforms(scene::scene_t& scene) = 0;
 };
 
 } // namespace pgre

@@ -59,6 +59,13 @@ public:
     void serialize(Archive& archive) {
         archive(_cubemap_texture);
     }
+
+    inline uint32_t get_material_sort_index() override {
+        return 0;
+    }
+
+    inline void set_scene_uniforms(scene::scene_t& scene) override {
+    }
 };
 
 

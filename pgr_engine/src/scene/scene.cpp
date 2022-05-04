@@ -61,7 +61,6 @@ void scene_t::update(const interval_t& delta){
     _registry.view<component::flying_camera_controller_t>().each([&delta, this](entt::entity entity, component::flying_camera_controller_t& camera_controller_c){
         if (entity == active_camera_owner) camera_controller_c.update(delta, {entity, this});
     });
-    phong_material_t::set_scene_uniforms(*this);
 }
 
 void scene_t::on_event(event_t& event) {

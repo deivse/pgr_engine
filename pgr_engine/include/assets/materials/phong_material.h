@@ -95,7 +95,12 @@ public:
      * 
      * @param scene the active scene.
      */
-    static void set_scene_uniforms(scene::scene_t& scene);
+    static void set_scene_uniforms_s(scene::scene_t& scene);
+
+    void set_scene_uniforms(scene::scene_t& scene) override {
+        phong_material_t::set_scene_uniforms_s
+        (scene);
+    }
 
     void set_matrices(const glm::mat4& M, const glm::mat4& V, const glm::mat4& P, const glm::mat4& PV) override;
 
@@ -112,6 +117,10 @@ public:
     template <class Archive>
     void serialize(Archive& archive) {
         archive(_diffuse, _ambient, _specular, _shininess, _transparency, _color_texture, _fog_settings);
+    }
+
+    inline uint32_t get_material_sort_index() override {
+        return 1;
     }
 };
 

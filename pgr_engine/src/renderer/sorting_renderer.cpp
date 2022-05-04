@@ -23,31 +23,46 @@ void sorting_renderer_t::init() {
     skybox_material_t::init();
 }
 
+void sorting_renderer_t::render(){
+    for (auto& [ix, render_command_vec]: _render_commands){
+        if (!render_command_vec.empty()) render_command_vec[0].material->set_scene_uniforms(*_curr_scene);
+        for (auto& rc: render_command_vec){
+            rc.material->use(*_curr_scene);
+            rc.material->set_matrices(rc.transform, _curr_v_matrix, _curr_p_matrix, _curr_pv_matrix);
+
+            rc.vao->bind();
+            glDrawElements(GL_TRIANGLES, rc.vao->get_index_buffer()->get_count(), GL_UNSIGNED_INT,
+                           nullptr);
+
+#ifndef PGRE_DISABLE_DEBUG_CHECKS
+            rc.vao->unbind();
+#endif
+        }
+    }
+}
+
 void sorting_renderer_t::begin_scene(scene::scene_t& scene) {
     _curr_scene = &scene;
     auto [camera, camera_view] = scene.get_active_camera();
     _curr_v_matrix = camera_view;
     _curr_p_matrix = camera->get_projection_matrix();
     _curr_pv_matrix = _curr_p_matrix * _curr_v_matrix;
+    for (auto& [ix, rquue] : _render_commands){
+        rquue.clear();
+    }
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
 }
 
-void sorting_renderer_t::end_scene() {}
+void sorting_renderer_t::end_scene() {
+    render();
+}
 
 void sorting_renderer_t::submit(const glm::mat4& transform,
                                 std::shared_ptr<primitives::vertex_array_t> vao,
                                 std::shared_ptr<material_t> material) {
-    material->use(*_curr_scene);
-    material->set_matrices(transform, _curr_v_matrix, _curr_p_matrix, _curr_pv_matrix);
-    
-    
-    vao->bind();
-    glDrawElements(GL_TRIANGLES, vao->get_index_buffer()->get_count(), GL_UNSIGNED_INT, nullptr);
-    
-#ifndef PGRE_DISABLE_DEBUG_CHECKS
-    vao->unbind();
-#endif
+    _render_commands[material->get_material_sort_index()].emplace_back(transform, std::move(vao),
+                                                                       std::move(material));
 }
 
 } // namespace pgre
