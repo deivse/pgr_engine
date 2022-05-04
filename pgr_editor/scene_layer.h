@@ -18,6 +18,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <utility>
 
+#include "assets/materials/skybox_material.h"
+#include "primitives/builtin_meshes.h"
 #include "scene_gui.h"
 
 class scene_layer_t : public pgre::layers::basic_layer_t
@@ -79,6 +81,24 @@ public:
         } catch ( const std::exception& e){
             spdlog::error(e.what());
         }
+    }
+
+    static void add_skybox(const std::string& cubemap_name, pgre::scene::entity_t& entity){
+        if (entity.has_component<pgre::component::mesh_t>()){
+            spdlog::error("Add skybox failed - entity  already has a mesh component");
+        }
+        using face = pgre::cubemap_texture_t::face_enum_t;
+        std::unordered_map<pgre::cubemap_texture_t::face_enum_t,std::string> paths {
+            {face::back, fmt::format("assets/skyboxes/{}_bk.jpg", cubemap_name)},
+            {face::front, fmt::format("assets/skyboxes/{}_ft.jpg", cubemap_name)},
+            {face::bottom, fmt::format("assets/skyboxes/{}_dn.jpg", cubemap_name)},
+            {face::top, fmt::format("assets/skyboxes/{}_up.jpg", cubemap_name)},
+            {face::right, fmt::format("assets/skyboxes/{}_rt.jpg", cubemap_name)},
+            {face::left, fmt::format("assets/skyboxes/{}_lf.jpg", cubemap_name)}
+        };
+        auto texture = std::make_shared<pgre::cubemap_texture_t>(paths, GL_NEAREST);
+        auto skybox_material = std::make_shared<pgre::skybox_material_t>(texture);
+        entity.add_component<pgre::component::mesh_t>(pgre::builtin_meshes::get_cube_vao(skybox_material), skybox_material);
     }
 
     void create_scene(){

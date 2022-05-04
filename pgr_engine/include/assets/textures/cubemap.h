@@ -60,19 +60,15 @@ public:
         if (_paths.empty())
             throw std::runtime_error(
               "Serialization of cubemaps not loaded from files is not implemented yet.");
-        auto old_paths = _paths;
-        std::ranges::transform(
-          old_paths, _paths,
-          [](const std::pair<face_enum_t, std::string>& el) -> std::pair<face_enum_t, std::string> {
-              return {el.first, std::filesystem::absolute(el.second).string()};
-          });
-        archive(_paths, _upscaling_algo, _downscaling_algo);
-        
+        decltype(_paths) paths;
+        for (const auto& x: _paths){
+            paths[x.first] = std::filesystem::absolute(x.second).string();
+        }
+        archive(paths, _upscaling_algo, _downscaling_algo);
     }
 
     template<class Archive>
     void load(Archive& archive) {
-        std::string path;
         archive(_paths, _upscaling_algo, _downscaling_algo);
         this->load_from_file();
     }

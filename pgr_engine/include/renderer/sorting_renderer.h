@@ -16,6 +16,7 @@ namespace pgre {
         scene::scene_t* _curr_scene;
         glm::mat4 _curr_pv_matrix; 
         glm::mat4 _curr_v_matrix;
+        glm::mat4 _curr_p_matrix;
     public:
         /**
          * @brief Initializes the renderer. 

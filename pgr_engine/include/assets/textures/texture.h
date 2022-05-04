@@ -12,6 +12,7 @@
 #include <cereal/types/string.hpp>
 #include <cerealization/archive_types.h>
 
+
 namespace pgre {
 
 class image_loading_error : public std::runtime_error

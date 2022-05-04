@@ -97,6 +97,8 @@ public:
      */
     static void set_scene_uniforms(scene::scene_t& scene);
 
+    void set_matrices(const glm::mat4& M, const glm::mat4& V, const glm::mat4& P, const glm::mat4& PV) override;
+
     shader_program_t& get_shader() override {
         debug_assert(_shader_program != nullptr, "phong_material_t::init never called");
         return *_shader_program;

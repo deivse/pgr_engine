@@ -10,10 +10,9 @@
 int main() {
     // spdlog::set_level(spdlog::level::warn);
     try {
-        pgre::app_t app(1280, 720, "tesst", true);
+        pgre::app_t app(1920, 1080, ":)))))))", true);
         spdlog::set_level(spdlog::level::level_enum::warn);
         std::shared_ptr<pgre::scene::scene_t> scene{};
-        // auto scene = pgre::scene::scene_t::deserialize("serialization_test2.json");
         auto scene_l = std::make_shared<scene_layer_t>(scene);
         app.push_layer(scene_l);
         app.push_overlay(std::make_unique<scene_gui_layer_t>(scene_l));

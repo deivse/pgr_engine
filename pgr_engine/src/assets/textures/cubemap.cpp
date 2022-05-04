@@ -2,7 +2,6 @@
 #include <assets/textures/cubemap.h>
 
 #include <fmt/format.h>
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 namespace pgre {
@@ -32,7 +31,6 @@ void cubemap_texture_t::load_from_file() {
     bool first = true;
     for (auto& [face, path]: _paths){
         auto old_w = width, old_h = height, old_channels = channels;
-        bool first = false;
         tex_data[face] = stbi_load(path.c_str(), &width, &height, &channels, 0);
 
         if (!tex_data[face])
@@ -41,6 +39,7 @@ void cubemap_texture_t::load_from_file() {
             throw image_loading_error(
               fmt::format("Dimensions of diff cubemap faces differ for {}.", path));
         }
+        bool first = false;
     }
     
     _width = width;
@@ -54,7 +53,7 @@ void cubemap_texture_t::load_from_file() {
     glTextureParameteri(_gl_id, GL_TEXTURE_MAG_FILTER, _upscaling_algo);
     glTextureParameteri(_gl_id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTextureParameteri(_gl_id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(_gl_id, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(_gl_id, GL_TEXTURE_WRAP_R, GL_MIRROR_CLAMP_TO_EDGE);
 
     for (auto& [face,data]: tex_data){
         glTextureSubImage3D(_gl_id, 0, 0, 0, face_to_ogl_offset.at(face), width, height, 1,

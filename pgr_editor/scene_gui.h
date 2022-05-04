@@ -12,6 +12,8 @@ class scene_gui_layer_t : public pgre::layers::imgui_layer_t
     std::optional<pgre::scene::entity_t> draw_entity(pgre::scene::entity_t& entity);
     std::string scene_file_path{};
     std::string import_file_path{};
+    std::string texture_file_path{};
+    std::string skybox_name{};
 
     std::optional<pgre::scene::entity_t> selected_entity;
     void scene_window();

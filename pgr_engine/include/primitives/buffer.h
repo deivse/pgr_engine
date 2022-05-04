@@ -37,7 +37,7 @@ struct buffer_t
      * @param data pointer to data
      * @param usage OpenGL usage hint
      */
-    void set_data(GLsizeiptr size, GLvoid* data, GLenum usage = GL_STATIC_DRAW) {
+    void set_data(GLsizeiptr size, const GLvoid* data, GLenum usage = GL_STATIC_DRAW) {
         glBindBuffer(binding_target, _gl_id);
         glBufferData(binding_target, size, data, usage);
         _current_data_offset = size;

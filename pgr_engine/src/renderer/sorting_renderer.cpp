@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 
 #include <assets/materials/phong_material.h>
+#include <assets/materials/skybox_material.h>
 #include <renderer/sorting_renderer.h>
 #include <scene/scene.h>
 
@@ -19,13 +20,15 @@ void sorting_renderer_t::init() {
     glDepthFunc(GL_LESS);
 
     phong_material_t::init();
+    skybox_material_t::init();
 }
 
 void sorting_renderer_t::begin_scene(scene::scene_t& scene) {
     _curr_scene = &scene;
     auto [camera, camera_view] = scene.get_active_camera();
     _curr_v_matrix = camera_view;
-    _curr_pv_matrix = camera->get_projection_matrix() * _curr_v_matrix;
+    _curr_p_matrix = camera->get_projection_matrix();
+    _curr_pv_matrix = _curr_p_matrix * _curr_v_matrix;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
 }
@@ -36,12 +39,9 @@ void sorting_renderer_t::submit(const glm::mat4& transform,
                                 std::shared_ptr<primitives::vertex_array_t> vao,
                                 std::shared_ptr<material_t> material) {
     material->use(*_curr_scene);
-    auto shader = material->get_shader();
-    // shader.set_uniform("model_matrix", transform);
-    shader.set_uniform("v_normal_matrix",glm::transpose(glm::inverse(_curr_v_matrix * transform)));
-    shader.set_uniform("view_matrix", _curr_v_matrix);
-    shader.set_uniform("vm_matrix", _curr_v_matrix * transform);
-    shader.set_uniform("pvm_matrix", _curr_pv_matrix * transform);
+    material->set_matrices(transform, _curr_v_matrix, _curr_p_matrix, _curr_pv_matrix);
+    
+    
     vao->bind();
     glDrawElements(GL_TRIANGLES, vao->get_index_buffer()->get_count(), GL_UNSIGNED_INT, nullptr);
     

@@ -114,9 +114,9 @@ void scene_gui_layer_t::entity_window() {
         }
         ImGui::Spacing();
         uint component_count = 0;
-        const auto delete_component_btn = [](pgre::scene::entity_t& entity, auto& c) {
-            if (pgre::imgui::colored_component_255(ImGui::SmallButton, {235, 0.0, 0.0, 255},
-                                                 "Remove Component")) {
+        auto delete_component_btn = [](pgre::scene::entity_t& entity, auto& c) {
+            if (pgre::imgui::colored_component_255(ImGui::Button, {235, 0.0, 0.0, 255},
+                                                 "Remove Component", ImVec2{0, 0})) {
                 entity.erase_component<std::decay_t<decltype(c)>>();
             }
         };
@@ -135,15 +135,15 @@ void scene_gui_layer_t::entity_window() {
                   component_title("Transform");
                   auto& transform_c = static_cast<pgre::component::transform_t&>(c);
                   ImGui::DragFloat3("Translation", glm::value_ptr(transform_c.translation), 0.5f,
-                                    -std::numeric_limits<float>::min(),
+                                    -std::numeric_limits<float>::max(),
                                     std::numeric_limits<float>::max());
                   auto euler_angles = transform_c.get_orientation_euler();
                   ImGui::DragFloat3("Orientation (Euler)", glm::value_ptr(euler_angles), 0.5f,
-                                    -std::numeric_limits<float>::min(),
+                                    -std::numeric_limits<float>::max(),
                                     std::numeric_limits<float>::max());
                   transform_c.set_orientation_euler(euler_angles);
                   ImGui::DragFloat3("Scale", glm::value_ptr(transform_c.scale), 0.2f,
-                                    -std::numeric_limits<float>::min(),
+                                    -std::numeric_limits<float>::max(),
                                     std::numeric_limits<float>::max());
                   ImGui::Text(transform_c.parent_transform_bound()
                                 ? "Parent Transform Bound: True"
@@ -295,6 +295,23 @@ void scene_gui_layer_t::entity_window() {
             add_component_button.template operator()<pgre::component::sun_light_t>("Sun Light");
             add_component_button.template operator()<pgre::component::flying_camera_controller_t>(
               "Flying Camera Controller");
+            ImGui::TreePop();
+        }
+        if (ImGui::TreeNode("Add Skybox")) {
+            const static auto cubemaps = std::array<std::string, 4>{
+                "sunsetflat",
+                "yellow",
+                "stormydays",
+            };
+            if (ImGui::TreeNode("Available cubemaps")){
+                for (const auto& name : cubemaps) ImGui::Text("%s", name.c_str());
+                ImGui::TreePop();
+            }
+            ImGui::InputString("Cubemap name", &skybox_name);
+            if (std::ranges::find(cubemaps, skybox_name) != cubemaps.end()
+                && ImGui::SmallButton("Add")) {
+                _scene_layer->add_skybox(skybox_name, *selected_entity);
+            }
             ImGui::TreePop();
         }
     } else {
