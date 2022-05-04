@@ -3,7 +3,7 @@
 #include <utility>
 
 #include <primitives/shader_program.h>
-#include <assets/texture.h>
+#include <assets/textures/texture2d.h>
 
 #include <cereal/types/memory.hpp>
 #include <cerealization/archive_types.h>

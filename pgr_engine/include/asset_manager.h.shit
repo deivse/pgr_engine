@@ -6,7 +6,7 @@
 
 
 #include "primitives/shader_program.h"
-#include "assets/texture.h"
+#include "assets/textures/texture2d.h"
 
 namespace pgre {
 using asset_id_t = uint64_t;

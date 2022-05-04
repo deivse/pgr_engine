@@ -53,7 +53,9 @@ public:
      */
     static void init();
 
+    virtual ~phong_material_t() = default;
     phong_material_t() = default;
+    
     explicit phong_material_t(const glm::vec3& diffuse_c, const glm::vec3& ambient_c,
                               const glm::vec3& specular_c, float shininess = 0.5f,
                               float transparency = 0.0f)

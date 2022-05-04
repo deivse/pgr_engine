@@ -8,7 +8,7 @@
 #include <primitives/vertex_array.h>
 #include <events/keyboard_events.h>
 #include <input/keyboard.h>
-#include <assets/texture.h>
+#include <assets/textures/texture2d.h>
 #include <assets/materials/phong_material.h>
 #include <renderer/camera.h>
 #include <scene/scene.h>

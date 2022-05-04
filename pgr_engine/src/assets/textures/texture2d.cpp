@@ -1,5 +1,5 @@
 #include "error_handling.h"
-#include <assets/texture.h>
+#include <assets/textures/texture2d.h>
 
 #include <fmt/format.h>
 #define STB_IMAGE_IMPLEMENTATION
@@ -48,8 +48,11 @@ texture2D_t::texture2D_t(const std::string& path, GLint upscaling_algo, GLint do
 
 texture2D_t::texture2D_t(const unsigned char* data, int width, int height, bool alpha,
                          GLint upscaling_algo, GLint downscaling_algo)
-  : _width(width), _height(height), _has_alpha(alpha) {
-
+  : _width(width),
+    _height(height),
+    _has_alpha(alpha),
+    _upscaling_algo(upscaling_algo),
+    _downscaling_algo(downscaling_algo) {
     glCreateTextures(GL_TEXTURE_2D, 1, &_gl_id);
     glTextureStorage2D(_gl_id, 1, alpha ? GL_RGBA8 : GL_RGB8, width, height); // TODO: mimmaps?
 
@@ -62,7 +65,12 @@ texture2D_t::texture2D_t(const unsigned char* data, int width, int height, bool 
 }
 
 texture2D_t::texture2D_t(const aiTexel* data, int width, int height, GLint upscaling_algo,
-                         GLint downscaling_algo) {
+                         GLint downscaling_algo)
+  : _width(width),
+    _height(height),
+    _upscaling_algo(upscaling_algo),
+    _downscaling_algo(downscaling_algo)
+     {
     glCreateTextures(GL_TEXTURE_2D, 1, &_gl_id);
     glTextureStorage2D(_gl_id, 1, GL_RGBA8, width, height); // TODO: mimmaps?
 

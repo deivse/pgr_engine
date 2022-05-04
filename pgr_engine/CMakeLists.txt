@@ -1,7 +1,7 @@
 file(GLOB third_party_headers third-party/*/include/*.h)
 file(GLOB third_party_cpps third-party/*/src/*.cpp)
-file(GLOB headers include/*.h include/*/*.h)
-file(GLOB cpps src/*.cpp src/*/*.cpp)
+file(GLOB headers CONFIGURE_DEPENDS include/*.h include/*/*.h include/*/*/*.h)
+file(GLOB cpps CONFIGURE_DEPENDS src/*.cpp src/*/*.cpp src/*/*/*.cpp)
 
 add_library(pgre STATIC ${headers} ${cpps} ${third_party_headers} ${third_party_cpps})
 
