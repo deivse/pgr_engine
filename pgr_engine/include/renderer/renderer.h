@@ -1,7 +1,7 @@
 #pragma once
 
 #include "./camera.h"
-#include <assets/material.h>
+#include <assets/materials/material.h>
 #include <primitives/vertex_array.h>
 #include <memory>
 #include <utility>

@@ -2,7 +2,7 @@
 
 #include <thread>
 
-#include <assets/material.h>
+#include <assets/materials/material.h>
 #include <renderer/renderer.h>
 
 namespace pgre {

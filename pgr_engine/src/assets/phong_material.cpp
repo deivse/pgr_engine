@@ -1,4 +1,4 @@
-#include <assets/phong_material.h>
+#include <assets/materials/phong_material.h>
 #include <scene/scene.h>
 #include <math.h>
 #include <components/transform_component.h>

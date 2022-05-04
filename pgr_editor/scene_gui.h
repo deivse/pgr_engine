@@ -16,8 +16,8 @@ class scene_gui_layer_t : public pgre::layers::imgui_layer_t
     std::optional<pgre::scene::entity_t> selected_entity;
     void scene_window();
     void entity_window();
-
     void scene_open_create_window();
+
 
 public:
     explicit scene_gui_layer_t(std::shared_ptr<scene_layer_t> scene_layer);

@@ -20,7 +20,7 @@ std::vector<entity_t> scene_t::get_top_level_entities() {
     std::vector<entity_t> retval;
     auto view = _registry.view<component::hierarchy_t>();
     retval.reserve(view.size());
-    view.each([scene = this, &retval](auto entity, component::hierarchy_t& hieararchy_c) {
+    view.each([scene = this, &retval, this](auto entity, component::hierarchy_t& hieararchy_c) {
         if (hieararchy_c.parent == entt::null) {
             retval.emplace_back(entity, scene);
         }
@@ -58,12 +58,18 @@ void scene_t::update(const interval_t& delta){
     _registry.view<component::script_component_t>().each([&delta](auto /*entity*/, component::script_component_t& script_c){
         script_c.update(delta);
     });
+    _registry.view<component::flying_camera_controller_t>().each([&delta, this](entt::entity entity, component::flying_camera_controller_t& camera_controller_c){
+        if (entity == active_camera_owner) camera_controller_c.update(delta, {entity, this});
+    });
     phong_material_t::set_scene_uniforms(*this);
 }
 
 void scene_t::on_event(event_t& event) {
     _registry.view<component::script_component_t>().each([&event](auto /*entity*/, component::script_component_t& script_c){
         script_c.on_event(event);
+    });
+    _registry.view<component::flying_camera_controller_t>().each([&event, this](entt::entity entity, component::flying_camera_controller_t& c){
+        if (entity == active_camera_owner) c.on_event(event, {entity, this});
     });
 }
     
@@ -73,10 +79,6 @@ void scene_t::render() {
     auto view = _registry.view<component::transform_t, component::mesh_t>();
     for (entt::entity entity: view ){
         auto& mesh_component = _registry.get<component::mesh_t>(entity);
-
-        // auto color = mesh_component.material->get_diffuse(); //TODO:remove DEBUG stuff
-        // spdlog::info("Submitting to render, diffuse color: {} {} {}", color.r, color.g, color.b);
-
         renderer::submit(_registry.get<component::transform_t>(entity), mesh_component.v_array, mesh_component.material);
     }
     renderer::end_scene();

@@ -65,7 +65,8 @@ void scene_gui_layer_t::scene_window() {
             selected_entity = opt;
         }
     }
-    if (ImGui::Button("AddNode")) {
+    ImGui::Spacing();
+    if (pgre::imgui::colored_component_1(ImGui::Button, {0.3, 1.0, 0.0, 1.0}, "Add Entity", ImVec2{0, 0})) {
         _scene_layer->scene->create_entity();
     }
     if (ImGui::TreeNode("Import")) {
@@ -87,6 +88,9 @@ void scene_gui_layer_t::scene_window() {
     if (ImGui::SmallButton("Save Scene")) {
         _scene_layer->save_scene(scene_file_path);
     }
+    if (ImGui::SmallButton("Add test cubes")) {
+        _scene_layer->add_test_objects();
+    }
     ImGui::End();
 }
 
@@ -100,11 +104,19 @@ void scene_gui_layer_t::entity_window() {
     if (selected_entity.has_value()) {
         pgre::imgui::colored_component_255(ImGui::Text, {255, 255, 0, 255}, "%s",
                                            selected_entity->get_name().c_str());
+        ImGui::SameLine();
+        if (pgre::imgui::colored_component_1(ImGui::Button, glm::vec4{1.0, 0, 0, 1}, "<- Delete",
+                                             ImVec2(0, 0))) {
+            selected_entity->destroy();
+            selected_entity = std::nullopt;
+            ImGui::End();
+            return;
+        }
         ImGui::Spacing();
         uint component_count = 0;
         const auto delete_component_btn = [](pgre::scene::entity_t& entity, auto& c) {
-            if (pgre::imgui::colored_component_1(ImGui::SmallButton, {1.0, 0.0, 0.0, 1.0},
-                                                 "Delete")) {
+            if (pgre::imgui::colored_component_255(ImGui::SmallButton, {235, 0.0, 0.0, 255},
+                                                 "Remove Component")) {
                 entity.erase_component<std::decay_t<decltype(c)>>();
             }
         };
@@ -179,25 +191,31 @@ void scene_gui_layer_t::entity_window() {
                       ImGui::TreePop();
                   }
                   if (ImGui::TreeNode("Material")) {
-                      ImGui::ColorEdit3("Ambient", glm::value_ptr(mesh_c.material->_ambient));
-                      ImGui::ColorEdit3("Diffuse", glm::value_ptr(mesh_c.material->_diffuse));
-                      ImGui::ColorEdit3("Specular", glm::value_ptr(mesh_c.material->_specular));
+                      if (auto material
+                          = std::dynamic_pointer_cast<pgre::phong_material_t>(mesh_c.material);
+                          material) {
+                          ImGui::ColorEdit3("Ambient", glm::value_ptr(material->_ambient));
+                          ImGui::ColorEdit3("Diffuse", glm::value_ptr(material->_diffuse));
+                          ImGui::ColorEdit3("Specular", glm::value_ptr(material->_specular));
 
-                      ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65 * 0.2);
-                      ImGui::DragFloat("Shininess", &(mesh_c.material->_shininess), 0.01f, 0.0f,
-                                       100.0f);
-                      ImGui::SameLine();
-                      ImGui::DragFloat("Transparency", &(mesh_c.material->_transparency), 0.01f,
-                                       0.0f, 1.0f);
-                      ImGui::PopItemWidth();
-                      if (mesh_c.material->_color_texture && ImGui::TreeNode("Texture")) {
-                          float size_mult = ImGui::GetWindowWidth()
-                                            / mesh_c.material->_color_texture->get_width();
-                          ImGui::Image(
-                            reinterpret_cast<void*>(mesh_c.material->_color_texture->get_gl_id()),
-                            {mesh_c.material->_color_texture->get_width() * size_mult,
-                             mesh_c.material->_color_texture->get_height() * size_mult});
-                          ImGui::TreePop();
+                          ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65 * 0.2);
+                          ImGui::DragFloat("Shininess", &(material->_shininess), 0.01f, 0.0f,
+                                           100.0f);
+                          ImGui::SameLine();
+                          ImGui::DragFloat("Transparency", &(material->_transparency), 0.01f, 0.0f,
+                                           1.0f);
+                          ImGui::PopItemWidth();
+                          if (material->_color_texture && ImGui::TreeNode("Texture")) {
+                              float size_mult
+                                = ImGui::GetWindowWidth() / material->_color_texture->get_width();
+                              ImGui::Image(
+                                reinterpret_cast<void*>(material->_color_texture->get_gl_id()),
+                                {material->_color_texture->get_width() * size_mult,
+                                 material->_color_texture->get_height() * size_mult});
+                              ImGui::TreePop();
+                          }
+                      } else {
+                          ImGui::Text("No GUI for this material type :(");
                       }
                       ImGui::TreePop();
                   }
@@ -228,6 +246,8 @@ void scene_gui_layer_t::entity_window() {
                   ImGui::ColorEdit3("Ambient", glm::value_ptr(spot_c.ambient));
                   ImGui::ColorEdit3("Diffuse", glm::value_ptr(spot_c.diffuse));
                   ImGui::ColorEdit3("Specular", glm::value_ptr(spot_c.specular));
+                  ImGui::DragFloat("cos(cone_angle/2)", &spot_c.cone_half_angle_cos);
+                  ImGui::DragFloat("In-cone distr. exponent", &spot_c.exponent);
                   ImGui::DragFloat("Attenuation (Constant)", glm::value_ptr(spot_c.attenuation));
                   ImGui::DragFloat("Attenuation (Linear)", glm::value_ptr(spot_c.attenuation) + 1);
                   ImGui::DragFloat("Attenuation (Quadratic)",
@@ -241,42 +261,40 @@ void scene_gui_layer_t::entity_window() {
                   ImGui::ColorEdit3("Ambient", glm::value_ptr(point_c.ambient));
                   ImGui::ColorEdit3("Diffuse", glm::value_ptr(point_c.diffuse));
                   ImGui::ColorEdit3("Specular", glm::value_ptr(point_c.specular));
+
                   ImGui::DragFloat("Attenuation (Constant)", glm::value_ptr(point_c.attenuation));
                   ImGui::DragFloat("Attenuation (Linear)", glm::value_ptr(point_c.attenuation) + 1);
                   ImGui::DragFloat("Attenuation (Quadratic)",
                                    glm::value_ptr(point_c.attenuation) + 2);
 
                   ImGui::Checkbox("Enabled", &point_c.enabled);
+              } else if constexpr (std::is_same_v<std::remove_reference_t<decltype(c)>,
+                                                  pgre::component::flying_camera_controller_t>) {
+                  component_title("Flying Camera Controller");
+                  auto& cc_c = static_cast<pgre::component::flying_camera_controller_t&>(c);
+                  ImGui::DragFloat("Move Speed", &cc_c.move_speed);
+                  ImGui::Text("Press 'M' to turn mouse input on or off.");
               }
               if (delete_comp_enabled) delete_component_btn(*selected_entity, c);
           });
         ImGui::Spacing();
         ImGui::Text("Total Components: %u", component_count);
         ImGui::Spacing();
-        const auto add_component
-          = [&scene = _scene_layer->scene, &entity = selected_entity]<typename CompTy>() -> bool {
-            if (entity->has_component<CompTy>()) return false;
-            entity->add_component<CompTy>();
-            return true;
+
+        const auto add_component_button = [&scene = _scene_layer->scene, &entity = selected_entity]<typename CompTy>(const char* name){
+            if (entity->has_component<CompTy>()) return;
+            if (ImGui::SmallButton(name)){
+                entity->add_component<CompTy>();
+            }
         };
 
         if (ImGui::TreeNode("Add component")) {
-            if (ImGui::SmallButton("Camera")) {
-                if (add_component.template operator()<pgre::component::camera_component_t>()) {
-                    selected_entity->get_component<pgre::component::camera_component_t>().camera
-                      = std::make_shared<pgre::perspective_camera_t>(60);
-                    selected_entity->add_script(std::make_unique<camera_script_t>());
-                }
-            }
-            if (ImGui::SmallButton("Point Light")) {
-                add_component.template operator()<pgre::component::point_light_t>();
-            }
-            if (ImGui::SmallButton("Spot Light")) {
-                add_component.template operator()<pgre::component::spot_light_t>();
-            }
-            if (ImGui::SmallButton("Sun Light")) {
-                add_component.template operator()<pgre::component::sun_light_t>();
-            }
+            add_component_button.template operator()<pgre::component::camera_component_t>("Camera");
+            add_component_button.template operator()<pgre::component::point_light_t>("Point Light");
+            add_component_button.template operator()<pgre::component::spot_light_t>("Spot Light");
+            add_component_button.template operator()<pgre::component::sun_light_t>("Sun Light");
+            add_component_button.template operator()<pgre::component::flying_camera_controller_t>(
+              "Flying Camera Controller");
             ImGui::TreePop();
         }
     } else {

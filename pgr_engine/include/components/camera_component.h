@@ -7,7 +7,7 @@
 namespace pgre::component {
 struct camera_component_t
 {
-    std::shared_ptr<perspective_camera_t> camera;
+    std::shared_ptr<perspective_camera_t> camera = std::make_shared<perspective_camera_t>(80);
 
     template<typename Archive>
     void serialize(Archive& archive) {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "assets/phong_material.h"
+#include "assets/materials/phong_material.h"
 #include "components/hierarchy_component.h"
 #include "components/component_predecl.h"
 #include "layers/basic_layer.h"

@@ -42,10 +42,6 @@ struct buffer_t
         glBufferData(binding_target, size, data, usage);
         _current_data_offset = size;
         _current_allocated_size = size;
-
-        std::vector<DataTy> debug(size / sizeof(DataTy));
-        glGetBufferSubData(binding_target, 0, size, static_cast<void*>(debug.data())); 
-        sleep(1);
     }
     /**
      * @brief Set all data in one call. Overwrites previous buffer data.

@@ -52,10 +52,11 @@ bool entity_t::remove_parent() {
         return true;
     }
     auto& prev_sib_hier_c = scene->_registry.get<c::hierarchy_t>(child_hierarchy_c.prev_sibling);
-    auto* next_sib_hier_c = scene->_registry.try_get<c::hierarchy_t>(child_hierarchy_c.next_sibling);
     prev_sib_hier_c.next_sibling = child_hierarchy_c.next_sibling;
-    if (next_sib_hier_c) next_sib_hier_c->prev_sibling = child_hierarchy_c.prev_sibling;
-
+    if (child_hierarchy_c.next_sibling != entt::null) {
+        auto& next_sib_hier_c = scene->_registry.get<c::hierarchy_t>(child_hierarchy_c.next_sibling);
+        next_sib_hier_c.prev_sibling = child_hierarchy_c.prev_sibling;
+    }
     child_hierarchy_c.prev_sibling = child_hierarchy_c.next_sibling = entt::null;
 
     return true;

@@ -9,13 +9,10 @@
 #include "mesh_component.h"
 #include "light_components.h"
 #include "script_component.h"
+#include "flying_camera_controller.h"
 
 #define PGRE_COMPONENT_TYPES                                                                         \
     pgre::component::tag_t, pgre::component::transform_t, pgre::component::camera_component_t, \
       pgre::component::hierarchy_t, pgre::component::mesh_t, pgre::component::spot_light_t,    \
       pgre::component::sun_light_t, pgre::component::point_light_t,                            \
-      pgre::component::script_component_t
-
-namespace pgre::component {
-using variant_t = std::variant<PGRE_COMPONENT_TYPES>;
-}
+      pgre::component::script_component_t, pgre::component::flying_camera_controller_t

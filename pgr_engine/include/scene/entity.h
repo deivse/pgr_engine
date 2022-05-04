@@ -169,16 +169,20 @@ public:
     }
 
     [[nodiscard]] bool is_valid() const {
-        return handle != entt::null && scene->_registry.valid(handle);
+        return handle != entt::null && scene && scene->_registry.valid(handle);
     }
 
     operator entt::entity() const { return handle; }
 
     /**
-     * @brief Destroys (and invalidates) the entity == removes from scene. 
+     * @brief Destroys (and invalidates) the entity and it's children. 
      * 
      */
     void destroy() {
+        this->remove_parent();
+        for (auto& child: this->get_children()){
+            child.destroy();
+        }
         scene->_registry.destroy(handle);
         handle = entt::null;
     }

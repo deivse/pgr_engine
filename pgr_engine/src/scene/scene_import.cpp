@@ -121,7 +121,8 @@ std::optional<entity_t> scene_t::import_from_file(const std::filesystem::path& s
                                                                   {GL_FLOAT, 3, "normal"},
                                                                   {GL_FLOAT, 2, "tex_coord"}}
             : std::initializer_list<primitives::buffer_element_t>{{GL_FLOAT, 3, "position"},
-                                                                  {GL_FLOAT, 3, "normal"}});
+                                                                  {GL_FLOAT, 3, "normal"}},
+          std::make_shared<phong_material_t>());
 
         std::vector<unsigned int> indices(ai_mesh->mNumFaces * 3);
         for (unsigned int face_ix = 0; face_ix < ai_mesh->mNumFaces; face_ix++) {

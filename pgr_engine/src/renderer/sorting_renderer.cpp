@@ -1,6 +1,6 @@
 #include <glad/glad.h>
 
-#include <assets/phong_material.h>
+#include <assets/materials/phong_material.h>
 #include <renderer/sorting_renderer.h>
 #include <scene/scene.h>
 

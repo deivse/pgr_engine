@@ -5,6 +5,7 @@
 
 #include <primitives/shader_program.h>
 #include "buffer.h"
+#include "assets/materials/material.h"
 
 #include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>
@@ -53,6 +54,7 @@ struct buffer_element_t {
 
 class buffer_layout_t {
     std::vector<buffer_element_t> _elements;
+    std::shared_ptr<material_t> _material;
     /**
      * @brief specifies the byte offset between consecutive generic vertex
      * attributes
@@ -66,8 +68,8 @@ public:
      * @param shader shader program to get attribute locations from
      * @param elements initializer list of buffer_element_t
      */
-    buffer_layout_t(std::initializer_list<buffer_element_t> elements);
-    buffer_layout_t(const std::vector<buffer_element_t>& elements);
+    buffer_layout_t(std::initializer_list<buffer_element_t> elements, std::shared_ptr<material_t> material);
+    buffer_layout_t(const std::vector<buffer_element_t>& elements, std::shared_ptr<material_t> material);
 
     [[nodiscard]] inline uintptr_t get_stride() const { return _stride; }
     /**
@@ -81,15 +83,16 @@ public:
 
     template <class Archive>
     void save(Archive& archive) const {
-        archive(_elements);
+        archive(_elements, _material);
     }
 };
 
 template<class Archive>
 void load(Archive& archive, buffer_layout_t& layout) {
     std::vector<buffer_element_t> loaded_elements;
-    archive(loaded_elements);
-    layout = buffer_layout_t(loaded_elements);
+    std::shared_ptr<material_t> material;
+    archive(loaded_elements, material);
+    layout = buffer_layout_t(loaded_elements, material);
 }
 
 } // namespace pgre::primitives
