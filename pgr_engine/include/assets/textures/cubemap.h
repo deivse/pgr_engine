@@ -1,13 +1,29 @@
 #pragma once
 #include "texture.h"
 
+#include <cereal/types/unordered_map.hpp>
+#include <cereal/types/string.hpp>
+
 namespace pgre {
 class cubemap_texture_t : public texture_t
 {
+public:
+    enum class face_enum_t
+    {
+        front,
+        back,
+        bottom,
+        top,
+        left,
+        right
+    };
+
+private:
+
     uint32_t _width{0}, _height{0};
     bool _has_alpha{true};
 
-    std::filesystem::path _path{};
+    std::unordered_map<face_enum_t, std::string > _paths;
     int _upscaling_algo{}, _downscaling_algo{};
 
     void load_from_file();
@@ -23,33 +39,8 @@ public:
      * @param upscaling_algo Upscaling algorithm to use, e.g. GL_LINEAR
      * @param downscaling_algo Downscaling algorithm to use, e.g. GL_LINEAR
      */
-    explicit cubemap_texture_t(const std::string& path, GLint upscaling_algo = GL_LINEAR,
-                         GLint downscaling_algo = GL_LINEAR);
-
-    /**
-     * @brief Loads texture from data.
-     *
-     * @param data texture data, 8 bits per channel
-     * @param width img width
-     * @param height img height
-     * @param alpha should be true for RGBA, false for RGB.
-     * @param upscaling_algo Upscaling algorithm to use, e.g. GL_LINEAR
-     * @param downscaling_algo Downscaling algorithm to use, e.g. GL_LINEAR
-     */
-    explicit cubemap_texture_t(const unsigned char* data, int width, int height, bool alpha,
-                         GLint upscaling_algo = GL_LINEAR, GLint downscaling_algo = GL_LINEAR);
-
-    /**
-     * @brief Loads texture from assimp data.
-     *
-     * @param data assimp texture data
-     * @param width img width
-     * @param height img height
-     * @param upscaling_algo Upscaling algorithm to use, e.g. GL_LINEAR
-     * @param downscaling_algo Downscaling algorithm to use, e.g. GL_LINEAR
-     */
-    explicit cubemap_texture_t(const aiTexel* data, int width, int height,
-                         GLint upscaling_algo = GL_LINEAR, GLint downscaling_algo = GL_LINEAR);
+    explicit cubemap_texture_t(std::unordered_map<face_enum_t,std::string> paths, GLint upscaling_algo = GL_LINEAR,
+                               GLint downscaling_algo = GL_LINEAR);
 
     [[nodiscard]] bool has_alpha() const { return _has_alpha; }
     [[nodiscard]] inline uint32_t get_width() const { return _width; }
@@ -66,17 +57,23 @@ public:
 
     template<class Archive>
     void save(Archive& archive) const {
-        if (_path.empty())
+        if (_paths.empty())
             throw std::runtime_error(
-              "Serialization of textures not loaded from file not implemented");
-        archive(std::filesystem::absolute(_path).string(), _upscaling_algo, _downscaling_algo);
+              "Serialization of cubemaps not loaded from files is not implemented yet.");
+        auto old_paths = _paths;
+        std::ranges::transform(
+          old_paths, _paths,
+          [](const std::pair<face_enum_t, std::string>& el) -> std::pair<face_enum_t, std::string> {
+              return {el.first, std::filesystem::absolute(el.second).string()};
+          });
+        archive(_paths, _upscaling_algo, _downscaling_algo);
+        
     }
 
     template<class Archive>
     void load(Archive& archive) {
         std::string path;
-        archive(path, _upscaling_algo, _downscaling_algo);
-        _path = std::filesystem::path{path};
+        archive(_paths, _upscaling_algo, _downscaling_algo);
         this->load_from_file();
     }
 };
