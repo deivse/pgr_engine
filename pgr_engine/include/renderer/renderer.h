@@ -18,6 +18,7 @@ namespace pgre {
                             std::shared_ptr<material_t> material)
           = 0;
         virtual void end_scene() = 0;
+        virtual void on_resize(const glm::ivec2& new_win_dims) = 0;
     };
 
     class renderer {
@@ -40,6 +41,10 @@ namespace pgre {
 
         inline static void end_scene(){
             _instance->end_scene();
+        }
+
+        inline static void on_resize(const glm::ivec2& new_win_dims){
+            _instance->on_resize(new_win_dims);
         }
     };
 

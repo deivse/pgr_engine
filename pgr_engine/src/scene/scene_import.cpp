@@ -19,13 +19,11 @@ namespace {
 namespace pgre::scene {
 std::optional<entity_t> scene_t::import_from_file(const std::filesystem::path& scene_file) {
     static Assimp::Importer importer;
-    if (scene_file.extension() != ".dae")
-        throw std::runtime_error("Collada is the only scene format currently supported.");
     importer.SetPropertyInteger(AI_CONFIG_PP_PTV_NORMALIZE, 1);
 
-    const aiScene* ai_scene
-      = importer.ReadFile(scene_file.c_str(), 0 | aiProcess_Triangulate 
-                                                | aiProcess_JoinIdenticalVertices);
+    const aiScene* ai_scene = importer.ReadFile(
+      scene_file.c_str(), 0 | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices
+                            | aiProcess_GenNormals);
 
     // abort if the loader fails
     if (ai_scene == NULL) {
@@ -149,7 +147,7 @@ std::optional<entity_t> scene_t::import_from_file(const std::filesystem::path& s
     }
 
     for (unsigned int child_ix = 0; child_ix < ai_root->mNumChildren; child_ix++) {
-        hierarchy_import_rec(root, ai_root->mChildren[child_ix], glm::mat4{1.0f}, materials,
+        hierarchy_import_rec(root, ai_root->mChildren[child_ix], materials,
                              vertex_arrays, ai_scene);
     }
 
@@ -198,8 +196,7 @@ std::optional<entity_t> scene_t::import_from_file(const std::filesystem::path& s
 }
 
 void scene_t::hierarchy_import_rec(
-  entity_t& parent, aiNode* ai_node, glm::mat4 acc_transform,
-  std::vector<std::shared_ptr<phong_material_t>>& materials,
+  entity_t& parent, aiNode* ai_node, std::vector<std::shared_ptr<phong_material_t>>& materials,
   std::vector<std::shared_ptr<primitives::vertex_array_t>>& vertex_arrays,
   const aiScene* ai_scene) {
     auto transform = mat4_cast(ai_node->mTransformation);
@@ -213,7 +210,7 @@ void scene_t::hierarchy_import_rec(
     }
 
     for (unsigned int child_ix = 0; child_ix < ai_node->mNumChildren; child_ix++) {
-        hierarchy_import_rec(new_entity, ai_node->mChildren[child_ix], transform, materials,
+        hierarchy_import_rec(new_entity, ai_node->mChildren[child_ix], materials,
                              vertex_arrays, ai_scene);
     }
 }

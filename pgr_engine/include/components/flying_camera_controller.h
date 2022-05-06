@@ -10,8 +10,9 @@ namespace pgre::component {
 class flying_camera_controller_t
 {
     bool mouse_input_enabled = false;
+    float last_x{}, last_y{};
 public:
-    float move_speed = 12.0f;
+    float move_speed = 18.0f;
 
     flying_camera_controller_t() = default;
 
@@ -25,7 +26,6 @@ public:
               auto curr_y = static_cast<float>(-event.y);
               auto curr_x = static_cast<float>(event.x);
 
-              static auto last_x = curr_x, last_y = curr_y;
               static float pitch = 0;
               static float yaw = 90;
 
@@ -43,16 +43,19 @@ public:
 
               return true;
           });
-        dispatcher.dispatch<pgre::key_released_evt_t>([this](pgre::key_released_evt_t& event) {
+        dispatcher.dispatch<key_released_evt_t>([this](key_released_evt_t& event) {
             if (event.key == GLFW_KEY_M) {
                 if (mouse_input_enabled) {
-                    pgre::app_t::get_window().set_cursor_enabled(true);
+                    app_t::get_window().set_cursor_enabled(true);
                     mouse_input_enabled = false;
                 } else {
-                    pgre::app_t::get_window().set_cursor_enabled(false);
-                    if (!pgre::app_t::get_window().enable_raw_mouse_input()) {
+                    app_t::get_window().set_cursor_enabled(false);
+                    if (!app_t::get_window().enable_raw_mouse_input()) {
                         throw std::runtime_error("Raw mouse input isn't supported");
                     }
+                    auto cursor_pos = app_t::get_window().get_cursor_pos();
+                    last_x = cursor_pos.x;
+                    last_x = cursor_pos.y;
                     mouse_input_enabled = true;
                 }
                 return false;
@@ -61,39 +64,36 @@ public:
         });
     }
 
-    void update(const pgre::interval_t& delta, scene::entity_t&& entity) {
-        auto& transform_c = entity.get_component<pgre::component::transform_t>();
-        const auto& transform = transform_c.get_transform();
-
-        if (pgre::input::key_down(GLFW_KEY_W)) {
-            transform_c.translation.y += move_speed * delta.seconds;
+    void update(const interval_t& delta, scene::entity_t&& entity) {
+        auto& transform_c = entity.get_component<component::transform_t>();
+        const auto& forward_vec = glm::rotate(transform_c.orientation, glm::vec3(0.0, 0.0, 1.0));
+        const auto& right_vec = glm::rotate(transform_c.orientation, glm::vec3(1.0, 0.0, 0.0));
+        // const auto& up_vec = glm::rotate(transform_c.orientation, glm::vec3(0.0, 1.0, 0.0));
+        glm::vec3 translation_vec{0}; 
+        if (input::key_down(GLFW_KEY_W)) {
+            translation_vec -= forward_vec;
         }
-        if (pgre::input::key_down(GLFW_KEY_S)) {
-            transform_c.translation.y -= move_speed * delta.seconds;
+        if (input::key_down(GLFW_KEY_S)) {
+            translation_vec += forward_vec;
         }
-        if (pgre::input::key_down(GLFW_KEY_D)) {
-            transform_c.translation.x += move_speed * delta.seconds;
-            // transform_c.set_from_mat(glm::translate(transform, {move_speed * delta.seconds, 0.0,
-            // 0.0}));
+        if (input::key_down(GLFW_KEY_D)) {
+            translation_vec += right_vec;
         }
-        if (pgre::input::key_down(GLFW_KEY_A)) {
-            transform_c.translation.x -= move_speed * delta.seconds;
-            // transform_c.set_from_mat(glm::translate(transform, {-move_speed * delta.seconds, 0.0,
-            // 0.0}));
+        if (input::key_down(GLFW_KEY_A)) {
+            translation_vec -= right_vec;
         }
-        if (pgre::input::key_down(GLFW_KEY_SPACE)) {
-            transform_c.translation.z += move_speed * delta.seconds;
-            // transform_c.set_from_mat(glm::translate(transform, {0.0, 0.0, move_speed *
-            // delta.seconds}));
+        if (input::key_down(GLFW_KEY_SPACE)) {
+            translation_vec.z += 1;
         }
-        if (pgre::input::key_down(GLFW_KEY_LEFT_SHIFT)) {
-            transform_c.translation.z -= move_speed * delta.seconds;
-            // transform_c.set_from_mat(glm::translate(transform, {0.0, 0.0, -move_speed *
-            // delta.seconds}));
+        if (input::key_down(GLFW_KEY_LEFT_SHIFT)) {
+            translation_vec.z -= 1;
         }
+        if (translation_vec == glm::vec3(0)) return;
+        transform_c.translation
+          += glm::normalize(translation_vec)
+             * (input::key_down(GLFW_KEY_LEFT_CONTROL) ? 2.5f * move_speed : move_speed)
+             * delta.seconds;
         transform_c.update_parentlocal_transform();
-        auto camera_pos = (transform_c.get_transform() * glm::vec4{0.0f, 0.0f, 0.0f, 1.0f});
-        spdlog::info("camera posititon: {}, {}, {}", camera_pos.x, camera_pos.y, camera_pos.z);
     }
 
     template<class Archive>

@@ -35,11 +35,10 @@ namespace pgre {
         void submit(const glm::mat4& transform, std::shared_ptr<primitives::vertex_array_t> vao,
                     std::shared_ptr<material_t> material) override;
         void end_scene() override;
-        /**
-         * @brief Signalizes that all draw calls for curr scene have been made, and the render thread can start. 
-         * Blocks if previous frame is still rendering.
-         */
-        void start_render();
+
+        void on_resize(const glm::ivec2& new_win_dims) override {
+            glViewport(0, 0, new_win_dims.x, new_win_dims.y);
+        }
     };
 }  // namespace pgre
 

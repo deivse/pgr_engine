@@ -1,6 +1,7 @@
 
 #include <events/keyboard_events.h>
 #include <renderer/renderer.h>
+#include <utility/call_at_scope_exit.h>
 #include <app.h>
 
 namespace pgre {
@@ -17,6 +18,7 @@ namespace detail {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, ogl_v_minor);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, gl_forward_compat);
         glfwWindowHint(GLFW_OPENGL_PROFILE, glfw_ogl_profile);
+        glfwWindowHint(GLFW_SAMPLES, 4);
     }
 
     void load_gl_funcs() {
@@ -55,13 +57,18 @@ app_t::app_t(uint16_t width, uint16_t height, const std::string& title, bool vsy
 
     renderer::init();
 
-    register_event_handlers();
+    register_callbacks();
     
     _instance = this;
+
+    static auto glfw_terminate_at_program_end = call_at_scope_exit_t([](){
+        glfwTerminate();
+    });
 }
 
-void app_t::register_event_handlers() {
+void app_t::register_callbacks() {
     // set user data pointer to the app instance;
+    glfwSetWindowSizeCallback(_window->get_native(), &window_t::resize_callback);
     glfwSetWindowUserPointer(_window->get_native(), this);
 
     glfwSetCursorPosCallback(_window->get_native(), [](GLFWwindow* window, double x, double y) {
@@ -90,7 +97,6 @@ void app_t::register_event_handlers() {
 
 app_t::~app_t() {
     _window.reset();
-    glfwTerminate();
 }
 
 void app_t::push_layer(std::shared_ptr<layers::basic_layer_t> layer) {

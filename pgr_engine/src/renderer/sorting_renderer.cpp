@@ -11,7 +11,8 @@ namespace pgre {
 const std::unique_ptr<renderer_i> renderer::_instance = std::make_unique<sorting_renderer_t>();
 
 void sorting_renderer_t::init() {
-    glDisable(GL_CULL_FACE);
+    glEnable(GL_MULTISAMPLE);
+    // glDisable(GL_CULL_FACE);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -47,15 +48,15 @@ void sorting_renderer_t::begin_scene(scene::scene_t& scene) {
     _curr_v_matrix = camera_view;
     _curr_p_matrix = camera->get_projection_matrix();
     _curr_pv_matrix = _curr_p_matrix * _curr_v_matrix;
-    for (auto& [ix, rquue] : _render_commands){
-        rquue.clear();
-    }
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
 }
 
 void sorting_renderer_t::end_scene() {
     render();
+    for (auto& [ix, rc_queue] : _render_commands){
+        rc_queue.clear();
+    }
 }
 
 void sorting_renderer_t::submit(const glm::mat4& transform,

@@ -69,14 +69,15 @@ public:
         if (_path.empty())
             throw std::runtime_error(
               "Serialization of textures not loaded from file not implemented");
-        archive(std::filesystem::absolute(_path).string(), _upscaling_algo, _downscaling_algo);
+        auto u8str  = _path.u8string();
+        archive(std::string(u8str.begin(), u8str.end()), _upscaling_algo, _downscaling_algo);
     }
 
     template<class Archive>
     void load(Archive& archive) {
         std::string path;
         archive(path, _upscaling_algo, _downscaling_algo);
-        _path = std::filesystem::path{path};
+        _path = std::filesystem::path{std::u8string(path.begin(), path.end())};
         this->load_from_file();
     }
 };

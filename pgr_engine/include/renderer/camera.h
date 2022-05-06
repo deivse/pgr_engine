@@ -17,21 +17,28 @@ class perspective_camera_t
     glm::vec2 _dimensions;
     glm::mat4 _proj_m;
 
-
     [[nodiscard]] glm::mat4 _calc_projection_matrix() const {
         return glm::perspective(glm::radians(_fov_deg), _dimensions.x / _dimensions.y, _near, _far);
     }
 
 public:
-    perspective_camera_t(float fov_deg = 90, float near = 0.01f, float far = 500.0f,
-                         glm::vec2 dimensions = app_t::get_window().get_dimensions())
-      : _fov_deg(fov_deg), _near(near), _far(far), _dimensions(dimensions) {
-          _proj_m = _calc_projection_matrix();
-      };
+    perspective_camera_t(float fov_deg = 90, float near = 0.01f, float far = 500.0f)
+      : _fov_deg(fov_deg),
+        _near(near),
+        _far(far),
+        _dimensions(app_t::get_window().get_dimensions())
+    {
+        _proj_m = _calc_projection_matrix();
+
+        app_t::get_window().register_window_resize_callback([this](const glm::ivec2& new_dims) {
+            _dimensions = new_dims;
+            _proj_m = _calc_projection_matrix();
+        });
+    };
 
     inline glm::mat4 get_projection_matrix() { return _proj_m; }
 
-    template <typename Archive>
+    template<typename Archive>
     void serialize(Archive& archive) {
         archive(_fov_deg, _near, _far, _dimensions);
     }

@@ -88,7 +88,7 @@ public:
      * 
      * @warning scene must have active camera.
      */
-    std::pair<std::shared_ptr<perspective_camera_t>, glm::mat4> get_active_camera() const;\
+    [[nodiscard]] std::pair<std::shared_ptr<perspective_camera_t>, glm::mat4> get_active_camera() const;\
 
     entt::entity get_active_camera_entity_handle() {return active_camera_owner;}
 
@@ -127,7 +127,7 @@ private: //methods
     void on_camera_component_remove(entt::registry& registry, entt::entity newly_not_a_camera_holder);
 
     void
-      hierarchy_import_rec(entity_t& parent, aiNode* node, glm::mat4 acc_transform,
+      hierarchy_import_rec(entity_t& parent, aiNode* node,
                            std::vector<std::shared_ptr<phong_material_t>>& materials,
                            std::vector<std::shared_ptr<primitives::vertex_array_t>>& vertex_arrays,
                            const aiScene* ai_scene);

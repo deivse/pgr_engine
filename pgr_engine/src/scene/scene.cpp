@@ -52,9 +52,10 @@ std::pair<std::shared_ptr<perspective_camera_t>, glm::mat4> scene_t::get_active_
 }
 
 void scene_t::update(const interval_t& delta){
-    _registry.view<component::transform_t>().each([](auto /*entity*/, component::transform_t& transform_c){
-        transform_c.update_global_transform();
-    });
+    _registry.view<component::hierarchy_t>().each([this](auto entity, component::hierarchy_t& hier){
+        _registry.get<component::transform_t>(entity).update_global_transform();
+    }); //TODO: fix multilevel hierarchy transform
+
     _registry.view<component::script_component_t>().each([&delta](auto /*entity*/, component::script_component_t& script_c){
         script_c.update(delta);
     });

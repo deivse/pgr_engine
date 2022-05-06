@@ -42,7 +42,7 @@ void texture2D_t::load_from_file() {
 }
 
 texture2D_t::texture2D_t(const std::string& path, GLint upscaling_algo, GLint downscaling_algo)
-  : _path(path), _upscaling_algo(upscaling_algo), _downscaling_algo(downscaling_algo) {
+  : _path(std::filesystem::canonical(path)), _upscaling_algo(upscaling_algo), _downscaling_algo(downscaling_algo) {
     this->load_from_file();
 }
 
