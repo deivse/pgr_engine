@@ -58,6 +58,12 @@ void scene_gui_layer_t::scene_open_create_window() {
 }
 
 void scene_gui_layer_t::scene_window() {
+    const auto parent_to_selected = [this](const pgre::scene::entity_t& new_entity) {
+        if (selected_entity) {
+            selected_entity->add_child(new_entity);
+            selected_entity = new_entity;
+        }
+    };
     ImGui::Begin("Scene");
     auto top_level_entities = _scene_layer->scene->get_top_level_entities();
     for (auto& entity : top_level_entities) {
@@ -68,10 +74,7 @@ void scene_gui_layer_t::scene_window() {
     ImGui::Spacing();
     if (pgre::imgui::colored_component_1(ImGui::Button, {0.3, 1.0, 0.0, 1.0}, "Add Entity", ImVec2{0, 0})) {
         auto new_entity = _scene_layer->scene->create_entity();
-        if (selected_entity) {
-            selected_entity->add_child(new_entity);
-            selected_entity = new_entity;
-        }
+        parent_to_selected(new_entity);   
     }
     if (ImGui::TreeNode("Import")) {
         ImGui::Text("The file may contain a full 3D scene including lights, meshes. Embedded"
@@ -79,12 +82,12 @@ void scene_gui_layer_t::scene_window() {
         ImGui::InputString("3D file path (e.g. Collada)", &import_file_path);
         if (std::filesystem::is_regular_file(import_file_path)) {
             if (ImGui::SmallButton("Import...")) {
-                _scene_layer->import_objects(import_file_path);
+                auto new_node = _scene_layer->import_objects(import_file_path);
+                if (new_node) parent_to_selected(new_node.value());
             }
         } else {
             pgre::imgui::colored_component_255(ImGui::Text, {200, 0, 0, 255}, "File doesn't exist");
         }
-
         ImGui::TreePop();
     }
     ImGui::Separator();
@@ -93,7 +96,7 @@ void scene_gui_layer_t::scene_window() {
         _scene_layer->save_scene(scene_file_path);
     }
     if (ImGui::SmallButton("Add test cubes")) {
-        _scene_layer->add_test_objects();
+        parent_to_selected(_scene_layer->add_test_objects());
     }
     ImGui::End();
 }
@@ -152,7 +155,6 @@ void scene_gui_layer_t::entity_window() {
                   ImGui::Text(transform_c.parent_transform_c_bound()
                                 ? "Parent Transform Bound: True"
                                 : "Parent Transform Bound: False");
-                  transform_c.update_parentlocal_transform();
                   if (ImGui::TreeNode("Transform Matrix")) {
                       auto trans_m = transform_c.get_transform();
                       auto row0 = glm::row(trans_m, 0);
@@ -278,6 +280,10 @@ void scene_gui_layer_t::entity_window() {
                   auto& cc_c = static_cast<pgre::component::flying_camera_controller_t&>(c);
                   ImGui::DragFloat("Move Speed", &cc_c.move_speed);
                   ImGui::Text("Press 'M' to turn mouse input on or off.");
+              } else if constexpr (std::is_same_v<std::remove_reference_t<decltype(c)>,
+                                                  pgre::component::bounding_box_t>) {
+                  component_title("Bounding Box");
+                  delete_comp_enabled = false;
               }
               if (delete_comp_enabled) delete_component_btn(*selected_entity, c);
           });

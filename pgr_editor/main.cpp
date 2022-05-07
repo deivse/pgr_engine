@@ -10,7 +10,7 @@
 int main() {
     // spdlog::set_level(spdlog::level::warn);
     try {
-        pgre::app_t app(1920, 1080, ":)))))))", true);
+        pgre::app_t app(1920, 1080, ":)))))))", false);
         spdlog::set_level(spdlog::level::level_enum::info);
         std::shared_ptr<pgre::scene::scene_t> scene{};
         auto scene_l = std::make_shared<scene_layer_t>(scene);

@@ -58,13 +58,12 @@ public:
         scene->update(delta);
         scene->render();
     }
-    void add_test_objects(){
-        auto loaded_root = scene->import_from_file("resources/test_cubes/scene.dae").value();
+    auto add_test_objects(){
+        return scene->import_from_file("resources/test_cubes/scene.dae").value();
     }
 
-    void import_objects(const std::string& path){
-
-        scene->import_from_file(path);
+    auto import_objects(const std::string& path){
+        return scene->import_from_file(path);
     }
 
     void open_scene(const std::string& path) {

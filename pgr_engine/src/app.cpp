@@ -54,6 +54,7 @@ app_t::app_t(uint16_t width, uint16_t height, const std::string& title, bool vsy
     err::setup_ogl_debug_callback();
 
     if (vsync) glfwSwapInterval(1);
+    else glfwSwapInterval(0);
 
     renderer::init();
 
