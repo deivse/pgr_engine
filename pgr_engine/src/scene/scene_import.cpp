@@ -1,3 +1,4 @@
+#include "math/aabb.h"
 #include <scene/scene.h>
 
 #include <scene/entity.h>
@@ -68,8 +69,8 @@ std::vector<std::shared_ptr<phong_material_t>> import_materials(const aiScene* a
     return materials;
 }
 
-std::vector<std::shared_ptr<primitives::vertex_array_t>> import_meshes(const aiScene* ai_scene){
-    std::vector<std::shared_ptr<primitives::vertex_array_t>> vertex_arrays(ai_scene->mNumMeshes);
+std::vector<std::pair<std::shared_ptr<primitives::vertex_array_t>, std::pair<glm::vec3, glm::vec3>>> import_meshes(const aiScene* ai_scene){
+    std::vector<std::pair<std::shared_ptr<primitives::vertex_array_t>, std::pair<glm::vec3, glm::vec3>>> vertex_arrays(ai_scene->mNumMeshes);
     for (unsigned int i = 0; i < ai_scene->mNumMeshes; i++) {
         auto vertex_buffer = std::make_shared<primitives::vertex_buffer_t>();
         auto index_buffer = std::make_shared<primitives::index_buffer_t>();
@@ -116,9 +117,10 @@ std::vector<std::shared_ptr<primitives::vertex_array_t>> import_meshes(const aiS
         }
         index_buffer->set_data(indices);
 
-        vertex_arrays[i] = std::make_shared<primitives::vertex_array_t>();
-        vertex_arrays[i]->set_index_buffer(index_buffer);
-        vertex_arrays[i]->add_vertex_buffer(vertex_buffer, std::make_shared<primitives::buffer_layout_t>(layout));
+        vertex_arrays[i].first = std::make_shared<primitives::vertex_array_t>();
+        vertex_arrays[i].first->set_index_buffer(index_buffer);
+        vertex_arrays[i].first->add_vertex_buffer(vertex_buffer, std::make_shared<primitives::buffer_layout_t>(layout));
+        vertex_arrays[i].second = math::calc_aabb(&(ai_scene->mMeshes[i]->mVertices[0].x), ai_scene->mMeshes[i]->mNumVertices);
     }
     return vertex_arrays;
 }
@@ -166,22 +168,13 @@ void import_lights(const aiScene* ai_scene, scene_t* scene, entt::registry& regi
     }
 }
 
-constexpr auto get_bb_min = [](const aiScene* scene, const aiNode* node) -> glm::vec3 {
-    debug_assert(node->mNumMeshes > 0, "Can't get BB for node which has no meshes.");
-    return vec3_cast(scene->mMeshes[node->mMeshes[0]]->mAABB.mMin);
-};
-constexpr auto get_bb_max = [](const aiScene* scene, const aiNode* node) -> glm::vec3 {
-    debug_assert(node->mNumMeshes > 0, "Can't get BB for node which has no meshes.");
-    return vec3_cast(scene->mMeshes[node->mMeshes[0]]->mAABB.mMax);
-};
-
 std::optional<entity_t> scene_t::import_from_file(const std::filesystem::path& scene_file) {
     static Assimp::Importer importer;
     importer.SetPropertyInteger(AI_CONFIG_PP_PTV_NORMALIZE, 1);
 
     const aiScene* ai_scene = importer.ReadFile(
       scene_file.c_str(), 0 | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices
-                            | aiProcess_GenNormals | aiProcess_GenBoundingBoxes);
+                            | aiProcess_GenNormals );
 
     // abort if the loader fails
     if (ai_scene == NULL) {
@@ -203,9 +196,9 @@ std::optional<entity_t> scene_t::import_from_file(const std::filesystem::path& s
       = this->create_entity(ai_root->mName.C_Str(), glm::mat4{1});
     if (ai_root->mNumMeshes != 0) {
         root.add_component<component::mesh_t>(
-          vertex_arrays[ai_root->mMeshes[0]],
+          vertex_arrays[ai_root->mMeshes[0]].first,
           materials[ai_scene->mMeshes[ai_root->mMeshes[0]]->mMaterialIndex]);
-        root.add_component<component::bounding_box_t>(get_bb_min(ai_scene, ai_root), get_bb_max(ai_scene, ai_root));
+        root.add_component<component::bounding_box_t>(vertex_arrays[ai_root->mMeshes[0]].second);
     }
 
     for (unsigned int child_ix = 0; child_ix < ai_root->mNumChildren; child_ix++) {
@@ -221,7 +214,7 @@ std::optional<entity_t> scene_t::import_from_file(const std::filesystem::path& s
 
 void scene_t::hierarchy_import_rec(
   entity_t& parent, aiNode* ai_node, std::vector<std::shared_ptr<phong_material_t>>& materials,
-  std::vector<std::shared_ptr<primitives::vertex_array_t>>& vertex_arrays,
+  std::vector<std::pair<std::shared_ptr<primitives::vertex_array_t>, std::pair<glm::vec3, glm::vec3>>>& vertex_arrays,
   const aiScene* ai_scene) {
     auto transform = mat4_cast(ai_node->mTransformation);
     auto new_entity = this->create_entity(ai_node->mName.C_Str(), transform);
@@ -229,9 +222,9 @@ void scene_t::hierarchy_import_rec(
 
     if (ai_node->mNumMeshes != 0) {
         new_entity.add_component<component::mesh_t>(
-          vertex_arrays[ai_node->mMeshes[0]],
+          vertex_arrays[ai_node->mMeshes[0]].first,
           materials[ai_scene->mMeshes[ai_node->mMeshes[0]]->mMaterialIndex]);
-        new_entity.add_component<component::bounding_box_t>(get_bb_min(ai_scene, ai_node), get_bb_max(ai_scene, ai_node));
+        new_entity.add_component<component::bounding_box_t>(vertex_arrays[ai_node->mMeshes[0]].second);
     }
 
     for (unsigned int child_ix = 0; child_ix < ai_node->mNumChildren; child_ix++) {

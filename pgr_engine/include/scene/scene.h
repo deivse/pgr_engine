@@ -93,7 +93,7 @@ public:
      * @return std::nullopt if no mesh could be found at these screen-space coordinates, or if no
      * camera is active.
      */
-    std::optional<entity_t> get_mesh_at_screenspace_coords(const glm::ivec2& window_coords);
+    std::optional<entity_t> get_mesh_at_screenspace_coords(const glm::vec2& window_coords);
 
     /**
      * @brief Get the active camera and respective view matrix.
@@ -147,7 +147,7 @@ private: //methods
     void
       hierarchy_import_rec(entity_t& parent, aiNode* node,
                            std::vector<std::shared_ptr<phong_material_t>>& materials,
-                           std::vector<std::shared_ptr<primitives::vertex_array_t>>& vertex_arrays,
+                           std::vector<std::pair<std::shared_ptr<primitives::vertex_array_t>, std::pair<glm::vec3, glm::vec3>>>& vertex_arrays,
                            const aiScene* ai_scene);
 };
 

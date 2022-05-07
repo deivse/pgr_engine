@@ -52,16 +52,19 @@ std::pair<std::shared_ptr<perspective_camera_t>, glm::mat4> scene_t::get_active_
 }
 
 void scene_t::update(const interval_t& delta){
-    // registry.sort<relationship>([&registry](const entt::entity lhs, const entt::entity rhs) {
-    //     const auto& clhs = registry.get<relationship>(lhs);
-    //     const auto& crhs = registry.get<relationship>(rhs);
-    //     return crhs.parent == lhs || clhs.next == rhs
-    //            || (!(clhs.parent == rhs || crhs.next == lhs)
+    // true if rhs > lhs
+    // _registry.sort<component::hierarchy_t>([&registry = _registry](const entt::entity lhs, const entt::entity rhs) {
+    //     const auto& clhs = registry.get<component::hierarchy_t>(lhs);
+    //     const auto& crhs = registry.get<component::hierarchy_t>(rhs);
+    //     return crhs.parent == lhs || clhs.next_sibling == rhs
+    //            || (!(clhs.parent == rhs || crhs.next_sibling == lhs)
     //                && (clhs.parent < crhs.parent || (clhs.parent == crhs.parent && &clhs < &crhs)));
     // });
-    _registry.view<component::hierarchy_t>().each([this](auto entity, component::hierarchy_t& hier){
-        _registry.get<component::transform_t>(entity).update_global_transform();
-    }); //TODO: fix multilevel hierarchy transform
+    _registry.sort<component::transform_t, component::hierarchy_t>();
+
+    _registry.view<component::transform_t>().each([this](auto entity, component::transform_t& trans_c){
+        trans_c.update_global_transform();
+    });
 
     _registry.view<component::script_component_t>().each([&delta](auto /*entity*/, component::script_component_t& script_c){
         script_c.update(delta);
@@ -140,13 +143,12 @@ std::shared_ptr<scene_t> scene_t::deserialize(const std::filesystem::path& filen
     return retval;
 }
 
-std::optional<entity_t> scene_t::get_mesh_at_screenspace_coords(const glm::ivec2& window_coords){
+std::optional<entity_t> scene_t::get_mesh_at_screenspace_coords(const glm::vec2& window_coords){
     if (_active_camera_owner == entt::null) return std::nullopt;
     auto camera_and_view_m = get_active_camera();
-    auto cursor_pos = app_t::get_window().get_cursor_pos();
     auto screen_height = app_t::get_window().get_dimensions().y;
     auto [ray_start, ray_end] = camera_and_view_m.first->get_ray_end_from_cam(
-      camera_and_view_m.second, {cursor_pos.x, screen_height - cursor_pos.y});
+      camera_and_view_m.second, {window_coords.x, screen_height - window_coords.y});
 
     std::optional<entity_t> retval{std::nullopt};
 
@@ -157,7 +159,7 @@ std::optional<entity_t> scene_t::get_mesh_at_screenspace_coords(const glm::ivec2
 
           auto model_matrix = transform_c.get_transform();
           // Have to calc pos from model_matrix cause the internal position is relative to parent.
-          auto this_ray_t_min = bb_c.test_ray_intersection_aa(ray_start, ray_end, model_matrix[3].xyz(), transform_c.get_global_scale());
+          auto this_ray_t_min = bb_c.test_ray_intersection_aa(ray_start, ray_end, model_matrix);
           if (this_ray_t_min >= 0 && this_ray_t_min < t_min) {
               t_min = this_ray_t_min;
               retval = entity_t{handle, this};
