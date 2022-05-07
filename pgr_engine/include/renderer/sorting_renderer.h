@@ -15,6 +15,7 @@ namespace pgre {
             const glm::mat4& transform;
             std::shared_ptr<primitives::vertex_array_t> vao;
             std::shared_ptr<material_t> material;
+            GLenum primitive;
         };
 
         std::thread _render_thread;
@@ -39,6 +40,8 @@ namespace pgre {
         void on_resize(const glm::ivec2& new_win_dims) override {
             glViewport(0, 0, new_win_dims.x, new_win_dims.y);
         }
+
+        void draw_line(glm::vec3& world_pos_a, glm::vec3& world_pos_b) override;
     };
 }  // namespace pgre
 

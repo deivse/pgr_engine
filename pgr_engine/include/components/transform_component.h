@@ -18,7 +18,7 @@ namespace pgre::component {
 
 class transform_t
 {
-    const glm::mat4* _parent_transform{nullptr};
+    const transform_t* _parent_transform_c{nullptr};
     glm::mat4 _transform_local_to_parent{};
     glm::mat4 _global_transform{};
 public:
@@ -54,12 +54,12 @@ public:
         orientation = glm::quat(glm::radians(euler_degrees));
     }
 
-    bool parent_transform_bound() { return static_cast<bool>(_parent_transform); }
+    bool parent_transform_c_bound() { return static_cast<bool>(_parent_transform_c); }
 
-    void bind_parent_transform(const glm::mat4* parent_transform) {
-        _parent_transform = parent_transform;
+    void bind_parent_transform_c(const transform_t* parent_transform) {
+        _parent_transform_c = parent_transform;
     }
-    void unbind_parent_transform() { _parent_transform = nullptr; }
+    void unbind_parent_transform_c() { _parent_transform_c = nullptr; }
 
     void update_parentlocal_transform() {
         _transform_local_to_parent = glm::translate(glm::mat4{1.0f}, translation) * glm::toMat4(orientation)
@@ -67,7 +67,21 @@ public:
     }
 
     void update_global_transform() {
-        _global_transform = _parent_transform ? *_parent_transform * _transform_local_to_parent : _transform_local_to_parent;
+        if (_parent_transform_c) {
+            _global_transform = _parent_transform_c ? _parent_transform_c->_transform_local_to_parent
+                                                      * _transform_local_to_parent
+                                                  : _transform_local_to_parent;
+        }
+    }
+
+    glm::vec3 get_global_scale() {
+        glm::vec3 out{1.0};
+        const auto* transform_c = this;
+        while (transform_c != nullptr){
+            out*= transform_c->scale;
+            transform_c = transform_c->_parent_transform_c;
+        }
+        return out;
     }
 
 

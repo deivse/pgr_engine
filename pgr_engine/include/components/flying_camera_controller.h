@@ -23,8 +23,8 @@ public:
            = entity.get_component<pgre::component::transform_t>(), this](pgre::cursor_pos_evt_t& event) {
               if (!mouse_input_enabled) return false;
               constexpr float sensitivity = 0.05f;
-              auto curr_y = static_cast<float>(-event.y);
               auto curr_x = static_cast<float>(event.x);
+              auto curr_y = static_cast<float>(-event.y);
 
               static float pitch = 0;
               static float yaw = 90;
@@ -55,7 +55,7 @@ public:
                     }
                     auto cursor_pos = app_t::get_window().get_cursor_pos();
                     last_x = cursor_pos.x;
-                    last_x = cursor_pos.y;
+                    last_x = -cursor_pos.y;
                     mouse_input_enabled = true;
                 }
                 return false;

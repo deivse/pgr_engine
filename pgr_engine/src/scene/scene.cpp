@@ -42,16 +42,23 @@ void scene_t::set_active_camera_entity(entt::entity camera_owner){
         throw std::runtime_error(
           "set_active_camera_entity called with an entity not owning a camera component.");
     }
-    active_camera_owner = camera_owner;
+    _active_camera_owner = camera_owner;
 }
 
 std::pair<std::shared_ptr<perspective_camera_t>, glm::mat4> scene_t::get_active_camera() const {
     return std::pair<std::shared_ptr<perspective_camera_t>, const glm::mat4&>{
-      _registry.get<component::camera_component_t>(active_camera_owner).camera,
-      _registry.get<component::transform_t>(active_camera_owner).get_view()};
+      _registry.get<component::camera_component_t>(_active_camera_owner).camera,
+      _registry.get<component::transform_t>(_active_camera_owner).get_view()};
 }
 
 void scene_t::update(const interval_t& delta){
+    // registry.sort<relationship>([&registry](const entt::entity lhs, const entt::entity rhs) {
+    //     const auto& clhs = registry.get<relationship>(lhs);
+    //     const auto& crhs = registry.get<relationship>(rhs);
+    //     return crhs.parent == lhs || clhs.next == rhs
+    //            || (!(clhs.parent == rhs || crhs.next == lhs)
+    //                && (clhs.parent < crhs.parent || (clhs.parent == crhs.parent && &clhs < &crhs)));
+    // });
     _registry.view<component::hierarchy_t>().each([this](auto entity, component::hierarchy_t& hier){
         _registry.get<component::transform_t>(entity).update_global_transform();
     }); //TODO: fix multilevel hierarchy transform
@@ -60,7 +67,7 @@ void scene_t::update(const interval_t& delta){
         script_c.update(delta);
     });
     _registry.view<component::flying_camera_controller_t>().each([&delta, this](entt::entity entity, component::flying_camera_controller_t& camera_controller_c){
-        if (entity == active_camera_owner) camera_controller_c.update(delta, {entity, this});
+        if (entity == _active_camera_owner) camera_controller_c.update(delta, {entity, this});
     });
 }
 
@@ -69,12 +76,12 @@ void scene_t::on_event(event_t& event) {
         script_c.on_event(event);
     });
     _registry.view<component::flying_camera_controller_t>().each([&event, this](entt::entity entity, component::flying_camera_controller_t& c){
-        if (entity == active_camera_owner) c.on_event(event, {entity, this});
+        if (entity == _active_camera_owner) c.on_event(event, {entity, this});
     });
 }
     
 void scene_t::render() {
-    if (active_camera_owner == entt::null) return;
+    if (_active_camera_owner == entt::null) return;
     renderer::begin_scene(*this);
     auto view = _registry.view<component::transform_t, component::mesh_t>();
     for (entt::entity entity: view ){
@@ -106,15 +113,15 @@ scene_lights_t& scene_t::get_lights(){
 
 void scene_t::on_camera_component_remove(entt::registry& /*unused*/,
                                          entt::entity newly_not_a_camera_holder) {
-    if (this->active_camera_owner == newly_not_a_camera_holder)
-        this->active_camera_owner = entt::null;
+    if (this->_active_camera_owner == newly_not_a_camera_holder)
+        this->_active_camera_owner = entt::null;
 }
 
 void scene_t::serialize(const std::filesystem::path& filename) {
     std::ofstream out(filename);
     cereal::JSONOutputArchive output(out);
     entt::snapshot{_registry}.entities(output).component<PGRE_COMPONENT_TYPES>(output);
-    output(active_camera_owner);
+    output(_active_camera_owner);
 }
 
 std::shared_ptr<scene_t> scene_t::deserialize(const std::filesystem::path& filename) {
@@ -122,13 +129,40 @@ std::shared_ptr<scene_t> scene_t::deserialize(const std::filesystem::path& filen
     std::ifstream in(filename);
     cereal::JSONInputArchive input(in);
     entt::snapshot_loader{retval->_registry}.entities(input).component<PGRE_COMPONENT_TYPES>(input);
-    input(retval->active_camera_owner);
+    input(retval->_active_camera_owner);
 
     retval->_registry.view<component::transform_t, component::hierarchy_t>().each(
       [&registry = retval->_registry](auto /*entity*/, component::transform_t& transform_c, component::hierarchy_t& hier_c) {
           if (hier_c.parent!= entt::null) {
-              transform_c.bind_parent_transform(&(registry.get<component::transform_t>(hier_c.parent)._global_transform));
+              transform_c.bind_parent_transform_c(&(registry.get<component::transform_t>(hier_c.parent)));
           }
+      });
+    return retval;
+}
+
+std::optional<entity_t> scene_t::get_mesh_at_screenspace_coords(const glm::ivec2& window_coords){
+    if (_active_camera_owner == entt::null) return std::nullopt;
+    auto camera_and_view_m = get_active_camera();
+    auto cursor_pos = app_t::get_window().get_cursor_pos();
+    auto screen_height = app_t::get_window().get_dimensions().y;
+    auto [ray_start, ray_end] = camera_and_view_m.first->get_ray_end_from_cam(
+      camera_and_view_m.second, {cursor_pos.x, screen_height - cursor_pos.y});
+
+    std::optional<entity_t> retval{std::nullopt};
+
+    float t_min = std::numeric_limits<float>::max();
+    _registry.view<component::bounding_box_t, component::transform_t>().each(
+      [this, &ray_end = ray_end, &retval, &ray_start = ray_start, &t_min]
+      (entt::entity handle, component::bounding_box_t& bb_c, component::transform_t& transform_c) {
+
+          auto model_matrix = transform_c.get_transform();
+          // Have to calc pos from model_matrix cause the internal position is relative to parent.
+          auto this_ray_t_min = bb_c.test_ray_intersection_aa(ray_start, ray_end, model_matrix[3].xyz(), transform_c.get_global_scale());
+          if (this_ray_t_min >= 0 && this_ray_t_min < t_min) {
+              t_min = this_ray_t_min;
+              retval = entity_t{handle, this};
+          }
+
       });
     return retval;
 }

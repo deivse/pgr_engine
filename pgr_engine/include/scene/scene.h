@@ -30,7 +30,7 @@ struct scene_lights_t {
 class scene_t {
     entt::registry _registry;
 
-    entt::entity active_camera_owner{entt::null};
+    entt::entity _active_camera_owner{entt::null};
 
     scene_lights_t _lights;
 
@@ -69,7 +69,7 @@ public:
      *
      * @param event
      */
-    void on_event(event_t& event); 
+    void on_event(event_t& event);
 
     /**
      * @brief Updates everything in the scene - scripts, cameras, transforms.
@@ -84,13 +84,31 @@ public:
     void render();
 
     /**
+     * @brief Tries to find an entity with a mesh drawn at the ss_coords. Performs a BB intersection
+     * test.
+     * @warning MUST be called after calling `update()`!
+     *
+     * @param ss_coords screen-space coordinates, e.g. where the user clicked.
+     * @return std::optional<entity_t> the entity that holds the mesh.
+     * @return std::nullopt if no mesh could be found at these screen-space coordinates, or if no
+     * camera is active.
+     */
+    std::optional<entity_t> get_mesh_at_screenspace_coords(const glm::ivec2& window_coords);
+
+    /**
      * @brief Get the active camera and respective view matrix.
      * 
      * @warning scene must have active camera.
      */
     [[nodiscard]] std::pair<std::shared_ptr<perspective_camera_t>, glm::mat4> get_active_camera() const;\
 
-    entt::entity get_active_camera_entity_handle() {return active_camera_owner;}
+    /**
+     * @brief Get the handle for the entity which holds the active camera. 
+     * 
+     * @return valid entt::entity if there is an active camera
+     * @return entt::null if no camera is active
+     */
+    entt::entity get_active_camera_entity_handle() {return _active_camera_owner;}
 
     /**
      * @brief Sets the active camera.

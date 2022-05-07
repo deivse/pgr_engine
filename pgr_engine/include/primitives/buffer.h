@@ -54,6 +54,16 @@ struct buffer_t
     }
 
     /**
+     * @brief Set all data in one call. Overwrites previous buffer data.
+     *
+     * @param data std::vector of DataTy
+     * @param usage OpenGL usage hint
+     */
+    void set_data(std::vector<DataTy>&& data, GLenum usage = GL_STATIC_DRAW) {
+        buffer_t::set_data(static_cast<GLsizeiptr>(data.size() * sizeof(DataTy)), data.data(), usage);
+    }
+
+    /**
      * @brief Ask OpenGL to alloc space for size bytes for subsequent push_back() calls
      *
      * @param size number of bytes that will be allocated.

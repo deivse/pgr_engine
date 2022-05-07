@@ -145,7 +145,7 @@ void scene_gui_layer_t::entity_window() {
                   ImGui::DragFloat3("Scale", glm::value_ptr(transform_c.scale), 0.2f,
                                     -std::numeric_limits<float>::max(),
                                     std::numeric_limits<float>::max());
-                  ImGui::Text(transform_c.parent_transform_bound()
+                  ImGui::Text(transform_c.parent_transform_c_bound()
                                 ? "Parent Transform Bound: True"
                                 : "Parent Transform Bound: False");
                   transform_c.update_parentlocal_transform();
@@ -320,3 +320,25 @@ void scene_gui_layer_t::entity_window() {
     ImGui::Spacing();
     ImGui::End();
 }
+
+void scene_gui_layer_t::on_event(pgre::event_t& event) {
+    pgre::event_dispatcher_t dispatcher(event);
+    auto &io = ImGui::GetIO();
+    dispatcher.dispatch<pgre::key_pressed_evt_t>([&io](pgre::key_pressed_evt_t&  /*event*/) {
+        return (io.WantCaptureKeyboard); // if ImGui handles the event, don't pass it down the layer stack.
+    });
+    dispatcher.dispatch<pgre::mouse_btn_down_evt_t>([&io](pgre::mouse_btn_down_evt_t&  /*event*/) {
+        return (io.WantCaptureMouse); // if ImGui handles the event, don't pass it down the layer stack.
+    });
+    dispatcher.dispatch<pgre::mouse_btn_up_evt_t>([&io, this](pgre::mouse_btn_up_evt_t& event) {
+        if (io.WantCaptureMouse) return true;
+        if (auto entity = _scene_layer->scene->get_mesh_at_screenspace_coords(
+              pgre::app_t::get_window().get_cursor_pos());
+            entity.has_value()) {
+            this->selected_entity = entity;
+            return true;
+        }
+        return true;
+    }); 
+}
+

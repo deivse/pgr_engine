@@ -120,7 +120,7 @@ public:
     }
 
     inline uint32_t get_material_sort_index() override {
-        return 1;
+        return 2;
     }
 };
 

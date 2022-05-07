@@ -2,6 +2,7 @@
 
 #include <assets/materials/phong_material.h>
 #include <assets/materials/skybox_material.h>
+#include <assets/materials/flat_color_material.h>
 #include <renderer/sorting_renderer.h>
 #include <scene/scene.h>
 
@@ -22,6 +23,7 @@ void sorting_renderer_t::init() {
 
     phong_material_t::init();
     skybox_material_t::init();
+    flat_color_material_t::init();
 }
 
 void sorting_renderer_t::render(){
@@ -32,7 +34,8 @@ void sorting_renderer_t::render(){
             rc.material->set_matrices(rc.transform, _curr_v_matrix, _curr_p_matrix, _curr_pv_matrix);
 
             rc.vao->bind();
-            glDrawElements(GL_TRIANGLES, rc.vao->get_index_buffer()->get_count(), GL_UNSIGNED_INT,
+            debug_assert(rc.vao->get_index_buffer() != nullptr, "VAO in render command has no index buffer.");
+            glDrawElements(rc.primitive, rc.vao->get_index_buffer()->get_count(), GL_UNSIGNED_INT,
                            nullptr);
 
 #ifndef PGRE_DISABLE_DEBUG_CHECKS
@@ -63,7 +66,36 @@ void sorting_renderer_t::submit(const glm::mat4& transform,
                                 std::shared_ptr<primitives::vertex_array_t> vao,
                                 std::shared_ptr<material_t> material) {
     _render_commands[material->get_material_sort_index()].emplace_back(transform, std::move(vao),
-                                                                       std::move(material));
+                                                                       std::move(material), GL_TRIANGLES);
 }
+
+void sorting_renderer_t::draw_line(glm::vec3& world_pos_a, glm::vec3& world_pos_b){
+    static auto material = std::make_shared<flat_color_material_t>();
+
+    auto vao= std::make_shared<primitives::vertex_array_t>();
+
+    auto  vb = std::make_shared<primitives::vertex_buffer_t>();
+    vb->allocate(sizeof(float)*6);
+    vb->push_back(sizeof(float)*3, static_cast<void*>(glm::value_ptr(world_pos_a)));
+    vb->push_back(sizeof(float)*3, static_cast<void*>(glm::value_ptr(world_pos_b)));
+    
+    constexpr auto make_ib = [](){
+        auto ib = std::make_shared<primitives::index_buffer_t>();
+        ib->set_data(std::vector<unsigned int>{0, 1});
+        return ib;
+    };
+    static auto ib = make_ib();
+
+    vao->add_vertex_buffer(
+      vb,
+      std::make_shared<primitives::buffer_layout_t>(
+        std::initializer_list<primitives::buffer_element_t>{{GL_FLOAT, 3, "position"}}, material));
+    vao->set_index_buffer(ib);
+
+    _render_commands[material->get_material_sort_index()].emplace_back(glm::mat4{1.0},
+                                                                       std::move(vao), material, GL_LINES);
+}
+
+// void draw_point
 
 } // namespace pgre

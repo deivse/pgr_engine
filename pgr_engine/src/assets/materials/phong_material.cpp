@@ -43,6 +43,7 @@ void phong_material_t::use(scene::scene_t& /*scene*/) {
 
 
 void phong_material_t::set_matrices(const glm::mat4& M, const glm::mat4& V, const glm::mat4& P, const glm::mat4& PV) {
+    _shader_program->bind();
     _shader_program->set_uniform("v_normal_matrix",glm::transpose(glm::inverse(V * M)));
     _shader_program->set_uniform("view_matrix", V);
     _shader_program->set_uniform("vm_matrix", V * M);

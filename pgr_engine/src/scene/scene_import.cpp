@@ -8,33 +8,16 @@
 #include <assimp/postprocess.h>
 
 
-namespace {
-    glm::vec3 vec3_cast(const aiColor3D &v) { return glm::vec3(v.r, v.g, v.b); } 
-    glm::vec3 vec3_cast(const aiVector3D &v) { return glm::vec3(v.x, v.y, v.z); } 
-    glm::vec2 vec2_cast(const aiVector3D &v) { return glm::vec2(v.x, v.y); } // it's aiVector3D because assimp's texture coordinates use that
-    glm::quat quat_cast(const aiQuaternion &q) { return glm::quat(q.w, q.x, q.y, q.z); } 
-    glm::mat4 mat4_cast(const aiMatrix4x4 &m) { return glm::transpose(glm::make_mat4(&m.a1)); }
-}
+
+glm::vec3 vec3_cast(const aiColor3D &v) { return glm::vec3(v.r, v.g, v.b); } 
+glm::vec3 vec3_cast(const aiVector3D &v) { return glm::vec3(v.x, v.y, v.z); } 
+glm::vec2 vec2_cast(const aiVector3D &v) { return glm::vec2(v.x, v.y); } // it's aiVector3D because assimp's texture coordinates use that
+glm::quat quat_cast(const aiQuaternion &q) { return glm::quat(q.w, q.x, q.y, q.z); } 
+glm::mat4 mat4_cast(const aiMatrix4x4 &m) { return glm::transpose(glm::make_mat4(&m.a1)); }
 
 namespace pgre::scene {
-std::optional<entity_t> scene_t::import_from_file(const std::filesystem::path& scene_file) {
-    static Assimp::Importer importer;
-    importer.SetPropertyInteger(AI_CONFIG_PP_PTV_NORMALIZE, 1);
 
-    const aiScene* ai_scene = importer.ReadFile(
-      scene_file.c_str(), 0 | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices
-                            | aiProcess_GenNormals);
-
-    // abort if the loader fails
-    if (ai_scene == NULL) {
-        spdlog::error("Scene/object failed: {}", importer.GetErrorString());
-        return std::nullopt;
-    }
-
-    debug_assert(ai_scene->mNumTextures == 0,
-                 "Wtf, how are there embedded textures in a Collada file...");
-
-    ////// MATERIALS //////
+std::vector<std::shared_ptr<phong_material_t>> import_materials(const aiScene* ai_scene, const std::filesystem::path& scene_file){
     std::vector<std::shared_ptr<phong_material_t>> materials(ai_scene->mNumMaterials, nullptr);
     for (unsigned int i = 0; i < ai_scene->mNumMaterials; i++) {
         aiMaterial& ai_material = *ai_scene->mMaterials[i];
@@ -82,8 +65,10 @@ std::optional<entity_t> scene_t::import_from_file(const std::filesystem::path& s
               glm::vec3{specular.r, specular.g, specular.b}, shininess, transparency);
         }
     }
+    return materials;
+}
 
-    ////// MESHES (VAOS) //////
+std::vector<std::shared_ptr<primitives::vertex_array_t>> import_meshes(const aiScene* ai_scene){
     std::vector<std::shared_ptr<primitives::vertex_array_t>> vertex_arrays(ai_scene->mNumMeshes);
     for (unsigned int i = 0; i < ai_scene->mNumMeshes; i++) {
         auto vertex_buffer = std::make_shared<primitives::vertex_buffer_t>();
@@ -135,34 +120,22 @@ std::optional<entity_t> scene_t::import_from_file(const std::filesystem::path& s
         vertex_arrays[i]->set_index_buffer(index_buffer);
         vertex_arrays[i]->add_vertex_buffer(vertex_buffer, std::make_shared<primitives::buffer_layout_t>(layout));
     }
+    return vertex_arrays;
+}
 
-    ////// NODES (ENTITIES) //////
-    auto* ai_root = ai_scene->mRootNode;
-    entity_t root
-      = this->create_entity(ai_root->mName.C_Str(), glm::mat4{1});
-    if (ai_root->mNumMeshes != 0) {
-        root.add_component<component::mesh_t>(
-          vertex_arrays[ai_root->mMeshes[0]],
-          materials[ai_scene->mMeshes[ai_root->mMeshes[0]]->mMaterialIndex]);
-    }
-
-    for (unsigned int child_ix = 0; child_ix < ai_root->mNumChildren; child_ix++) {
-        hierarchy_import_rec(root, ai_root->mChildren[child_ix], materials,
-                             vertex_arrays, ai_scene);
-    }
-
+void import_lights(const aiScene* ai_scene, scene_t* scene, entt::registry& registry){
     for (unsigned int i = 0; i < ai_scene->mNumLights; i++) {
         auto* ai_light = ai_scene->mLights[i];
-        auto named = _registry.view<component::tag_t>();
+        auto named = registry.view<component::tag_t>();
         entt::entity light_owner = entt::null;
         for (auto entity : named) {
-            if (_registry.get<component::tag_t>(entity).tag == ai_light->mName.C_Str()) {
+            if (registry.get<component::tag_t>(entity).tag == ai_light->mName.C_Str()) {
                 light_owner = entity;
                 break;
             }
         }
-        debug_assert(light_owner != entt::null, "Each light was supposed to have a node...");
-        auto light_entity = entity_t{light_owner, this};
+        pgre::debug_assert(light_owner != entt::null, "Each light was supposed to have a node...");
+        auto light_entity = entity_t{light_owner, scene};
         switch (ai_light->mType) {
             case aiLightSource_DIRECTIONAL:
                 light_entity.add_component<component::sun_light_t>(
@@ -191,6 +164,57 @@ std::optional<entity_t> scene_t::import_from_file(const std::filesystem::path& s
                 break;
         }
     }
+}
+
+constexpr auto get_bb_min = [](const aiScene* scene, const aiNode* node) -> glm::vec3 {
+    debug_assert(node->mNumMeshes > 0, "Can't get BB for node which has no meshes.");
+    return vec3_cast(scene->mMeshes[node->mMeshes[0]]->mAABB.mMin);
+};
+constexpr auto get_bb_max = [](const aiScene* scene, const aiNode* node) -> glm::vec3 {
+    debug_assert(node->mNumMeshes > 0, "Can't get BB for node which has no meshes.");
+    return vec3_cast(scene->mMeshes[node->mMeshes[0]]->mAABB.mMax);
+};
+
+std::optional<entity_t> scene_t::import_from_file(const std::filesystem::path& scene_file) {
+    static Assimp::Importer importer;
+    importer.SetPropertyInteger(AI_CONFIG_PP_PTV_NORMALIZE, 1);
+
+    const aiScene* ai_scene = importer.ReadFile(
+      scene_file.c_str(), 0 | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices
+                            | aiProcess_GenNormals | aiProcess_GenBoundingBoxes);
+
+    // abort if the loader fails
+    if (ai_scene == NULL) {
+        spdlog::error("Scene/object failed: {}", importer.GetErrorString());
+        return std::nullopt;
+    }
+
+    debug_assert(ai_scene->mNumTextures == 0,
+                 "Sorry bro, embedded textures - no can do...");
+
+    auto materials = import_materials(ai_scene, scene_file);
+    auto vertex_arrays = import_meshes(ai_scene);
+
+    
+
+    // Create entities and scene graph 
+    auto* ai_root = ai_scene->mRootNode;
+    entity_t root
+      = this->create_entity(ai_root->mName.C_Str(), glm::mat4{1});
+    if (ai_root->mNumMeshes != 0) {
+        root.add_component<component::mesh_t>(
+          vertex_arrays[ai_root->mMeshes[0]],
+          materials[ai_scene->mMeshes[ai_root->mMeshes[0]]->mMaterialIndex]);
+        root.add_component<component::bounding_box_t>(get_bb_min(ai_scene, ai_root), get_bb_max(ai_scene, ai_root));
+    }
+
+    for (unsigned int child_ix = 0; child_ix < ai_root->mNumChildren; child_ix++) {
+        hierarchy_import_rec(root, ai_root->mChildren[child_ix], materials,
+                             vertex_arrays, ai_scene);
+    }
+
+    // Has to be after hieararchy is created, as we add lights to existing entities.
+    import_lights(ai_scene, this, _registry);
 
     return root;
 }
@@ -207,6 +231,7 @@ void scene_t::hierarchy_import_rec(
         new_entity.add_component<component::mesh_t>(
           vertex_arrays[ai_node->mMeshes[0]],
           materials[ai_scene->mMeshes[ai_node->mMeshes[0]]->mMaterialIndex]);
+        new_entity.add_component<component::bounding_box_t>(get_bb_min(ai_scene, ai_node), get_bb_max(ai_scene, ai_node));
     }
 
     for (unsigned int child_ix = 0; child_ix < ai_node->mNumChildren; child_ix++) {

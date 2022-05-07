@@ -38,10 +38,20 @@ public:
 
     inline glm::mat4 get_projection_matrix() { return _proj_m; }
 
+    /**
+     * @brief Get the intersection of a ray cast from the camera and passing through the specified
+     * coords on the "window plane" with the near and far clipping planes.
+     *
+     * @param view_matrix
+     * @param window_coords coords in the
+     * @return pair<vec3, vec3> point of intersection of the ray with the near and far clipping plane respectively.
+     */
+    std::pair<glm::vec3, glm::vec3> get_ray_end_from_cam(const glm::mat4& view_matrix, const glm::ivec2& window_coords);
+
     template<typename Archive>
     void serialize(Archive& archive) {
         archive(_fov_deg, _near, _far, _dimensions);
     }
 };
 
-} // namespace pgre
+}  // namespace pgre

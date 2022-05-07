@@ -25,6 +25,7 @@ void skybox_material_t::use(scene::scene_t& /*scene*/) {
 
 void skybox_material_t::set_matrices(const glm::mat4&  /*M*/, const glm::mat4& V, const glm::mat4& P,
                                      const glm::mat4&  /*PV*/) {
+    _shader_program->bind();
     auto v_no_tr = V;
     v_no_tr[3].x = 0;
     v_no_tr[3].y = 0;

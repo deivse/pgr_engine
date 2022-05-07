@@ -15,7 +15,7 @@ void entity_t::add_child(entt::entity child_handle){
 
     auto& child_hierarchy_c = child.get_component<c::hierarchy_t>();
     child.remove_parent();
-    child.get_component<component::transform_t>().bind_parent_transform(&(this->get_component<component::transform_t>()._transform_local_to_parent));
+    child.get_component<component::transform_t>().bind_parent_transform_c(&(this->get_component<component::transform_t>()));
     child_hierarchy_c.parent = this->handle;
 
     auto& this_hierarchy_c = this->get_component<c::hierarchy_t>();
@@ -40,7 +40,7 @@ bool entity_t::remove_parent() {
     auto& child_hierarchy_c = this->get_component<c::hierarchy_t>();
     if (child_hierarchy_c.parent == entt::null) return false;
 
-    this->get_component<component::transform_t>().unbind_parent_transform();
+    this->get_component<component::transform_t>().unbind_parent_transform_c();
 
     auto parent = entity_t{child_hierarchy_c.parent, scene};
     auto& parent_hierarchy_c = parent.get_component<c::hierarchy_t>();
@@ -67,7 +67,7 @@ bool entity_t::remove_child(entt::entity child_handle) {
     auto& child_hierarchy_c = child_entity.get_component<c::hierarchy_t>();
     if (child_hierarchy_c.parent != this->handle) return false;
 
-    child_entity.get_component<component::transform_t>().unbind_parent_transform();
+    child_entity.get_component<component::transform_t>().unbind_parent_transform_c();
 
     auto& parent_hierarchy_c = this->get_component<c::hierarchy_t>();
 
