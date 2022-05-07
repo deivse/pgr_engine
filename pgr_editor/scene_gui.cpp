@@ -67,10 +67,14 @@ void scene_gui_layer_t::scene_window() {
     }
     ImGui::Spacing();
     if (pgre::imgui::colored_component_1(ImGui::Button, {0.3, 1.0, 0.0, 1.0}, "Add Entity", ImVec2{0, 0})) {
-        _scene_layer->scene->create_entity();
+        auto new_entity = _scene_layer->scene->create_entity();
+        if (selected_entity) {
+            selected_entity->add_child(new_entity);
+            selected_entity = new_entity;
+        }
     }
     if (ImGui::TreeNode("Import")) {
-        ImGui::Text("The file may contain a full 3D scene including lights, meshes. Embedde\n "
+        ImGui::Text("The file may contain a full 3D scene including lights, meshes. Embedded"
                     "textures, cameras, and many other things\nare not yet supported...");
         ImGui::InputString("3D file path (e.g. Collada)", &import_file_path);
         if (std::filesystem::is_regular_file(import_file_path)) {
@@ -331,7 +335,7 @@ void scene_gui_layer_t::on_event(pgre::event_t& event) {
         return (io.WantCaptureMouse); // if ImGui handles the event, don't pass it down the layer stack.
     });
     dispatcher.dispatch<pgre::mouse_btn_up_evt_t>([&io, this](pgre::mouse_btn_up_evt_t& event) {
-        if (io.WantCaptureMouse) return true;
+        if (io.WantCaptureMouse || !_scene_layer->scene) return true;
         if (auto entity = _scene_layer->scene->get_mesh_at_screenspace_coords(
               pgre::app_t::get_window().get_cursor_pos());
             entity.has_value()) {

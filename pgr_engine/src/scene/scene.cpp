@@ -52,19 +52,26 @@ std::pair<std::shared_ptr<perspective_camera_t>, glm::mat4> scene_t::get_active_
 }
 
 void scene_t::update(const interval_t& delta){
-    // true if rhs > lhs
-    // _registry.sort<component::hierarchy_t>([&registry = _registry](const entt::entity lhs, const entt::entity rhs) {
-    //     const auto& clhs = registry.get<component::hierarchy_t>(lhs);
-    //     const auto& crhs = registry.get<component::hierarchy_t>(rhs);
-    //     return crhs.parent == lhs || clhs.next_sibling == rhs
-    //            || (!(clhs.parent == rhs || crhs.next_sibling == lhs)
-    //                && (clhs.parent < crhs.parent || (clhs.parent == crhs.parent && &clhs < &crhs)));
-    // });
-    _registry.sort<component::transform_t, component::hierarchy_t>();
-
-    _registry.view<component::transform_t>().each([this](auto entity, component::transform_t& trans_c){
-        trans_c.update_global_transform();
-    });
+    _registry.view<component::transform_t, component::hierarchy_t>().each(
+      [this](auto entity, component::transform_t& trans_c, component::hierarchy_t& hier_c) {
+          if (hier_c.parent == entt::null) {
+              trans_c.update_parentlocal_transform();
+              trans_c.update_global_transform();
+              auto child_children = entity_t{entity, this}.get_children();
+              while (!child_children.empty()){
+                  decltype(child_children) next_child_children;
+                  for (auto& child: child_children){
+                      auto& child_trans_c = child.get_component<component::transform_t>();
+                      child_trans_c.update_parentlocal_transform();
+                      child_trans_c.update_global_transform();
+                      
+                      auto tmp = child.get_children();
+                      next_child_children.insert(next_child_children.end(), tmp.begin(), tmp.end());
+                  }
+                  child_children = next_child_children;
+              }
+          }
+      });
 
     _registry.view<component::script_component_t>().each([&delta](auto /*entity*/, component::script_component_t& script_c){
         script_c.update(delta);

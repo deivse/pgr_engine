@@ -67,11 +67,9 @@ public:
     }
 
     void update_global_transform() {
-        if (_parent_transform_c) {
-            _global_transform = _parent_transform_c ? _parent_transform_c->_transform_local_to_parent
-                                                      * _transform_local_to_parent
-                                                  : _transform_local_to_parent;
-        }
+        _global_transform = _parent_transform_c ? _parent_transform_c->_global_transform
+                                                    * _transform_local_to_parent
+                                                : _transform_local_to_parent;
     }
 
     glm::vec3 get_global_scale() {
