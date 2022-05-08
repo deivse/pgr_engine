@@ -51,7 +51,16 @@ std::pair<std::shared_ptr<perspective_camera_t>, glm::mat4> scene_t::get_active_
       _registry.get<component::transform_t>(_active_camera_owner).get_view()};
 }
 
-void scene_t::update(const interval_t& delta){
+void scene_t::update(const interval_t& delta) {
+    // update things that can affect transforms 
+    _registry.view<component::script_component_t>().each([&delta](auto /*entity*/, component::script_component_t& script_c){
+        script_c.update(delta);
+    });
+    _registry.view<component::flying_camera_controller_t>().each([&delta, this](entt::entity entity, component::flying_camera_controller_t& camera_controller_c){
+        if (entity == _active_camera_owner) camera_controller_c.update(delta, {entity, this});
+    });
+
+    // update transforms (naive algorithm, but it's good enough for this)
     _registry.view<component::transform_t, component::hierarchy_t>().each(
       [this](auto entity, component::transform_t& trans_c, component::hierarchy_t& hier_c) {
           if (hier_c.parent == entt::null) {
@@ -72,13 +81,6 @@ void scene_t::update(const interval_t& delta){
               }
           }
       });
-
-    _registry.view<component::script_component_t>().each([&delta](auto /*entity*/, component::script_component_t& script_c){
-        script_c.update(delta);
-    });
-    _registry.view<component::flying_camera_controller_t>().each([&delta, this](entt::entity entity, component::flying_camera_controller_t& camera_controller_c){
-        if (entity == _active_camera_owner) camera_controller_c.update(delta, {entity, this});
-    });
 }
 
 void scene_t::on_event(event_t& event) {
@@ -129,7 +131,7 @@ void scene_t::on_camera_component_remove(entt::registry& /*unused*/,
 
 void scene_t::serialize(const std::filesystem::path& filename) {
     std::ofstream out(filename);
-    cereal::JSONOutputArchive output(out);
+    cereal::BinaryOutputArchive output(out);
     entt::snapshot{_registry}.entities(output).component<PGRE_COMPONENT_TYPES>(output);
     output(_active_camera_owner);
 }
@@ -137,7 +139,7 @@ void scene_t::serialize(const std::filesystem::path& filename) {
 std::shared_ptr<scene_t> scene_t::deserialize(const std::filesystem::path& filename) {
     auto retval = std::make_shared<scene_t>();
     std::ifstream in(filename);
-    cereal::JSONInputArchive input(in);
+    cereal::BinaryInputArchive input(in);
     entt::snapshot_loader{retval->_registry}.entities(input).component<PGRE_COMPONENT_TYPES>(input);
     input(retval->_active_camera_owner);
 

@@ -71,22 +71,23 @@ bool entity_t::remove_child(entt::entity child_handle) {
 
     auto& parent_hierarchy_c = this->get_component<c::hierarchy_t>();
 
-    if (parent_hierarchy_c.first_child == child_handle) {
-        parent_hierarchy_c.first_child = child_hierarchy_c.next_sibling; // may be null but that's ok
-        child_hierarchy_c.next_sibling = entt::null;
-        return true;
+    if (child_hierarchy_c.prev_sibling != entt::null) {
+        auto& prev_sibling_hier_c = scene->_registry.get<c::hierarchy_t>(child_hierarchy_c.prev_sibling);
+        prev_sibling_hier_c.next_sibling = child_hierarchy_c.next_sibling;
+    } else {
+        parent_hierarchy_c.first_child = child_hierarchy_c.next_sibling;
     }
-    auto& prev_sib_hier_c = scene->_registry.get<c::hierarchy_t>(child_hierarchy_c.prev_sibling);
-    auto* next_sib_hier_c = scene->_registry.try_get<c::hierarchy_t>(child_hierarchy_c.next_sibling);
-    prev_sib_hier_c.next_sibling = child_hierarchy_c.next_sibling;
-    if (next_sib_hier_c) {
-        next_sib_hier_c->prev_sibling = child_hierarchy_c.prev_sibling;
+    
+    if (child_hierarchy_c.next_sibling != entt::null) {
+        auto& next_sib_hier_c = scene->_registry.get<c::hierarchy_t>(child_hierarchy_c.next_sibling);
+
+        next_sib_hier_c.prev_sibling = child_hierarchy_c.prev_sibling;
 
         auto curr = child_hierarchy_c.next_sibling;
-        for (size_t i = next_sib_hier_c->child_ix; i < parent_hierarchy_c.num_children; i++) {
-            auto& curr_hier_c = scene->_registry.get<c::hierarchy_t>(curr);
-            curr_hier_c.child_ix--;
-            curr = curr_hier_c.next_sibling;
+        for (size_t i = next_sib_hier_c.child_ix; i < parent_hierarchy_c.num_children; i++) {
+            auto& curr_sibling_hier_c = scene->_registry.get<c::hierarchy_t>(curr);
+            curr_sibling_hier_c.child_ix--;
+            curr = curr_sibling_hier_c.next_sibling;
         }
     }
 
