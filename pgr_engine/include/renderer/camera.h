@@ -3,7 +3,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-#include <cereal/types/memory.hpp>
 #include <cerealization/archive_types.h>
 #include <cerealization/glm_serializers.h>
 
@@ -11,6 +10,7 @@ namespace pgre {
 
 class perspective_camera_t
 {
+    inline static std::set<std::reference_wrapper<perspective_camera_t>> active_cameras;
     float _fov_deg;
     float _near;
     float _far;
@@ -22,19 +22,9 @@ class perspective_camera_t
     }
 
 public:
-    perspective_camera_t(float fov_deg = 90, float near = 0.01f, float far = 500.0f)
-      : _fov_deg(fov_deg),
-        _near(near),
-        _far(far),
-        _dimensions(app_t::get_window().get_dimensions())
-    {
-        _proj_m = _calc_projection_matrix();
+    perspective_camera_t(float fov_deg = 90, float near = 0.01f, float far = 500.0f);
 
-        app_t::get_window().register_window_resize_callback([this](const glm::ivec2& new_dims) {
-            _dimensions = new_dims;
-            _proj_m = _calc_projection_matrix();
-        });
-    };
+    ~perspective_camera_t();
 
     inline glm::mat4 get_projection_matrix() { return _proj_m; }
 
@@ -49,9 +39,24 @@ public:
     std::pair<glm::vec3, glm::vec3> get_ray_end_from_cam(const glm::mat4& view_matrix, const glm::ivec2& window_coords);
 
     template<typename Archive>
-    void serialize(Archive& archive) {
+    void save(Archive& archive) const {
         archive(_fov_deg, _near, _far, _dimensions);
     }
+
+    template<typename Archive>
+    void load(Archive& archive) {
+        archive(_fov_deg, _near, _far, _dimensions);
+    }
+
+    static void on_resize(const glm::vec2& new_dims){
+        for (const auto& c: active_cameras) {
+            c.get()._dimensions = new_dims;
+            c.get()._proj_m = c.get()._calc_projection_matrix();
+        }
+    }
 };
+
+bool operator<(const std::reference_wrapper<pgre::perspective_camera_t> a,
+               const std::reference_wrapper<pgre::perspective_camera_t> b);
 
 }  // namespace pgre

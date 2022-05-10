@@ -49,11 +49,9 @@ void window_t::disable_raw_mouse_input() {
 
 void window_t::resize_callback(GLFWwindow* /*window*/, int xpos, int ypos) {
     auto& pgre_window = pgre::app_t::get_window();
-
-    auto new_win_dims = glm::ivec2{xpos, ypos};
+    auto new_win_dims = glm::vec2{xpos, ypos};
     renderer::on_resize(new_win_dims);
-    for (auto& callback : pgre_window.resize_callbacks) {
-        callback(new_win_dims);
-    }
+    perspective_camera_t::on_resize(new_win_dims);
 }
+
 } // namespace pgre

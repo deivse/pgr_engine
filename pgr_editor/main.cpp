@@ -10,7 +10,7 @@
 int main() {
     // spdlog::set_level(spdlog::level::warn);
     try {
-        pgre::app_t app(1920, 1080, ":)))))))", false);
+        pgre::app_t app(640, 360, "PGR\"E\" Editor", false);
         spdlog::set_level(spdlog::level::level_enum::info);
         std::shared_ptr<pgre::scene::scene_t> scene{};
         auto scene_l = std::make_shared<scene_layer_t>(scene);
@@ -23,3 +23,10 @@ int main() {
     }
     return 0;
 }
+
+/*TODO;
+
+|X| crashes when modifying scene hierarchy
+| | models not loading full
+
+*/

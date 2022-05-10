@@ -14,7 +14,7 @@ namespace pgre {
 class window_t
 {
     GLFWwindow* _window_ptr = nullptr;
-    std::vector<std::function<void(const glm::ivec2&)>> resize_callbacks{};
+    std::vector<std::function<void(const glm::vec2&)>> resize_callbacks{};
 
     static void resize_callback(GLFWwindow* /*window*/, int xpos, int ypos);
 

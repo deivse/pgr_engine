@@ -1,6 +1,21 @@
 #include <renderer/camera.h>
 
 namespace pgre {
+
+bool operator < (const std::reference_wrapper<pgre::perspective_camera_t> a, const std::reference_wrapper<pgre::perspective_camera_t> b) {
+    return &(a.get()) < &(b.get());
+}
+
+perspective_camera_t::perspective_camera_t(float fov_deg, float near, float far)
+  : _fov_deg(fov_deg), _near(near), _far(far), _dimensions(app_t::get_window().get_dimensions()) {
+    _proj_m = _calc_projection_matrix();
+    active_cameras.emplace(std::ref(*this));
+};
+
+perspective_camera_t::~perspective_camera_t(){
+    active_cameras.erase(std::ref(*this));
+}
+
 std::pair<glm::vec3, glm::vec3> perspective_camera_t::get_ray_end_from_cam(const glm::mat4& view_matrix,
                                                      const glm::ivec2& window_coords) {
 

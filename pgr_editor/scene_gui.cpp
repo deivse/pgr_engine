@@ -193,7 +193,10 @@ void scene_gui_layer_t::entity_window() {
                                                     vertex_buffers.size(),
                                                     index_buffer ? "True" : "False")
                                           .c_str());
-                      if (index_buffer) ImGui::Text("Vertex Count: %i", index_buffer->get_count());
+                      if (index_buffer) ImGui::Text("Index Buffer Count: %i", index_buffer->get_count());
+                      for (size_t i = 0; i < vertex_buffers.size(); i++) {
+                        ImGui::Text("VBO[%i] Count: %i", i, vertex_buffers[i].first->get_count());
+                      }
                       ImGui::TreePop();
                   }
                   if (ImGui::TreeNode("Material")) {
