@@ -20,7 +20,9 @@
 
 #include "assets/materials/skybox_material.h"
 #include "primitives/builtin_meshes.h"
-#include "scene_gui.h"
+
+class scene_gui_layer_t;
+class component_gui_t;
 
 class scene_layer_t : public pgre::layers::basic_layer_t
 {
@@ -106,4 +108,5 @@ public:
     }
 
     friend class scene_gui_layer_t;
+    friend class component_gui_t;
 };

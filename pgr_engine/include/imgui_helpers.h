@@ -78,7 +78,7 @@ static int InputTextCallback(ImGuiInputTextCallbackData* data) {
     return 0;
 }
 
-bool InputString(const char* label, std::string* str, ImGuiInputTextFlags flags = 0,
+inline bool InputString(const char* label, std::string* str, ImGuiInputTextFlags flags = 0,
                  ImGuiInputTextCallback callback = NULL, void* user_data = NULL) {
     IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
     flags |= ImGuiInputTextFlags_CallbackResize;
@@ -91,7 +91,7 @@ bool InputString(const char* label, std::string* str, ImGuiInputTextFlags flags 
                      &cb_user_data);
 }
 
-bool InputStringMultiline(const char* label, std::string* str, const ImVec2& size = ImVec2(0, 0),
+inline bool InputStringMultiline(const char* label, std::string* str, const ImVec2& size = ImVec2(0, 0),
                           ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = NULL,
                           void* user_data = NULL) {
     IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
@@ -105,7 +105,7 @@ bool InputStringMultiline(const char* label, std::string* str, const ImVec2& siz
                               InputTextCallback, &cb_user_data);
 }
 
-bool InputStringWithHint(const char* label, const char* hint, std::string* str,
+inline bool InputStringWithHint(const char* label, const char* hint, std::string* str,
                          ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = NULL,
                          void* user_data = NULL) {
     IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "component_gui.h"
 #include "scene/scene.h"
 #include "scene/entity.h"
 #include <layers/imgui_layer.h>
@@ -20,7 +21,7 @@ class scene_gui_layer_t : public pgre::layers::imgui_layer_t
     void scene_window();
     void entity_window();
     void scene_open_create_window();
-
+    component_gui_t component_gui;
 public:
     explicit scene_gui_layer_t(std::shared_ptr<scene_layer_t> scene_layer);
     void on_gui_update(const pgre::interval_t& delta) override;
