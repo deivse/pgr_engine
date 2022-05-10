@@ -278,9 +278,9 @@ void scene_gui_layer_t::entity_window() {
 
                   ImGui::Checkbox("Enabled", &point_c.enabled);
               } else if constexpr (std::is_same_v<std::remove_reference_t<decltype(c)>,
-                                                  pgre::component::flying_camera_controller_t>) {
+                                                  pgre::component::camera_controller_t>) {
                   component_title("Flying Camera Controller");
-                  auto& cc_c = static_cast<pgre::component::flying_camera_controller_t&>(c);
+                  auto& cc_c = static_cast<pgre::component::camera_controller_t&>(c);
                   ImGui::DragFloat("Move Speed", &cc_c.move_speed);
                   ImGui::Text("Press 'M' to turn mouse input on or off.");
               } else if constexpr (std::is_same_v<std::remove_reference_t<decltype(c)>,
@@ -306,7 +306,7 @@ void scene_gui_layer_t::entity_window() {
             add_component_button.template operator()<pgre::component::point_light_t>("Point Light");
             add_component_button.template operator()<pgre::component::spot_light_t>("Spot Light");
             add_component_button.template operator()<pgre::component::sun_light_t>("Sun Light");
-            add_component_button.template operator()<pgre::component::flying_camera_controller_t>(
+            add_component_button.template operator()<pgre::component::camera_controller_t>(
               "Flying Camera Controller");
             ImGui::TreePop();
         }

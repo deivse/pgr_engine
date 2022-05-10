@@ -7,14 +7,15 @@
 #include "transform_component.h"
 
 namespace pgre::component {
-class flying_camera_controller_t
+class camera_controller_t
 {
     bool mouse_input_enabled = false;
     float last_x{}, last_y{};
+
 public:
     float move_speed = 18.0f;
 
-    flying_camera_controller_t() = default;
+    camera_controller_t() = default;
 
     void on_event(pgre::event_t& event, scene::entity_t&& entity){
         pgre::event_dispatcher_t dispatcher(event);

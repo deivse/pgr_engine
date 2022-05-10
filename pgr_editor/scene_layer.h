@@ -34,7 +34,7 @@ class scene_layer_t : public pgre::layers::basic_layer_t
 
         camera_e.add_component<pgre::component::camera_component_t>().camera
           = std::make_shared<pgre::perspective_camera_t>(60);
-        camera_e.add_component<pgre::component::flying_camera_controller_t>();
+        camera_e.add_component<pgre::component::camera_controller_t>();
 
         scene->set_active_camera_entity(camera_e);
     }

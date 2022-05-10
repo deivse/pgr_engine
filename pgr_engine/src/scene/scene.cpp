@@ -56,7 +56,7 @@ void scene_t::update(const interval_t& delta) {
     _registry.view<component::script_component_t>().each([&delta](auto /*entity*/, component::script_component_t& script_c){
         script_c.update(delta);
     });
-    _registry.view<component::flying_camera_controller_t>().each([&delta, this](entt::entity entity, component::flying_camera_controller_t& camera_controller_c){
+    _registry.view<component::camera_controller_t>().each([&delta, this](entt::entity entity, component::camera_controller_t& camera_controller_c){
         if (entity == _active_camera_owner) camera_controller_c.update(delta, {entity, this});
     });
 
@@ -87,7 +87,7 @@ void scene_t::on_event(event_t& event) {
     _registry.view<component::script_component_t>().each([&event](auto /*entity*/, component::script_component_t& script_c){
         script_c.on_event(event);
     });
-    _registry.view<component::flying_camera_controller_t>().each([&event, this](entt::entity entity, component::flying_camera_controller_t& c){
+    _registry.view<component::camera_controller_t>().each([&event, this](entt::entity entity, component::camera_controller_t& c){
         if (entity == _active_camera_owner) c.on_event(event, {entity, this});
     });
 }
