@@ -59,6 +59,12 @@ public:
         return {cursor_pos};
     }
 
+    inline glm::vec2 get_cursor_pos_origin_bottom_left(){
+        glm::dvec2 cursor_pos;
+        glfwGetCursorPos(_window_ptr, &cursor_pos.x, &cursor_pos.y);
+        return {cursor_pos.x, get_dimensions().y - cursor_pos.y};
+    }
+
     ~window_t();
 
     glm::vec2 get_dimensions();
