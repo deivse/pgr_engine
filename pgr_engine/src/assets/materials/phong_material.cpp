@@ -23,7 +23,6 @@ void phong_material_t::init() {
 void phong_material_t::use(scene::scene_t& /*scene*/) {
     debug_assert(_shader_program != nullptr, "phong_material_t::init never called");
 
-    glDepthMask(GL_TRUE);
     _shader_program->bind();
 
     _shader_program->set_uniform("material.ambient", _ambient);

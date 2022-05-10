@@ -21,6 +21,7 @@ void skybox_material_t::use(scene::scene_t& /*scene*/) {
     }
     _cubemap_texture->bind(2);
     _shader_program->set_uniform("cubemap", 2);
+    glDepthMask(GL_TRUE);
 }
 
 void skybox_material_t::set_matrices(const glm::mat4&  /*M*/, const glm::mat4& V, const glm::mat4& P,

@@ -87,6 +87,7 @@ public:
     static void add_skybox(const std::string& cubemap_name, pgre::scene::entity_t& entity){
         if (entity.has_component<pgre::component::mesh_t>()){
             spdlog::error("Add skybox failed - entity  already has a mesh component");
+            return;
         }
         using face = pgre::cubemap_texture_t::face_enum_t;
         std::unordered_map<pgre::cubemap_texture_t::face_enum_t,std::string> paths {

@@ -78,7 +78,7 @@ public:
     
     size_t get_num_children() {return this->get_component<component::hierarchy_t>().num_children;}
 
-    ///////////// COMPONENT HELEPERS //////////////
+    ///////////// COMPONENT HELPERS //////////////
 
     const std::string& get_name(){
         return this->get_component<component::tag_t>().tag;
