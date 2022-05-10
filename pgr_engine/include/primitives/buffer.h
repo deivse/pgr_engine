@@ -118,9 +118,9 @@ struct buffer_t
     /**
      * @brief Get the size, in bytes, of data currently in the buffer.
      */
-    inline GLsizeiptr get_size() const { return _current_data_offset; }
+    [[nodiscard]] inline GLsizeiptr get_size() const { return _current_data_offset; }
 
-    inline int get_count() const {
+    [[nodiscard]] inline int get_count() const {
         return _current_data_offset / sizeof(DataTy);
     }
     /**

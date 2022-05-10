@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include "components/hierarchy_component.h"
 
 #include <stdexcept>
@@ -22,6 +23,8 @@ class transform_t
     glm::mat4 _transform_local_to_parent{};
     glm::mat4 _global_transform{};
 public:
+    static constexpr auto in_place_delete = true; // entt pointer stability (for _parent_transform_c)
+
     glm::vec3 scale{};
     glm::vec3 translation{};
     glm::quat orientation{};
@@ -104,11 +107,11 @@ public:
     void load(Archive& archive){
         archive(scale, translation, orientation);
         update_parentlocal_transform();
-        update_global_transform();
     }
 
     friend class scene::entity_t;
     friend class scene::scene_t;
 };
+
 
 } // namespace pgre::component

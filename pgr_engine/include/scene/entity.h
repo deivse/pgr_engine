@@ -1,9 +1,12 @@
 #pragma once
 #include <scene/scene.h>
 
+#include <entt/entt.hpp>
+
 #include <error_handling.h>
 #include <components/tag_component.h>
-#include <entt/entt.hpp>
+#include <components/transform_component.h>
+
 
 namespace pgre::component {
 class script_component_t;
