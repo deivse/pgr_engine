@@ -84,7 +84,7 @@ public:
 
     template<typename Archive>
     void serialize(Archive& ar) {
-        ar(keyframes, total_anim_time);
+        ar(keyframes, playing);
     }
 };
 
