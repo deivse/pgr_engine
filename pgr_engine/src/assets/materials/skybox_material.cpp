@@ -12,7 +12,6 @@ void skybox_material_t::init() {
 void skybox_material_t::use(scene::scene_t& /*scene*/) {
     debug_assert(_shader_program != nullptr, "skybox_material_t::init never called");
     
-    glDepthMask(GL_FALSE);
     _shader_program->bind();
 
     if (!_cubemap_texture) {
@@ -21,17 +20,16 @@ void skybox_material_t::use(scene::scene_t& /*scene*/) {
     }
     _cubemap_texture->bind(2);
     _shader_program->set_uniform("cubemap", 2);
-    glDepthMask(GL_TRUE);
 }
 
-void skybox_material_t::set_matrices(const glm::mat4&  /*M*/, const glm::mat4& V, const glm::mat4& P,
+void skybox_material_t::set_matrices(const glm::mat4&  M, const glm::mat4& V, const glm::mat4& P,
                                      const glm::mat4&  /*PV*/) {
     _shader_program->bind();
     auto v_no_tr = V;
     v_no_tr[3].x = 0;
     v_no_tr[3].y = 0;
     v_no_tr[3].z = 0;
-    _shader_program->set_uniform("skybox_matrix", P * v_no_tr);
+    _shader_program->set_uniform("skybox_matrix", P * glm::mat4(glm::mat3(V)) * glm::mat4(glm::mat3(M)));
 }
 
 } // namespace pgre

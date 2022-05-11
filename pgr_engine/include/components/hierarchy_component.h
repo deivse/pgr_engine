@@ -17,7 +17,7 @@ struct hierarchy_t
 
     template<typename Archive>
     void serialize(Archive& archive) {
-        archive(num_children, parent, first_child, prev_sibling, next_sibling);
+        archive(num_children, parent, first_child, prev_sibling, next_sibling, child_ix);
     }
 };
 

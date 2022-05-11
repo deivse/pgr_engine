@@ -108,7 +108,7 @@ public:
     component::script_component_t& add_script(std::unique_ptr<entity_script_t> script);
 
     template <typename ComponentTy>
-    bool has_component() {
+    bool has_component() const {
         return scene->_registry.all_of<ComponentTy>(handle);
     } 
 

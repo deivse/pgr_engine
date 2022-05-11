@@ -20,17 +20,19 @@ void cubemap_texture_t::load_from_file() {
 
     std::unordered_map<face_enum_t, unsigned char*> tex_data;
     static const std::map<face_enum_t, uint8_t> face_to_ogl_offset{
-      {face_enum_t::front, 2},
-      {face_enum_t::back, 3},
+      {face_enum_t::front, 5},
+      {face_enum_t::back, 4},
       {face_enum_t::right, 0},
       {face_enum_t::left, 1},
-      {face_enum_t::top, 4},
-      {face_enum_t::bottom, 5},
+      {face_enum_t::top, 3},
+      {face_enum_t::bottom, 2},
+      // 3-> back 2-> front //  
     };
 
     bool first = true;
     for (auto& [face, path]: _paths){
         auto old_w = width, old_h = height, old_channels = channels;
+
         tex_data[face] = stbi_load(path.c_str(), &width, &height, &channels, 0);
 
         if (!tex_data[face])

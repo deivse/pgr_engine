@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scene_layer.h"
+#include "animator_gui.h"
 #include <fmt/format.h>
 #include <imgui_helpers.h>
 #include <scene/entity.h>
@@ -16,6 +17,8 @@ class component_gui_t
     size_t component_count = 0;
     std::optional<pgre::scene::entity_t>& selected_entity;
     std::shared_ptr<scene_layer_t>& _scene_layer;
+
+    animator_gui_t& animator_gui;
 
     /**
      * @brief 
@@ -38,8 +41,8 @@ class component_gui_t
 
 public:
     component_gui_t(std::optional<pgre::scene::entity_t>& selected_entity,
-                    std::shared_ptr<scene_layer_t>& scene_layer)
-      : selected_entity(selected_entity), _scene_layer(scene_layer) {}
+                    std::shared_ptr<scene_layer_t>& scene_layer, animator_gui_t& animator_gui)
+      : selected_entity(selected_entity), _scene_layer(scene_layer), animator_gui(animator_gui) {}
     void new_frame() { component_count = 0; }
 
     template<typename ComponentTy>

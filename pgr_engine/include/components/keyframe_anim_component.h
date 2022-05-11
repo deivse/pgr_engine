@@ -4,13 +4,16 @@
 #include "timer.h"
 #include <glm/vec3.hpp>
 #include <glm/gtc/quaternion.hpp>
+
+#include <cereal/types/vector.hpp>
 #include <vector>
 
 namespace pgre::component {
 
-class keyframe_animator_t {
+class keyframe_animator_t
+{
 public:
-    struct transform_keyframe_t
+    struct keyframe_t
     {
         glm::vec3 translation;
         glm::vec3 scale;
@@ -20,13 +23,19 @@ public:
          *
          */
         float to_next_seconds = 2.5f;
+
+        template<typename Archive>
+        void serialize(Archive& ar) {
+            ar(translation, scale, orientation);
+        }
     };
+
 private:
-    std::vector<transform_keyframe_t> keyframes;
-    float anim_time = 0;
+    std::vector<keyframe_t> keyframes;
     float total_anim_time = 0;
 
-    transform_keyframe_t from, to;
+    float anim_time = 0;
+    keyframe_t from, to;
     float factor = 0.f;
 
     bool playing = false;
@@ -34,9 +43,29 @@ private:
 public:
     keyframe_animator_t() = default;
 
-    void push_keyframe(transform_keyframe_t keyframe) {
+    void push_keyframe(keyframe_t keyframe) {
         keyframes.emplace_back(keyframe);
         total_anim_time += keyframe.to_next_seconds;
+    }
+
+    size_t get_kframe_count() {
+        return keyframes.size();
+    }
+
+    void new_keyframe(size_t from_ix){
+        if (from_ix >= keyframes.size()){
+            push_keyframe({{0,0,0}, {1,1,1}, glm::quat{}});
+        } else {
+            push_keyframe(*std::next(keyframes.begin(),from_ix) );
+        }
+    }
+
+    auto& get_keyframe(size_t ix){
+        return keyframes[ix];
+    }
+
+    void delete_keyframe(size_t ix){
+        keyframes.erase(std::next(keyframes.begin(),ix));
     }
 
     void pop_keyframe() {
@@ -44,8 +73,19 @@ public:
         keyframes.resize(keyframes.size() - 1);
     }
 
-void update(const interval_t& delta, scene::entity_t&& entity);
+    void toggle_play(){
+        playing = !playing;
+    }
+    [[nodiscard]] bool is_playing() const{
+        return playing;
+    } 
 
+    void update(const interval_t& delta, scene::entity_t&& entity);
+
+    template<typename Archive>
+    void serialize(Archive& ar) {
+        ar(keyframes, total_anim_time);
+    }
 };
 
-}  // namespace pgre::component
+} // namespace pgre::component

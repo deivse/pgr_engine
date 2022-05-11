@@ -5,7 +5,14 @@ namespace pgre::builtin_meshes {
 
 namespace {
     constexpr float cube_vertices[24]
-      = {-1, -1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1, -1, -1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1};
+      = {-1, -1, -1, // bottom close left  0
+          1, -1, -1, // bottom close right 1
+          1,  1, -1, // bottom far right   2
+         -1,  1, -1, // bottom far left    3
+         -1, -1,  1, // top close left     4
+          1, -1,  1, // top close right    5
+          1,  1,  1, // top far right      6
+         -1,  1,  1};// top far left       7
 
     constexpr unsigned int cube_indices[36] = {0, 1, 3, 3, 1, 2, 1, 5, 2, 2, 5, 6, 5, 4, 6, 6, 4, 7,
                                          4, 0, 7, 7, 0, 3, 3, 2, 7, 7, 2, 6, 4, 5, 0, 0, 5, 1};

@@ -9,6 +9,7 @@ smooth out vec3 v_tex_coords;
 
 void main() {
   gl_Position = skybox_matrix * vec4(position, 1);
+  gl_Position.w = gl_Position.z + 0.0000001;
   v_tex_coords = position;
 }
 } shader::vertex

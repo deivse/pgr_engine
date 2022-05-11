@@ -1,16 +1,24 @@
+#include <components/all_components.h>
 #include "component_gui.h"
 
 namespace c = pgre::component;
 
 template<>
-bool component_gui_t::gui_impl(c::tag_t&  /*comp*/) {
+bool component_gui_t::gui_impl(c::tag_t&  comp) {
     component_title("Tag");
+    static std::string new_name;
+    ImGui::InputString("New name:", &new_name);
+    if (!new_name.empty() && ImGui::SmallButton("Rename")){
+        comp.tag = new_name;
+        new_name.clear();
+    }
     return false;
 }
 
 template<>
 bool component_gui_t::gui_impl(c::transform_t& comp) {
     component_title("Transform");
+    ImGui::BeginDisabled(selected_entity->has_component<c::keyframe_animator_t>());
     ImGui::DragFloat3("Translation", glm::value_ptr(comp.translation), 0.5f,
                       -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
     auto euler_angles = comp.get_orientation_euler();
@@ -19,6 +27,7 @@ bool component_gui_t::gui_impl(c::transform_t& comp) {
     comp.set_orientation_euler(euler_angles);
     ImGui::DragFloat3("Scale", glm::value_ptr(comp.scale), 0.2f,
                       -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    ImGui::EndDisabled();
     ImGui::Text(comp.parent_transform_c_bound() ? "Parent Transform Bound: True"
                                                        : "Parent Transform Bound: False");
     if (ImGui::TreeNode("Transform Matrix")) {
@@ -163,5 +172,17 @@ bool component_gui_t::gui_impl(c::camera_controller_t& comp) {
 template<>
 bool component_gui_t::gui_impl(c::script_component_t& /*comp*/){
     component_title("Script Component");
+    return true;
+}
+
+template<>
+bool component_gui_t::gui_impl(c::keyframe_animator_t& animator){
+    component_title("Keyframe Animation");
+    if (ImGui::Button("Edit...")){
+        animator_gui.open_window(*selected_entity);
+    }
+    if (ImGui::Button(animator.is_playing() ? "Pause" : "Play")){
+        animator.toggle_play();
+    }
     return true;
 }

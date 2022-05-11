@@ -6,7 +6,7 @@
 #include "scene_gui.h"
 
 scene_gui_layer_t::scene_gui_layer_t(std::shared_ptr<scene_layer_t> scene_layer)
-  : _scene_layer(std::move(scene_layer)), component_gui(selected_entity, _scene_layer) {}
+  : _scene_layer(std::move(scene_layer)), component_gui(selected_entity, _scene_layer, animator_gui) {}
 
 std::optional<pgre::scene::entity_t> scene_gui_layer_t::draw_entity(pgre::scene::entity_t& entity) {
     if (entity.get_num_children() != 0) {
@@ -36,6 +36,7 @@ void scene_gui_layer_t::on_gui_update(const pgre::interval_t& /*delta*/) {
     if (_scene_layer->scene) {
         scene_window();
         entity_window();
+        animator_gui.on_gui_update();
     } else {
         scene_open_create_window();
     }
@@ -135,7 +136,9 @@ void scene_gui_layer_t::entity_window() {
             add_component_button.template operator()<pgre::component::spot_light_t>("Spot Light");
             add_component_button.template operator()<pgre::component::sun_light_t>("Sun Light");
             add_component_button.template operator()<pgre::component::camera_controller_t>(
-              "Flying Camera Controller");
+              "Camera Controller");
+            add_component_button.template operator()<pgre::component::keyframe_animator_t>(
+              "Keyframe Animator");
             ImGui::TreePop();
         }
         if (ImGui::TreeNode("Add Skybox")) {
