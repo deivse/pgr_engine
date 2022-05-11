@@ -90,6 +90,7 @@ public:
     bool set_uniform(const std::string& glsl_name, const std::vector<glm::vec3>& x);
     bool set_uniform(const std::string& glsl_name, const glm::vec4& x);
     bool set_uniform(const std::string& glsl_name, float x);
+    bool set_uniform(const std::string& glsl_name, double x);
     bool set_uniform(const std::string& glsl_name, int x);
     bool set_uniform(const std::string& glsl_name, bool x);
 

@@ -7,7 +7,7 @@ struct Material {      // structure that describes currently used material
   vec3  specular;      // specular component
   float shininess;     // sharpness of specular reflection
   float opacity;
-
+  float tex_coord_anim_speed;  
   bool use_texture;    // defines whether the texture is used or not
 };
 
@@ -60,7 +60,7 @@ uniform mat4 view_matrix;
 uniform mat4 normal_matrix;  // inverse transposed model_matrix
 
 uniform sampler2D color_tex_sampler;
-uniform vec2 tex_coord_offset;
+uniform double time;
 
 uniform Material material;
 uniform FogSettings fog;
@@ -162,7 +162,11 @@ void main() {
   output_color = vec4(color, material.opacity);
 
   if(material.use_texture) {
-    output_color *= texture(color_tex_sampler, vec2(v_tex_coord.x + tex_coord_offset.x, v_tex_coord.y + tex_coord_offset.y));
+    vec2 tex_coord = v_tex_coord;
+    
+    tex_coord.x += float(time * material.tex_coord_anim_speed);
+    tex_coord.y += float(time * material.tex_coord_anim_speed);
+    output_color *= texture(color_tex_sampler, tex_coord);
   }
   if(fog.enable) {
     output_color = add_fog(output_color);

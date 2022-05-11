@@ -11,7 +11,7 @@ int main() {
     // spdlog::set_level(spdlog::level::warn);
     try {
         pgre::app_t app(1280, 720, "PGR\"E\" Editor", false);
-        spdlog::set_level(spdlog::level::level_enum::info);
+        spdlog::set_level(spdlog::level::level_enum::warn);
         std::shared_ptr<pgre::scene::scene_t> scene{};
         auto scene_l = std::make_shared<scene_layer_t>(scene);
         app.push_layer(scene_l);

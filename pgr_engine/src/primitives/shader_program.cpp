@@ -182,6 +182,12 @@ bool shader_program_t::set_uniform(const std::string& glsl_name, float x) {
     glUniform1f(loc, x);
     return true;
 }
+bool shader_program_t::set_uniform(const std::string& glsl_name, double x){
+    int loc{};
+    if (!get_uniform_loc(glsl_name, loc)) return false;
+    glUniform1d(loc, x);
+    return true;
+}
 bool shader_program_t::set_uniform(const std::string& glsl_name, int x) {
     int loc{};
     if (!get_uniform_loc(glsl_name, loc)) return false;

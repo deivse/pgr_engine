@@ -30,8 +30,10 @@ void phong_material_t::use(scene::scene_t& /*scene*/) {
     _shader_program->set_uniform("material.specular", _specular);
     _shader_program->set_uniform("material.shininess", _shininess);
     _shader_program->set_uniform("material.opacity", 1.0f - _transparency);
+    _shader_program->set_uniform("time", glfwGetTime());
 
     if (_color_texture) {
+        _shader_program->set_uniform("material.tex_coord_anim_speed", animate_texture ? texture_anim_speed : 0.0f);
         _shader_program->set_uniform("color_tex_sampler", 1);
         _shader_program->set_uniform("material.use_texture", true);
         _color_texture->bind(1);

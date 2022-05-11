@@ -86,6 +86,10 @@ bool component_gui_t::gui_impl(c::mesh_t& comp) {
             ImGui::DragFloat("Transparency", &(material->_transparency), 0.01f, 0.0f, 1.0f);
             ImGui::PopItemWidth();
             if (material->_color_texture && ImGui::TreeNode("Texture")) {
+                if (ImGui::Button("Toggle Texture Animation")) {
+                    material->toggle_texture_animation();
+                };
+                ImGui::DragFloat("Texture anim speed", &material->texture_anim_speed, 0.1f, 0.0f, 1.0f);
                 float size_mult = ImGui::GetWindowWidth() / material->_color_texture->get_width();
                 ImGui::Image(reinterpret_cast<void*>(material->_color_texture->get_gl_id()),
                              {material->_color_texture->get_width() * size_mult,
