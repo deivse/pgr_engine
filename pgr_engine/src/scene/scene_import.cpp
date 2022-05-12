@@ -197,10 +197,11 @@ void add_mesh_and_bb_components(
 
 std::optional<entity_t> scene_t::import_from_file(const std::filesystem::path& scene_file) {
     static Assimp::Importer importer;
-    importer.SetPropertyInteger(AI_CONFIG_PP_PTV_NORMALIZE, 1);    
+    importer.SetPropertyInteger(AI_CONFIG_PP_PTV_NORMALIZE, 1);
 
     const aiScene* ai_scene
-      = importer.ReadFile(scene_file.c_str(), 0);
+      = importer.ReadFile(scene_file.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals
+                                                | aiProcess_GenUVCoords);
 
     // abort if the loader fails
     if (ai_scene == NULL) {

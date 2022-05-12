@@ -19,6 +19,7 @@ class component_gui_t
     std::shared_ptr<scene_layer_t>& _scene_layer;
 
     animator_gui_t& animator_gui;
+    std::string tex_path;
 
     /**
      * @brief 

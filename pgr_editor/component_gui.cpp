@@ -81,20 +81,37 @@ bool component_gui_t::gui_impl(c::mesh_t& comp) {
             ImGui::ColorEdit3("Specular", glm::value_ptr(material->_specular));
 
             ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65 * 0.2);
-            ImGui::DragFloat("Shininess", &(material->_shininess), 0.01f, 0.0f, 100.0f);
+            ImGui::DragFloat("Shininess", &(material->_shininess), 0.25f, 0.0f, 100.0f);
             ImGui::SameLine();
             ImGui::DragFloat("Transparency", &(material->_transparency), 0.01f, 0.0f, 1.0f);
             ImGui::PopItemWidth();
-            if (material->_color_texture && ImGui::TreeNode("Texture")) {
-                if (ImGui::Button("Toggle Texture Animation")) {
-                    material->toggle_texture_animation();
-                };
-                ImGui::DragFloat("Texture anim speed", &material->texture_anim_speed, 0.1f, 0.0f, 1.0f);
-                float size_mult = ImGui::GetWindowWidth() / material->_color_texture->get_width();
-                ImGui::Image(reinterpret_cast<void*>(material->_color_texture->get_gl_id()),
-                             {material->_color_texture->get_width() * size_mult,
-                              material->_color_texture->get_height() * size_mult});
-                ImGui::TreePop();
+            
+            if (material->_color_texture) {
+                if (ImGui::TreeNode("Texture")) {
+                    ImGui::Checkbox("Spritesheet", &material->spritesheet);
+                    if (material->spritesheet) {
+                        ImGui::InputInt("FPS", &material->spritesheet_fps);
+                        ImGui::InputInt2("Spritesheet Dims", glm::value_ptr(material->spritesheet_dims));
+                    } else {    
+                        if (ImGui::Button("Toggle Texture Animation")) {
+                        material->toggle_texture_animation();
+                    };
+                    ImGui::DragFloat("Texture anim speed", &material->texcoord_anim_speed, 0.01f,
+                                     -5.0f, 5.0f);
+                    }
+                    float size_mult
+                      = ImGui::GetWindowWidth() / material->_color_texture->get_width();
+                    ImGui::Image(reinterpret_cast<void*>(material->_color_texture->get_gl_id()),
+                                 {material->_color_texture->get_width() * size_mult,
+                                  material->_color_texture->get_height() * size_mult});
+                    ImGui::TreePop();
+                }
+            } else {
+                ImGui::InputString("Texture path", &tex_path);
+                if (!tex_path.empty() && std::filesystem::is_regular_file(tex_path) && ImGui::Button("Add Texture")) {
+                    material->_color_texture
+                      = std::make_shared<pgre::texture2D_t>(std::filesystem::absolute(tex_path));
+                }
             }
         } else {
             ImGui::Text("No GUI for this material type :(");

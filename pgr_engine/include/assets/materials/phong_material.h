@@ -37,9 +37,13 @@ class phong_material_t : public material_t
 {
     inline static std::unique_ptr<shader_program_t> _shader_program{nullptr};
     inline static fog_settings_t _fog_settings{};
-    bool animate_texture = false;
+    bool animate_texture_coords = false;
+
 public:
-    float texture_anim_speed = 0.5f;
+    bool spritesheet = false;
+    glm::ivec2 spritesheet_dims{};
+    int spritesheet_fps{15};
+    float texcoord_anim_speed = 0.5f;
     glm::vec3 _diffuse{1.0f};
     glm::vec3 _ambient{1.0f};
     glm::vec3 _specular{1.0f};
@@ -90,7 +94,7 @@ public:
      */
     void use(scene::scene_t& /*scene*/) override;
 
-    void toggle_texture_animation() { animate_texture = !animate_texture; }
+    void toggle_texture_animation() { animate_texture_coords = !animate_texture_coords; }
 
     /**
      * @brief Sets all scene-global uniforms (lights, fog, etc.)
@@ -119,7 +123,9 @@ public:
 
     template <class Archive>
     void serialize(Archive& archive) {
-        archive(_diffuse, _ambient, _specular, _shininess, _transparency, _color_texture, _fog_settings, animate_texture, texture_anim_speed);
+        archive(_diffuse, _ambient, _specular, _shininess, _transparency, _color_texture,
+                _fog_settings, animate_texture_coords, texcoord_anim_speed, spritesheet,
+                spritesheet_dims, spritesheet_fps);
     }
 
     inline uint32_t get_material_sort_index() override {

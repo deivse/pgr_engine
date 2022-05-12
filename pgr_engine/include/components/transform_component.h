@@ -91,8 +91,16 @@ public:
     }
 
     [[nodiscard]] glm::mat4 get_view() const {
-        auto translation_m = glm::translate(glm::mat4{1.0f}, translation);
-        return glm::inverse(translation_m * glm::toMat4(orientation));
+        const auto* parent_tr_c = _parent_transform_c;
+        auto world_translation = translation;
+        auto world_orientation = orientation;
+        while (parent_tr_c) {
+            world_translation += parent_tr_c->translation;
+            world_orientation = parent_tr_c->orientation * world_orientation;
+            parent_tr_c = parent_tr_c->_parent_transform_c;
+        }
+        auto translation_m = glm::translate(glm::mat4{1.0f}, world_translation);
+        return glm::inverse(translation_m * glm::toMat4(world_orientation));
     }
 
     operator const glm::mat4&() const { return _global_transform; }

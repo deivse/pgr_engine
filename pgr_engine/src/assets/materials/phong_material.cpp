@@ -33,8 +33,16 @@ void phong_material_t::use(scene::scene_t& /*scene*/) {
     _shader_program->set_uniform("time", glfwGetTime());
 
     if (_color_texture) {
-        _shader_program->set_uniform("material.tex_coord_anim_speed", animate_texture ? texture_anim_speed : 0.0f);
+        _shader_program->set_uniform("material.spritesheet", spritesheet);
+        if (spritesheet) {
+            _shader_program->set_uniform("material.spritesheet_dims", spritesheet_dims);
+            _shader_program->set_uniform("material.spritesheet_frame_duration", 1.0f/static_cast<float>(spritesheet_fps));
+            _shader_program->set_uniform("material.tex_coord_anim_speed", 0.0f);
+        } else {
+            _shader_program->set_uniform("material.tex_coord_anim_speed", animate_texture_coords ? texcoord_anim_speed : 0.0f);
+        }
         _shader_program->set_uniform("color_tex_sampler", 1);
+        
         _shader_program->set_uniform("material.use_texture", true);
         _color_texture->bind(1);
     } else {
@@ -106,7 +114,7 @@ void phong_material_t::set_scene_uniforms_s(scene::scene_t& scene) {
         _shader_program->set_uniform(fmt::format("spot_lights[{}].exponent", i),
                                      lights.spot_lights[i].first->exponent);
         _shader_program->set_uniform(fmt::format("spot_lights[{}].direction", i),
-                                     glm::normalize(glm::row(light_transform_m, 2).xyz()));
+                                     glm::normalize(glm::vec3(light_transform_m * glm::vec4(0.0, 0.0, 1.0, 0.0))));
         _shader_program->set_uniform(fmt::format("spot_lights[{}].position", i),
                                      glm::column(light_transform_m, 3).xyz());
         _shader_program->set_uniform(fmt::format("spot_lights[{}].attenuation", i),

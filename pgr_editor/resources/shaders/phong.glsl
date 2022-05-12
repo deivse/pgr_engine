@@ -7,8 +7,12 @@ struct Material {      // structure that describes currently used material
   vec3  specular;      // specular component
   float shininess;     // sharpness of specular reflection
   float opacity;
-  float tex_coord_anim_speed;  
+
   bool use_texture;    // defines whether the texture is used or not
+  float tex_coord_anim_speed;  
+  bool spritesheet;
+  float spritesheet_frame_duration;
+  ivec2 spritesheet_dims;
 };
 
 struct FogSettings {
@@ -163,9 +167,19 @@ void main() {
 
   if(material.use_texture) {
     vec2 tex_coord = v_tex_coord;
-    
     tex_coord.x += float(time * material.tex_coord_anim_speed);
     tex_coord.y += float(time * material.tex_coord_anim_speed);
+
+    if (material.spritesheet) {
+        vec2 offset = vec2(1.0) / vec2(material.spritesheet_dims);
+        int frame = int(time / material.spritesheet_frame_duration);
+        vec2 tmp = tex_coord / vec2(material.spritesheet_dims);
+        tex_coord
+          = tmp
+            + vec2(frame % material.spritesheet_dims.x,
+                   material.spritesheet_dims.y - 1 - (frame / material.spritesheet_dims.x))
+                * offset;
+    }
     output_color *= texture(color_tex_sampler, tex_coord);
   }
   if(fog.enable) {
