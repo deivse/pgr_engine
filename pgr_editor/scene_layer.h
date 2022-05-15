@@ -68,16 +68,20 @@ public:
         return scene->import_from_file(path);
     }
 
-    void open_scene(const std::string& path) {
+    void open_scene(const std::string& path_s) {
         try {
+            auto path = std::filesystem::path{path_s};
+            if (path.is_relative()) path = "saved_scenes"/path;
             scene = pgre::scene::scene_t::deserialize(path);
         } catch ( const std::exception& e){
             spdlog::error(e.what());
         }
     }
 
-    void save_scene(const std::string& path) {
+    void save_scene(const std::string& path_s) {
         try {
+            auto path = std::filesystem::path{path_s};
+            if (path.is_relative()) path = "saved_scenes"/path;
             scene->serialize(path);
         } catch ( const std::exception& e){
             spdlog::error(e.what());
