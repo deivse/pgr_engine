@@ -52,9 +52,9 @@ public:
         return keyframes.size();
     }
 
-    void new_keyframe(size_t from_ix){
+    void new_keyframe(size_t from_ix, transform_t& tr_c){
         if (from_ix >= keyframes.size()){
-            push_keyframe({{0,0,0}, {1,1,1}, glm::quat{}});
+            push_keyframe({tr_c.translation, tr_c.scale, tr_c.orientation});
         } else {
             push_keyframe(*std::next(keyframes.begin(),from_ix) );
         }

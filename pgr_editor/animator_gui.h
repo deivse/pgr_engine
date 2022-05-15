@@ -48,7 +48,7 @@ class animator_gui_t
                 ImGui::Separator();
                 ImGui::EndDisabled();
                 if (ImGui::Button("Add Keyframe")) {
-                    animator.new_keyframe(selected_keyframe_ix);
+                    animator.new_keyframe(selected_keyframe_ix, entity.get_component<c::transform_t>());
                 }
                 ImGui::End();
                 return true;

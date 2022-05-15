@@ -4,3 +4,6 @@ build/
 examples/
 assets/
 saved_scenes/
+callgrind.*
+profiling_data/
+*.svg
