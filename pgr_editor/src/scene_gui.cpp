@@ -6,7 +6,7 @@
 #include "scene_gui.h"
 
 scene_gui_layer_t::scene_gui_layer_t(std::shared_ptr<scene_layer_t> scene_layer)
-  : _scene_layer(std::move(scene_layer)), component_gui(selected_entity, _scene_layer, animator_gui) {}
+  : _scene_layer(std::move(scene_layer)), component_gui(selected_entity, _scene_layer, kframe_animator_gui, ccurve_animator_gui) {}
 
 std::optional<pgre::scene::entity_t> scene_gui_layer_t::draw_entity(pgre::scene::entity_t& entity) {
     if (entity.get_num_children() != 0) {
@@ -36,7 +36,8 @@ void scene_gui_layer_t::on_gui_update(const pgre::interval_t& /*delta*/) {
     if (_scene_layer->scene) {
         scene_window();
         entity_window();
-        animator_gui.on_gui_update();
+        kframe_animator_gui.on_gui_update();
+        ccurve_animator_gui.on_gui_update();
     } else {
         scene_open_create_window();
     }
@@ -45,9 +46,9 @@ void scene_gui_layer_t::on_gui_update(const pgre::interval_t& /*delta*/) {
 void scene_gui_layer_t::scene_open_create_window() {
     ImGui::Begin("Select scene");
     ImGui::InputString("Scene File Path", &scene_file_path);
-    if (std::filesystem::is_regular_file(scene_file_path)) {
+    if (std::filesystem::is_regular_file("scenes/"+scene_file_path)) {
         if (ImGui::Button("Load Scene")) {
-            _scene_layer->open_scene(scene_file_path);
+            _scene_layer->open_scene("scenes"/std::filesystem::path{scene_file_path});
         }
     } else {
         pgre::imgui::colored_component_255(ImGui::Text, {200, 0, 0, 255}, "File doesn't exist");
@@ -94,7 +95,7 @@ void scene_gui_layer_t::scene_window() {
     ImGui::Separator();
     ImGui::InputString("Scene File Path", &scene_file_path);
     if (ImGui::SmallButton("Save Scene")) {
-        _scene_layer->save_scene(scene_file_path);
+        _scene_layer->save_scene("scenes"/std::filesystem::path{scene_file_path});
     }
     if (ImGui::SmallButton("Add test cubes")) {
         parent_to_selected(_scene_layer->add_test_objects());
@@ -137,8 +138,14 @@ void scene_gui_layer_t::entity_window() {
             add_component_button.template operator()<pgre::component::sun_light_t>("Sun Light");
             add_component_button.template operator()<pgre::component::camera_controller_t>(
               "Camera Controller");
-            add_component_button.template operator()<pgre::component::keyframe_animator_t>(
-              "Keyframe Animator");
+            if (!selected_entity->has_component<c::coons_curve_animator_t>()) {
+                add_component_button.template operator()<pgre::component::keyframe_animator_t>(
+                  "Keyframe Animator");
+            }
+            if (!selected_entity->has_component<c::keyframe_animator_t>()) {
+                add_component_button.template operator()<pgre::component::coons_curve_animator_t>(
+                  "Curve Animator");
+            }
             ImGui::TreePop();
         }
         if (ImGui::TreeNode("Add Skybox")) {

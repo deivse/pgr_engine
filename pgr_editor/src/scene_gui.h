@@ -1,8 +1,8 @@
 #pragma once
 
-#include "component_gui.h"
-#include "scene/scene.h"
-#include "scene/entity.h"
+#include "component_gui/component_gui.h"
+#include <scene/scene.h>
+#include <scene/entity.h>
 #include <layers/imgui_layer.h>
 
 class scene_layer_t;
@@ -10,7 +10,8 @@ class scene_layer_t;
 class scene_gui_layer_t : public pgre::layers::imgui_layer_t
 {
     std::shared_ptr<scene_layer_t> _scene_layer;
-    animator_gui_t animator_gui{};
+    kframe_animator_gui_t kframe_animator_gui{};
+    ccurve_animator_gui_t ccurve_animator_gui{};
     std::string scene_file_path{};
     std::string import_file_path{};
     std::string texture_file_path{};

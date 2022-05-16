@@ -70,9 +70,7 @@ public:
 
     void open_scene(const std::string& path_s) {
         try {
-            auto path = std::filesystem::path{path_s};
-            if (path.is_relative()) path = "saved_scenes"/path;
-            scene = pgre::scene::scene_t::deserialize(path);
+            scene = pgre::scene::scene_t::deserialize(path_s);
         } catch ( const std::exception& e){
             spdlog::error(e.what());
         }
@@ -80,9 +78,7 @@ public:
 
     void save_scene(const std::string& path_s) {
         try {
-            auto path = std::filesystem::path{path_s};
-            if (path.is_relative()) path = "saved_scenes"/path;
-            scene->serialize(path);
+            scene->serialize(path_s);
         } catch ( const std::exception& e){
             spdlog::error(e.what());
         }

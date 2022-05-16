@@ -8,14 +8,14 @@
 
 namespace c = pgre::component;
 
-class animator_gui_t
+class kframe_animator_gui_t
 {
     struct animator_window_t
     {
         bool open = true;
         int selected_keyframe_ix = 0;
 
-        bool draw_keyframe(c::keyframe_animator_t::keyframe_t& kframe) {
+        bool draw_keyframe(c::keyframe_animator_t::curve_point_t& kframe) {
             ImGui::DragFloat3("Translation", glm::value_ptr(kframe.translation), 0.5f,
                               -std::numeric_limits<float>::max(),
                               std::numeric_limits<float>::max());

@@ -18,7 +18,7 @@ bool component_gui_t::gui_impl(c::tag_t&  comp) {
 template<>
 bool component_gui_t::gui_impl(c::transform_t& comp) {
     component_title("Transform");
-    ImGui::BeginDisabled(selected_entity->has_component<c::keyframe_animator_t>());
+    ImGui::BeginDisabled(selected_entity->has_component<c::keyframe_animator_t>() || selected_entity->has_component<c::coons_curve_animator_t>());
     ImGui::DragFloat3("Translation", glm::value_ptr(comp.translation), 0.5f,
                       -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
     auto euler_angles = comp.get_orientation_euler();
@@ -197,13 +197,25 @@ bool component_gui_t::gui_impl(c::script_component_t& /*comp*/){
 }
 
 template<>
-bool component_gui_t::gui_impl(c::keyframe_animator_t& animator){
-    component_title("Keyframe Animation");
-    if (ImGui::Button("Edit...")){
-        animator_gui.open_window(*selected_entity);
+bool component_gui_t::gui_impl(c::keyframe_animator_t& kframe_animator){
+    component_title("Keyframe Animator");
+    if (ImGui::Button("Edit...##Kframe")){
+        kframe_animator_gui.open_window(*selected_entity);
     }
-    if (ImGui::Button(animator.is_playing() ? "Pause" : "Play")){
-        animator.toggle_play();
+    if (ImGui::Button(kframe_animator.is_playing() ? "Pause##Kframe" : "Play##Kframe")){
+        kframe_animator.toggle_play();
+    }
+    return true;
+}
+
+template<>
+bool component_gui_t::gui_impl(c::coons_curve_animator_t& ccurve_animator) {
+    component_title("Coons Curve Animator");
+    if (ImGui::Button("Edit...##Coons")){
+        ccurve_animator_gui.open_window(*selected_entity);
+    }
+    if (ImGui::Button(ccurve_animator.is_playing() ? "Pause##Coons" : "Play##Coons")){
+        ccurve_animator.toggle_play();
     }
     return true;
 }
