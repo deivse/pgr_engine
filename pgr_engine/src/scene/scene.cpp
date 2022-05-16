@@ -53,17 +53,17 @@ std::pair<std::shared_ptr<perspective_camera_t>, glm::mat4> scene_t::get_active_
 
 void scene_t::update(const interval_t& delta) {
     // update things that can affect transforms 
-    _registry.view<component::camera_controller_t>().each([&delta, this](entt::entity entity, component::camera_controller_t& camera_controller_c){
-        if (entity == _active_camera_owner) camera_controller_c.update(delta, {entity, this});
-    });
-    _registry.view<component::script_component_t>().each([&delta](auto /*entity*/, component::script_component_t& script_c){
-        script_c.update(delta);
-    });
     _registry.view<component::keyframe_animator_t>().each([&delta, this](auto entity, component::keyframe_animator_t& animator_c){
         animator_c.update(delta, {entity, this});
     });
     _registry.view<component::coons_curve_animator_t>().each([&delta, this](auto entity, component::coons_curve_animator_t& animator_c){
         animator_c.update(delta, {entity, this});
+    });
+    _registry.view<component::camera_controller_t>().each([&delta, this](entt::entity entity, component::camera_controller_t& camera_controller_c){
+        if (entity == _active_camera_owner) camera_controller_c.update(delta, {entity, this});
+    });
+    _registry.view<component::script_component_t>().each([&delta](auto /*entity*/, component::script_component_t& script_c){
+        script_c.update(delta);
     });
 
     // update transforms (naive algorithm, but it's good enough for this)

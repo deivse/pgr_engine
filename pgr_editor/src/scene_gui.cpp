@@ -138,14 +138,11 @@ void scene_gui_layer_t::entity_window() {
             add_component_button.template operator()<pgre::component::sun_light_t>("Sun Light");
             add_component_button.template operator()<pgre::component::camera_controller_t>(
               "Camera Controller");
-            if (!selected_entity->has_component<c::coons_curve_animator_t>()) {
-                add_component_button.template operator()<pgre::component::keyframe_animator_t>(
-                  "Keyframe Animator");
-            }
-            if (!selected_entity->has_component<c::keyframe_animator_t>()) {
-                add_component_button.template operator()<pgre::component::coons_curve_animator_t>(
-                  "Curve Animator");
-            }
+            add_component_button.template operator()<pgre::component::keyframe_animator_t>(
+              "Keyframe Animator");
+            add_component_button.template operator()<pgre::component::coons_curve_animator_t>(
+              "Curve Animator");
+
             ImGui::TreePop();
         }
         if (ImGui::TreeNode("Add Skybox")) {
