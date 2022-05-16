@@ -38,7 +38,8 @@ struct buffer_t
      * @param usage OpenGL usage hint
      */
     void set_data(GLsizeiptr size, const GLvoid* data, GLenum usage = GL_STATIC_DRAW) {
-        glBindBuffer(binding_target, _gl_id);
+        glBindVertexArray(0);
+        this->bind();
         glBufferData(binding_target, size, data, usage);
         _current_data_offset = size;
         _current_allocated_size = size;
@@ -70,7 +71,8 @@ struct buffer_t
      * @param usage OpenGL usage hint for data that will be provided.
      */
     void allocate(GLsizeiptr size, GLenum usage = GL_STATIC_DRAW) {
-        glBindBuffer(binding_target, _gl_id);
+        glBindVertexArray(0);
+        this->bind();
         glBufferData(binding_target, size, nullptr, usage);
         _current_allocated_size = size;
         _current_data_offset = 0;
@@ -89,6 +91,8 @@ struct buffer_t
             throw std::runtime_error("Trying to push_back more data to a buffer_t object "
                                      "than it has space alloced for.");
 #endif
+        glBindVertexArray(0);
+        this->bind();
         glBufferSubData(binding_target, _current_data_offset, size, data);
         _current_data_offset += size;
     }
@@ -136,7 +140,6 @@ using index_buffer_t = buffer_t<GL_ELEMENT_ARRAY_BUFFER, GLuint>;
 template <class Archive>
 void save(Archive& archive, vertex_buffer_t const& vb) {
     std::vector<uint8_t> buffer_data(vb.get_count());
-    
     vb.bind();
     glGetBufferSubData(GL_ARRAY_BUFFER, 0, vb.get_size(), static_cast<void*>(buffer_data.data()));
     archive(buffer_data);
