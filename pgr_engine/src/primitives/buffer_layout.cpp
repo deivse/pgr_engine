@@ -27,9 +27,9 @@ int buffer_element_t::get_size() const  {
 }
 
 void buffer_layout_t::enable_and_point() const {
-    for (auto& el: _elements){
+    for (const auto& el: _elements){
         glEnableVertexAttribArray(el.shader_location);
-        glVertexAttribPointer(el.shader_location, el.items_per_vertex, el.type, el.normalize, _stride, reinterpret_cast<const void*>(el.start_offset_bytes));
+        glVertexAttribPointer(el.shader_location, el.items_per_vertex, el.type, el.normalize, _stride, reinterpret_cast<void*>(el.start_offset_bytes));
     }
 }
 

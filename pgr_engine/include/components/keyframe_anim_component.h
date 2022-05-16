@@ -13,7 +13,7 @@ namespace pgre::component {
 class keyframe_animator_t
 {
 public:
-    struct keyframe_t
+    struct curve_point_t
     {
         glm::vec3 translation;
         glm::vec3 scale;
@@ -31,11 +31,11 @@ public:
     };
 
 private:
-    std::vector<keyframe_t> keyframes;
+    std::vector<curve_point_t> keyframes;
     float total_anim_time = 0;
 
     float anim_time = 0;
-    keyframe_t from, to;
+    curve_point_t from, to;
     float factor = 0.f;
 
     bool playing = false;
@@ -43,7 +43,7 @@ private:
 public:
     keyframe_animator_t() = default;
 
-    void push_keyframe(keyframe_t keyframe) {
+    void push_keyframe(curve_point_t keyframe) {
         keyframes.emplace_back(keyframe);
         total_anim_time += keyframe.to_next_seconds;
     }

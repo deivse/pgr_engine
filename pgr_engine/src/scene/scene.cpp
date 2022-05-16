@@ -62,6 +62,9 @@ void scene_t::update(const interval_t& delta) {
     _registry.view<component::keyframe_animator_t>().each([&delta, this](auto entity, component::keyframe_animator_t& animator_c){
         animator_c.update(delta, {entity, this});
     });
+    _registry.view<component::coons_curve_animator_t>().each([&delta, this](auto entity, component::coons_curve_animator_t& animator_c){
+        animator_c.update(delta, {entity, this});
+    });
 
     // update transforms (naive algorithm, but it's good enough for this)
     _registry.view<component::transform_t, component::hierarchy_t>().each(
