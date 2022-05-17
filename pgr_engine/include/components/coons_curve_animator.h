@@ -1,12 +1,14 @@
 #pragma once
 
-#include "scene/entity.h"
-#include "timer.h"
 #include <glm/vec3.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 #include <cereal/types/vector.hpp>
 #include <vector>
+
+#include <math/curve.h>
+#include <scene/entity.h>
+#include <timer.h>
 
 namespace pgre::component {
 
@@ -15,8 +17,9 @@ class coons_curve_animator_t
 public:
 
 private:
-    std::vector<glm::vec3> control_points{};
+    math::curves::coons_curve_3D_t curve{};
     bool playing = false;
+    bool show_cps = true;
 
     float time = 0.0f;
 public:
@@ -25,20 +28,27 @@ public:
     coons_curve_animator_t() = default;
 
     void add_point(size_t insert_after_ix, transform_t& tr_c) {
-        if (insert_after_ix == 0) control_points.insert(std::begin(control_points) + insert_after_ix, tr_c.translation);
-        else control_points.insert(std::begin(control_points) + insert_after_ix, *(std::begin(control_points) + insert_after_ix));
+        if (insert_after_ix == 0) curve.add_point(insert_after_ix, tr_c.translation);
+        else curve.add_point(insert_after_ix, curve.get_point(insert_after_ix));
     }
 
     void remove_point(size_t ix) {
-        control_points.erase(std::begin(control_points) + ix);
+        curve.remove_point(ix);
+    }
+
+    bool should_render_curve() const { return show_cps && curve.get_point_count() > 0; }
+    void render_curve(bool render = true) { show_cps = render; }
+
+    auto& get_curve(){
+        return curve;
     }
 
     auto& get_point(size_t ix) {
-        return control_points[ix];
+        return curve.get_point(ix);
     }
 
     auto& get_point_vec() {
-        return control_points;
+        return curve.get_point_vec();
     }
 
     void toggle_play(){
@@ -52,7 +62,7 @@ public:
 
     template<typename Archive>
     void serialize(Archive& ar) {
-        ar(control_points, playing);
+        ar(curve, playing);
     }
 };
 

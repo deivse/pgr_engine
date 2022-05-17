@@ -1,5 +1,6 @@
 #pragma once
 
+#include "assets/materials/flat_color_material.h"
 #include <thread>
 
 #include <assets/materials/material.h>
@@ -20,6 +21,7 @@ namespace pgre {
 
         std::thread _render_thread;
         std::map<uint32_t, std::vector<render_command_t>> _render_commands{};
+        
 
         scene::scene_t* _curr_scene;
         glm::mat4 _curr_pv_matrix; 
@@ -34,15 +36,14 @@ namespace pgre {
         void init() override;
         void begin_scene(scene::scene_t& scene) override;
         void submit(const glm::mat4& transform, std::shared_ptr<primitives::vertex_array_t> vao,
-                    std::shared_ptr<material_t> material) override;
+                    std::shared_ptr<material_t> material, GLenum primitive = GL_TRIANGLES) override;
         void end_scene() override;
 
         void on_resize(const glm::ivec2& new_win_dims) override {
             glViewport(0, 0, new_win_dims.x, new_win_dims.y);
         }
-
-        void draw_line(glm::vec3& world_pos_a, glm::vec3& world_pos_b) override;
     };
+
 }  // namespace pgre
 
 

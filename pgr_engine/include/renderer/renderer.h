@@ -15,11 +15,10 @@ namespace pgre {
         virtual void begin_scene(scene::scene_t& scene) = 0;
         virtual void submit(const glm::mat4& transform,
                             std::shared_ptr<primitives::vertex_array_t> vao,
-                            std::shared_ptr<material_t> material)
+                            std::shared_ptr<material_t> material, GLenum primitive = GL_TRIANGLES)
           = 0;
         virtual void end_scene() = 0;
         virtual void on_resize(const glm::ivec2& new_win_dims) = 0;
-        virtual void draw_line(glm::vec3& world_pos_a, glm::vec3& world_pos_b) = 0;
     };
 
     class renderer {
@@ -36,8 +35,8 @@ namespace pgre {
 
         inline static void submit(const glm::mat4& transform,
                                   std::shared_ptr<primitives::vertex_array_t> vao,
-                                  std::shared_ptr<material_t> material) {
-            _instance->submit(transform, std::move(vao), std::move(material));
+                                  std::shared_ptr<material_t> material, GLenum primitive = GL_TRIANGLES) {
+            _instance->submit(transform, std::move(vao), std::move(material), primitive);
         }
 
         inline static void end_scene(){
@@ -48,9 +47,6 @@ namespace pgre {
             _instance->on_resize(new_win_dims);
         }
 
-        inline static void draw_line(glm::vec3& world_pos_a, glm::vec3& world_pos_b){
-            _instance->draw_line(world_pos_a, world_pos_b);
-        }
     };
 
     

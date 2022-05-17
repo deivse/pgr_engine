@@ -16,11 +16,10 @@ void flat_color_material_t::use(scene::scene_t& /*scene*/) {
     _shader_program->set_uniform("color", _color);
 }
 
-void flat_color_material_t::set_matrices(const glm::mat4&  /*M*/, const glm::mat4&  V, const glm::mat4&  /*P*/,
+void flat_color_material_t::set_matrices(const glm::mat4&  M, const glm::mat4&  V, const glm::mat4&  /*P*/,
                                      const glm::mat4&  PV) {
     
-    _shader_program->set_uniform("pvm_matrix", PV);
-    _shader_program->set_uniform("camera_pos", glm::inverse(V)[3].xyz());
+    _shader_program->set_uniform("pvm_matrix", PV*M);
 }
 
 } // namespace pgre

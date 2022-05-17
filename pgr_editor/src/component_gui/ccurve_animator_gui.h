@@ -24,9 +24,10 @@ class ccurve_animator_gui_t
         }
 
         bool update(pgre::scene::entity_t entity) {
+            auto& ccurve_animator = entity.get_component<c::coons_curve_animator_t>();
             if (open) {
+                ccurve_animator.render_curve(true);
                 ImGui::Begin(fmt::format("Curve Editor [{}]", entity.get_name()).c_str(), &open);
-                auto& ccurve_animator = entity.get_component<c::coons_curve_animator_t>();
                 auto& point_vec = ccurve_animator.get_point_vec();
                 
                 for (int64_t i = 0; i < point_vec.size(); i++) {
@@ -49,6 +50,7 @@ class ccurve_animator_gui_t
                 ImGui::End();
                 return true;
             }
+            ccurve_animator.render_curve(false);
             return false;
         }
     };

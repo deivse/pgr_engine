@@ -1,6 +1,7 @@
 #include "renderer/renderer.h"
 #include <filesystem>
 #include <scene/scene.h>
+#include <glad/glad.h>
 
 #include <components/all_components.h>
 #include <scene/entity.h>
@@ -101,10 +102,22 @@ void scene_t::on_event(event_t& event) {
 void scene_t::render() {
     if (_active_camera_owner == entt::null) return;
     renderer::begin_scene(*this);
-    auto view = _registry.view<component::transform_t, component::mesh_t>();
-    for (entt::entity entity: view ){
+    auto mesh_view = _registry.view<component::transform_t, component::mesh_t>();
+    for (entt::entity entity: mesh_view ){
         auto& mesh_component = _registry.get<component::mesh_t>(entity);
         renderer::submit(_registry.get<component::transform_t>(entity), mesh_component.v_array, mesh_component.material);
+    }
+    auto curve_view = _registry.view<component::transform_t, component::coons_curve_animator_t>();
+    for (entt::entity entity: curve_view ){
+        entity_t e{entity, this};
+        auto& animator = e.get_component<component::coons_curve_animator_t>();
+        if (!animator.should_render_curve()) continue;
+        auto& curve = animator.get_curve();        
+        auto& hier = e.get_component<component::hierarchy_t>();
+        auto transform = glm::mat4(1);
+        if (hier.parent != entt::null)
+            transform = _registry.get<component::transform_t>(hier.parent);
+        renderer::submit(transform, curve.get_cp_vao(), curve.get_material(), GL_POINTS);
     }
     renderer::end_scene();
 }
