@@ -18,6 +18,5 @@ void camera_controller_t::update_orientation(const interval_t& delta, transform_
     last.y = curr.y;
 
     transform_c.set_orientation_euler({pitch, 0, yaw});
-    transform_c.update_parentlocal_transform();
 }
 } // namespace pgre::component

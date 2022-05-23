@@ -122,8 +122,9 @@ bool component_gui_t::gui_impl(c::mesh_t& comp) {
 }
 
 template<>
-bool component_gui_t::gui_impl(c::bounding_box_t&  /*comp*/) {
+bool component_gui_t::gui_impl(c::bounding_box_t&  comp) {
     component_title("Bounding Box");
+    ImGui::Checkbox("Enable Collisions w/ Camera", &comp.enable_collisions);
     return false;
 }
 

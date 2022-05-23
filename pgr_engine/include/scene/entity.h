@@ -75,6 +75,10 @@ public:
      * @return std::vector<entity_t>
      */
     std::vector<entity_t> get_children();
+
+    auto* get_scene(){
+        return scene;
+    }
     
     size_t get_num_children() {return this->get_component<component::hierarchy_t>().num_children;}
 

@@ -139,6 +139,26 @@ public:
      */
     static std::shared_ptr<scene_t> deserialize(const std::filesystem::path& filename);
 
+    template<typename ComponentTy,
+             std::predicate<std::add_lvalue_reference_t<ComponentTy>> PredicateTy>
+    bool any_component(PredicateTy&& unary_predicate) {
+        bool retval = false;
+        _registry.view<ComponentTy>().each(
+          [&retval, &unary_predicate](ComponentTy& c) { retval |= unary_predicate(c); });
+        return retval;
+    }
+
+    
+    /**
+     * @brief Tests if the AABB at position `box_position` and with sides of length `box_size`*2 collides with any other BB in the scene
+     * 
+     * @param box_position position of the center of the box
+     * @param box_size length of side of the box divided by 2
+     * @return true 
+     * @return false 
+     */
+    bool test_bb_collision(const glm::vec3& box_position_world, float box_size);
+
     friend struct entity_t;
 
 private: //methods

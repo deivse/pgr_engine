@@ -1,6 +1,7 @@
 #pragma once
 
 #include "camera_component.h"
+#include "components/bounding_box.h"
 #include "events/keyboard_events.h"
 #include "input/keyboard.h"
 #include "scene/entity.h"
@@ -42,7 +43,6 @@ class camera_controller_t
           += glm::normalize(translation_vec)
              * (input::key_down(GLFW_KEY_LEFT_CONTROL) ? 2.5f * move_speed : move_speed)
              * delta.seconds;
-        transform_c.update_parentlocal_transform();
     }
 
     void update_orientation(const interval_t& delta, transform_t& transform_c);
@@ -80,7 +80,12 @@ public:
 
     void update(const interval_t& delta, scene::entity_t&& entity) {
         auto& transform_c = entity.get_component<transform_t>();
+        auto prev_transform = transform_c;
         update_translation(delta, transform_c);
+        if (entity.get_scene()->test_bb_collision(transform_c.get_global_translation(), 1.0f)) {
+            transform_c = prev_transform;
+            return;
+        }
         update_orientation(delta, transform_c);
     }
 

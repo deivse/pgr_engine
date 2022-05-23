@@ -24,6 +24,7 @@ class bounding_box_t
         }
     }
 public:
+    bool enable_collisions = true;
     bounding_box_t() = default;
     bounding_box_t(const glm::vec3& bb_min, const glm::vec3& bb_max)
       : _min(bb_min),
@@ -80,10 +81,28 @@ public:
 
         return t_min;
     }
+    
+    /**
+     * @brief Tests if this box collides with an AABB at position `box_position` and with sides of length `box_size`*2
+     * 
+     * @param box_position position of the center of the box
+     * @param box_size length of side of the box divided by 2
+     * @return true 
+     * @return false 
+     */
+    bool test_collision(const glm::vec3& box_position_world, float box_size, const glm::mat4& model_matrix) {
+        const glm::vec3 other_w_min = {box_position_world.x - box_size, box_position_world.y - box_size, box_position_world.z - box_size};
+        const glm::vec3 other_w_max = {box_position_world.x + box_size, box_position_world.y + box_size, box_position_world.z + box_size};
+        calc_transformed_box_vertices(model_matrix);
+        auto [w_min, w_max] = math::calc_aabb(glm::value_ptr(_transformed_box_vertices[0]), 8);
+        return (w_min.x <= other_w_max.x && w_max.x >= other_w_min.x) &&
+               (w_min.y <= other_w_max.y && w_max.y >= other_w_min.y) &&
+               (w_min.z <= other_w_max.z && w_max.z >= other_w_min.z);
+    }
 
     template<typename Archive>
     void serialize(Archive& ar) {
-        ar(_min, _max, _box_vertices);
+        ar(_min, _max, _box_vertices, enable_collisions);
     }
 };
 

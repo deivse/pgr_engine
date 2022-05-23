@@ -197,4 +197,15 @@ std::optional<entity_t> scene_t::get_mesh_at_screenspace_coords(const glm::vec2&
     return retval;
 }
 
+bool scene_t::test_bb_collision(const glm::vec3& box_position_world, float box_size){
+    bool retval = false;
+    _registry.view<component::bounding_box_t>().each([&, this](entt::entity e, component::bounding_box_t& c){
+        if (!c.enable_collisions) return;
+        auto entity = entity_t{e, this};
+        auto& transform = entity.get_component<component::transform_t>();
+        if (c.test_collision(box_position_world, box_size, transform.get_transform())) retval = true;
+    });
+    return retval;
+}
+
 }  // namespace pgre::scene

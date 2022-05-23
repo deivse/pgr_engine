@@ -85,6 +85,16 @@ public:
         return out;
     }
 
+    glm::vec3 get_global_translation() {
+        glm::vec3 out{1.0};
+        const auto* transform_c = this;
+        while (transform_c != nullptr){
+            out*= transform_c->translation;
+            transform_c = transform_c->_parent_transform_c;
+        }
+        return out;
+    }
+
 
     [[nodiscard]] const glm::mat4& get_transform() const {
         return _global_transform;
