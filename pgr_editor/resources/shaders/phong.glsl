@@ -148,8 +148,7 @@ vec3 calc_spot_l(SpotLight light, vec3 ver_pos_cam, vec3 ver_normal_cam){
 void main() {
   vec3 normal_cam = normalize(v_normal_cam);
 
-  vec3 global_ambient_l = vec3(0.9f);
-  vec3 color = material.ambient * global_ambient_l;
+  vec3 color = vec3(0);
   
   for(int i=0;i<num_point_lights;++i)
   {

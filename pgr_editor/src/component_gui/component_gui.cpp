@@ -76,6 +76,12 @@ bool component_gui_t::gui_impl(c::mesh_t& comp) {
     if (ImGui::TreeNode("Material")) {
         if (auto material = std::dynamic_pointer_cast<pgre::phong_material_t>(comp.material);
             material) {
+            ImGui::Text("In use by ~%li meshes", material.use_count()-1);
+            if (ImGui::SmallButton("Make instance unique")) {
+                comp.realize_material_instance();
+                ImGui::TreePop();
+                return true;
+            }
             ImGui::ColorEdit3("Ambient", glm::value_ptr(material->_ambient));
             ImGui::ColorEdit3("Diffuse", glm::value_ptr(material->_diffuse));
             ImGui::ColorEdit3("Specular", glm::value_ptr(material->_specular));

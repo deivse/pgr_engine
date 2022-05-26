@@ -90,13 +90,17 @@ public:
             return;
         }
         using face = pgre::cubemap_texture_t::face_enum_t;
+        std::string ext = "jpg";
+        if (!std::filesystem::is_regular_file("assets/skyboxes/"+cubemap_name+"_bk.jpg")) {
+            ext = "png";
+        }
         std::unordered_map<pgre::cubemap_texture_t::face_enum_t,std::string> paths {
-            {face::back, fmt::format("assets/skyboxes/{}_bk.jpg", cubemap_name)},
-            {face::front, fmt::format("assets/skyboxes/{}_ft.jpg", cubemap_name)},
-            {face::bottom, fmt::format("assets/skyboxes/{}_dn.jpg", cubemap_name)},
-            {face::top, fmt::format("assets/skyboxes/{}_up.jpg", cubemap_name)},
-            {face::right, fmt::format("assets/skyboxes/{}_rt.jpg", cubemap_name)},
-            {face::left, fmt::format("assets/skyboxes/{}_lf.jpg", cubemap_name)}
+            {face::back, fmt::format("assets/skyboxes/{}_bk.{}", cubemap_name, ext)},
+            {face::front, fmt::format("assets/skyboxes/{}_ft.{}", cubemap_name, ext)},
+            {face::bottom, fmt::format("assets/skyboxes/{}_dn.{}", cubemap_name, ext)},
+            {face::top, fmt::format("assets/skyboxes/{}_up.{}", cubemap_name, ext)},
+            {face::right, fmt::format("assets/skyboxes/{}_rt.{}", cubemap_name, ext)},
+            {face::left, fmt::format("assets/skyboxes/{}_lf.{}", cubemap_name, ext)}
         };
         auto skybox_entity = scene->create_entity(cubemap_name + "_skybox");
         auto texture = std::make_shared<pgre::cubemap_texture_t>(paths, GL_NEAREST);

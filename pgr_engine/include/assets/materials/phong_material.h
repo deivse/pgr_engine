@@ -11,7 +11,7 @@ namespace pgre {
 struct fog_settings_t
 {
     bool _enable = true;
-    glm::vec4 _color{glm::vec3{0.15}, 1.0};
+    glm::vec4 _color{glm::vec3{0.1, 0.1, 0.3}, 1.0};
     float _density = 200;
 
     void apply_changes() { _settings_updated = true; }
@@ -60,7 +60,20 @@ public:
 
     virtual ~phong_material_t() = default;
     phong_material_t() = default;
-    
+    phong_material_t(phong_material_t& other)
+      : spritesheet(other.spritesheet),
+        spritesheet_dims(other.spritesheet_dims),
+        spritesheet_fps(other.spritesheet_fps),
+        texcoord_anim_speed(other.texcoord_anim_speed),
+        animate_texture_coords(other.animate_texture_coords),
+        _diffuse(other._diffuse),
+        _ambient(other._ambient),
+        _specular(other._specular),
+        _shininess(other._shininess),
+        _transparency(other._transparency),
+        _color_texture(other._color_texture)
+         {}
+
     explicit phong_material_t(const glm::vec3& diffuse_c, const glm::vec3& ambient_c,
                               const glm::vec3& specular_c, float shininess = 0.5f,
                               float transparency = 0.0f)

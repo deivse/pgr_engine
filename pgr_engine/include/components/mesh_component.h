@@ -16,6 +16,14 @@ struct mesh_t
       : v_array(vertex_array), material(material){
     }
 
+    void realize_material_instance(){
+        if (auto p_material = std::dynamic_pointer_cast<pgre::phong_material_t>(material)) {
+            material = std::make_shared<phong_material_t>(*p_material);
+        } else {
+            spdlog::warn("Trying to realize non-phong material instance. (Not supported)");
+        }
+    }
+
     template<typename Archive>
     void serialize(Archive& archive) {
         archive(v_array, material);

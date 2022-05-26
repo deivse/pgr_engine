@@ -150,6 +150,7 @@ void scene_gui_layer_t::entity_window() {
                 "sunsetflat",
                 "yellow",
                 "stormydays",
+                "space"
             };
             if (ImGui::TreeNode("Available cubemaps")){
                 for (const auto& name : cubemaps) ImGui::Text("%s", name.c_str());
