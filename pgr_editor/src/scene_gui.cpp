@@ -34,6 +34,7 @@ std::optional<pgre::scene::entity_t> scene_gui_layer_t::draw_entity(pgre::scene:
 
 void scene_gui_layer_t::on_gui_update(const pgre::interval_t& /*delta*/) {
     if (_scene_layer->scene) {
+        if (hidden) return;
         scene_window();
         entity_window();
         kframe_animator_gui.on_gui_update();
@@ -173,8 +174,11 @@ void scene_gui_layer_t::entity_window() {
 void scene_gui_layer_t::on_event(pgre::event_t& event) {
     pgre::event_dispatcher_t dispatcher(event);
     auto &io = ImGui::GetIO();
-    dispatcher.dispatch<pgre::key_pressed_evt_t>([&io](pgre::key_pressed_evt_t&  /*event*/) {
-        return (io.WantCaptureKeyboard); // if ImGui handles the event, don't pass it down the layer stack.
+    dispatcher.dispatch<pgre::key_pressed_evt_t>([&io, this](pgre::key_pressed_evt_t&  event) {
+        if (event.key == GLFW_KEY_F12) {
+            hidden = !hidden;
+        }
+        return (!hidden && io.WantCaptureKeyboard); // if ImGui handles the event, don't pass it down the layer stack.
     });
     dispatcher.dispatch<pgre::mouse_btn_down_evt_t>([&io](pgre::mouse_btn_down_evt_t&  /*event*/) {
         return (io.WantCaptureMouse); // if ImGui handles the event, don't pass it down the layer stack.

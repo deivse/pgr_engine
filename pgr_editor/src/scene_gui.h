@@ -9,6 +9,7 @@ class scene_layer_t;
 
 class scene_gui_layer_t : public pgre::layers::imgui_layer_t
 {
+    bool hidden = false;
     std::shared_ptr<scene_layer_t> _scene_layer;
     kframe_animator_gui_t kframe_animator_gui{};
     ccurve_animator_gui_t ccurve_animator_gui{};
