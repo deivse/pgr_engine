@@ -10,6 +10,7 @@
 namespace pgre::component {
 class camera_controller_t
 {
+    static constexpr auto move_speed_delta = 5.f;
     bool mouse_input_enabled = false;
     glm::vec2 last;
     float pitch{};
@@ -73,6 +74,12 @@ public:
                     mouse_input_enabled = true;
                 }
                 return false;
+            }
+            if (event.key == GLFW_KEY_UP) {
+                move_speed += move_speed_delta;
+            }
+            if (event.key == GLFW_KEY_DOWN) {
+                move_speed -= move_speed_delta;
             }
             return false;
         });
