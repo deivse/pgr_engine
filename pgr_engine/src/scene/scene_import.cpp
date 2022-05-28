@@ -136,7 +136,7 @@ void import_lights(const aiScene* ai_scene, scene_t* scene, entt::registry& regi
                 break;
             }
         }
-        pgre::debug_assert(light_owner != entt::null, "Each light was supposed to have a node...");
+        debug_assert(light_owner != entt::null, "Each light was supposed to have a node...");
         auto light_entity = entity_t{light_owner, scene};
         switch (ai_light->mType) {
             case aiLightSource_DIRECTIONAL:
