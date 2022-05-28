@@ -37,6 +37,7 @@ void scene_gui_layer_t::on_gui_update(const pgre::interval_t& /*delta*/) {
         if (hidden) return;
         scene_window();
         entity_window();
+        fog_gui.on_gui_update();
         kframe_animator_gui.on_gui_update();
         ccurve_animator_gui.on_gui_update();
     } else {
@@ -100,6 +101,10 @@ void scene_gui_layer_t::scene_window() {
     }
     if (ImGui::SmallButton("Add test cubes")) {
         parent_to_selected(_scene_layer->add_test_objects());
+    }
+    ImGui::Separator();
+    if (ImGui::SmallButton("Open Fog Settings")) {
+        fog_gui.show_window();
     }
     ImGui::End();
 }

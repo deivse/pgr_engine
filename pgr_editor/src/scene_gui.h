@@ -1,6 +1,7 @@
 #pragma once
 
 #include "component_gui/component_gui.h"
+#include "fog_gui.h"
 #include <scene/scene.h>
 #include <scene/entity.h>
 #include <layers/imgui_layer.h>
@@ -13,6 +14,8 @@ class scene_gui_layer_t : public pgre::layers::imgui_layer_t
     std::shared_ptr<scene_layer_t> _scene_layer;
     kframe_animator_gui_t kframe_animator_gui{};
     ccurve_animator_gui_t ccurve_animator_gui{};
+    fog_gui_t fog_gui;
+    
     std::string scene_file_path{};
     std::string import_file_path{};
     std::string texture_file_path{};

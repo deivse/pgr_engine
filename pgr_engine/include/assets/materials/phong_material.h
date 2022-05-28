@@ -129,6 +129,10 @@ public:
         return *_shader_program;
     }
 
+    static auto& get_fog_settings_ref() {
+        return _fog_settings;
+    }
+
     static shader_program_t& get_shader_s() {
         debug_assert(_shader_program != nullptr, "phong_material_t::init never called");
         return *_shader_program;
