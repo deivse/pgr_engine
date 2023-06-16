@@ -192,7 +192,7 @@ shader::vertex {
 
 layout (location = 0) in vec3 position;           // vertex position in world space
 layout (location = 1) in vec3 normal;             // vertex normal
-layout (location = 2) in vec2 tex_coord;           // incoming texture coordinates
+layout (location = 2) in vec2 tex_coord;          // incoming texture coordinates
 
 uniform mat4 pvm_matrix; 
 uniform mat4 vm_matrix;
