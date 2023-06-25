@@ -9,7 +9,6 @@
 #include <cerealization/std_serializers.h>
 #include <cereal/archives/json.hpp>
 
-
 namespace pgre::scene {
 
 scene_t::scene_t() {
@@ -37,9 +36,9 @@ entity_t scene_t::create_entity(const std::string& name, const glm::mat4& transf
     return entity;
 }
 
-void scene_t::set_active_camera_entity(entt::entity camera_owner){
+void scene_t::set_active_camera_entity(entt::entity camera_owner) {
     entity_t e{camera_owner, this};
-    if (!e.has_component<component::camera_component_t>()){
+    if (!e.has_component<component::camera_component_t>()) {
         throw std::runtime_error(
           "set_active_camera_entity called with an entity not owning a camera component.");
     }
@@ -53,19 +52,23 @@ std::pair<std::shared_ptr<perspective_camera_t>, glm::mat4> scene_t::get_active_
 }
 
 void scene_t::update(const interval_t& delta) {
-    // update things that can affect transforms 
-    _registry.view<component::keyframe_animator_t>().each([&delta, this](auto entity, component::keyframe_animator_t& animator_c){
-        animator_c.update(delta, {entity, this});
-    });
-    _registry.view<component::coons_curve_animator_t>().each([&delta, this](auto entity, component::coons_curve_animator_t& animator_c){
-        animator_c.update(delta, {entity, this});
-    });
-    _registry.view<component::camera_controller_t>().each([&delta, this](entt::entity entity, component::camera_controller_t& camera_controller_c){
-        if (entity == _active_camera_owner) camera_controller_c.update(delta, {entity, this});
-    });
-    _registry.view<component::script_component_t>().each([&delta](auto /*entity*/, component::script_component_t& script_c){
-        script_c.update(delta);
-    });
+    // update things that can affect transforms
+    _registry.view<component::keyframe_animator_t>().each(
+      [&delta, this](auto entity, component::keyframe_animator_t& animator_c) {
+          animator_c.update(delta, {entity, this});
+      });
+    _registry.view<component::coons_curve_animator_t>().each(
+      [&delta, this](auto entity, component::coons_curve_animator_t& animator_c) {
+          animator_c.update(delta, {entity, this});
+      });
+    _registry.view<component::camera_controller_t>().each(
+      [&delta, this](entt::entity entity, component::camera_controller_t& camera_controller_c) {
+          if (entity == _active_camera_owner) camera_controller_c.update(delta, {entity, this});
+      });
+    _registry.view<component::script_component_t>().each(
+      [&delta](auto /*entity*/, component::script_component_t& script_c) {
+          script_c.update(delta);
+      });
 
     // update transforms (naive algorithm, but it's good enough for this)
     _registry.view<component::transform_t, component::hierarchy_t>().each(
@@ -74,13 +77,13 @@ void scene_t::update(const interval_t& delta) {
               trans_c.update_parentlocal_transform();
               trans_c.update_global_transform();
               auto child_children = entity_t{entity, this}.get_children();
-              while (!child_children.empty()){
+              while (!child_children.empty()) {
                   decltype(child_children) next_child_children;
-                  for (auto& child: child_children){
+                  for (auto& child : child_children) {
                       auto& child_trans_c = child.get_component<component::transform_t>();
                       child_trans_c.update_parentlocal_transform();
                       child_trans_c.update_global_transform();
-                      
+
                       auto tmp = child.get_children();
                       next_child_children.insert(next_child_children.end(), tmp.begin(), tmp.end());
                   }
@@ -91,28 +94,31 @@ void scene_t::update(const interval_t& delta) {
 }
 
 void scene_t::on_event(event_t& event) {
-    _registry.view<component::script_component_t>().each([&event](auto /*entity*/, component::script_component_t& script_c){
-        script_c.on_event(event);
-    });
-    _registry.view<component::camera_controller_t>().each([&event, this](entt::entity entity, component::camera_controller_t& c){
-        if (entity == _active_camera_owner) c.on_event(event, {entity, this});
-    });
+    _registry.view<component::script_component_t>().each(
+      [&event](auto /*entity*/, component::script_component_t& script_c) {
+          script_c.on_event(event);
+      });
+    _registry.view<component::camera_controller_t>().each(
+      [&event, this](entt::entity entity, component::camera_controller_t& c) {
+          if (entity == _active_camera_owner) c.on_event(event, {entity, this});
+      });
 }
-    
+
 void scene_t::render() {
     if (_active_camera_owner == entt::null) return;
     renderer::begin_scene(*this);
     auto mesh_view = _registry.view<component::transform_t, component::mesh_t>();
-    for (entt::entity entity: mesh_view ){
+    for (entt::entity entity : mesh_view) {
         auto& mesh_component = _registry.get<component::mesh_t>(entity);
-        renderer::submit(_registry.get<component::transform_t>(entity), mesh_component.v_array, mesh_component.material);
+        renderer::submit(_registry.get<component::transform_t>(entity), mesh_component.v_array,
+                         mesh_component.material);
     }
     auto curve_view = _registry.view<component::transform_t, component::coons_curve_animator_t>();
-    for (entt::entity entity: curve_view ){
+    for (entt::entity entity : curve_view) {
         entity_t e{entity, this};
         auto& animator = e.get_component<component::coons_curve_animator_t>();
         if (!animator.should_render_curve()) continue;
-        auto& curve = animator.get_curve();        
+        auto& curve = animator.get_curve();
         auto& hier = e.get_component<component::hierarchy_t>();
         auto transform = glm::mat4(1);
         if (hier.parent != entt::null)
@@ -122,7 +128,7 @@ void scene_t::render() {
     renderer::end_scene();
 }
 
-scene_lights_t& scene_t::get_lights(){
+scene_lights_t& scene_t::get_lights() {
     _lights.point_lights.clear();
     _lights.sun_lights.clear();
     _lights.spot_lights.clear();
@@ -132,7 +138,8 @@ scene_lights_t& scene_t::get_lights(){
           if (component.enabled) _lights.sun_lights.push_back(&component);
       });
     _registry.view<component::point_light_t, component::transform_t>().each(
-      [this](auto entity, component::point_light_t& point_light, component::transform_t& transform) {
+      [this](auto entity, component::point_light_t& point_light,
+             component::transform_t& transform) {
           if (point_light.enabled) _lights.point_lights.emplace_back(&point_light, &transform);
       });
     _registry.view<component::spot_light_t, component::transform_t>().each(
@@ -163,28 +170,29 @@ std::shared_ptr<scene_t> scene_t::deserialize(const std::filesystem::path& filen
     input(retval->_active_camera_owner);
 
     retval->_registry.view<component::transform_t, component::hierarchy_t>().each(
-      [&registry = retval->_registry](auto /*entity*/, component::transform_t& transform_c, component::hierarchy_t& hier_c) {
-          if (hier_c.parent!= entt::null) {
-              transform_c.bind_parent_transform_c(&(registry.get<component::transform_t>(hier_c.parent)));
+      [&registry = retval->_registry](auto /*entity*/, component::transform_t& transform_c,
+                                      component::hierarchy_t& hier_c) {
+          if (hier_c.parent != entt::null) {
+              transform_c.bind_parent_transform_c(
+                &(registry.get<component::transform_t>(hier_c.parent)));
           }
       });
     return retval;
 }
 
-std::optional<entity_t> scene_t::get_mesh_at_screenspace_coords(const glm::vec2& window_coords){
+std::optional<entity_t> scene_t::get_mesh_at_screenspace_coords(const glm::vec2& window_coords) {
     if (_active_camera_owner == entt::null) return std::nullopt;
-    auto camera_and_view_m = get_active_camera();
+    auto&& [camera, view_m] = get_active_camera();
     auto screen_height = app_t::get_window().get_dimensions().y;
-    auto [ray_start, ray_end] = camera_and_view_m.first->get_ray_end_from_cam(
-      camera_and_view_m.second, {window_coords.x, screen_height - window_coords.y});
+    auto [ray_start, ray_end]
+      = camera->get_ray_end_from_cam(view_m, {window_coords.x, screen_height - window_coords.y});
 
     std::optional<entity_t> retval{std::nullopt};
 
     float t_min = std::numeric_limits<float>::max();
     _registry.view<component::bounding_box_t, component::transform_t>().each(
-      [this, &ray_end = ray_end, &retval, &ray_start = ray_start, &t_min]
-      (entt::entity handle, component::bounding_box_t& bb_c, component::transform_t& transform_c) {
-
+      [this, &ray_end = ray_end, &retval, &ray_start = ray_start, &t_min](
+        entt::entity handle, component::bounding_box_t& bb_c, component::transform_t& transform_c) {
           auto model_matrix = transform_c.get_transform();
           // Have to calc pos from model_matrix cause the internal position is relative to parent.
           auto this_ray_t_min = bb_c.test_ray_intersection_aa(ray_start, ray_end, model_matrix);
@@ -192,20 +200,21 @@ std::optional<entity_t> scene_t::get_mesh_at_screenspace_coords(const glm::vec2&
               t_min = this_ray_t_min;
               retval = entity_t{handle, this};
           }
-
       });
     return retval;
 }
 
-bool scene_t::test_bb_collision(const glm::vec3& box_position_world, float box_size){
+bool scene_t::test_bb_collision(const glm::vec3& box_position_world, float box_size) {
     bool retval = false;
-    _registry.view<component::bounding_box_t>().each([&, this](entt::entity e, component::bounding_box_t& c){
-        if (!c.enable_collisions) return;
-        auto entity = entity_t{e, this};
-        auto& transform = entity.get_component<component::transform_t>();
-        if (c.test_collision(box_position_world, box_size, transform.get_transform())) retval = true;
-    });
+    _registry.view<component::bounding_box_t>().each(
+      [&, this](entt::entity e, component::bounding_box_t& c) {
+          if (!c.enable_collisions) return;
+          auto entity = entity_t{e, this};
+          auto& transform = entity.get_component<component::transform_t>();
+          if (c.test_collision(box_position_world, box_size, transform.get_transform()))
+              retval = true;
+      });
     return retval;
 }
 
-}  // namespace pgre::scene
+} // namespace pgre::scene

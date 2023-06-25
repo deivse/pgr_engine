@@ -38,12 +38,13 @@ struct buffer_t
      * @param usage OpenGL usage hint
      */
     void set_data(GLsizeiptr size, const GLvoid* data, GLenum usage = GL_STATIC_DRAW) {
-        glBindVertexArray(0);
+        glBindVertexArray(0); // unbind any currently bound vertex arrays
         this->bind();
         glBufferData(binding_target, size, data, usage);
         _current_data_offset = size;
         _current_allocated_size = size;
     }
+    
     /**
      * @brief Set all data in one call. Overwrites previous buffer data.
      *

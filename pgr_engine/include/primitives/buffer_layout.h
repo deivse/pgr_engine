@@ -55,11 +55,13 @@ struct buffer_element_t {
 class buffer_layout_t {
     std::vector<buffer_element_t> _elements;
     std::shared_ptr<material_t> _material;
+    
     /**
      * @brief specifies the byte offset between consecutive generic vertex
      * attributes
      */
     GLsizei _stride = 0;
+
 public:
     buffer_layout_t() = default;
     /**
