@@ -1,12 +1,14 @@
 #include <imgui_helpers.h>
 #include <components/all_components.h>
+#include <renderer/renderer.h>
 #include <limits>
 
 #include "scene_layer.h"
 #include "scene_gui.h"
 
 scene_gui_layer_t::scene_gui_layer_t(std::shared_ptr<scene_layer_t> scene_layer)
-  : _scene_layer(std::move(scene_layer)), component_gui(selected_entity, _scene_layer, kframe_animator_gui, ccurve_animator_gui) {}
+  : _scene_layer(std::move(scene_layer)),
+    component_gui(selected_entity, _scene_layer, kframe_animator_gui, ccurve_animator_gui) {}
 
 std::optional<pgre::scene::entity_t> scene_gui_layer_t::draw_entity(pgre::scene::entity_t& entity) {
     if (entity.get_num_children() != 0) {
@@ -48,9 +50,9 @@ void scene_gui_layer_t::on_gui_update(const pgre::interval_t& /*delta*/) {
 void scene_gui_layer_t::scene_open_create_window() {
     ImGui::Begin("Select scene");
     ImGui::InputString("Scene File Path", &scene_file_path);
-    if (std::filesystem::is_regular_file("scenes/"+scene_file_path)) {
+    if (std::filesystem::is_regular_file("scenes/" + scene_file_path)) {
         if (ImGui::Button("Load Scene")) {
-            _scene_layer->open_scene("scenes"/std::filesystem::path{scene_file_path});
+            _scene_layer->open_scene("scenes" / std::filesystem::path{scene_file_path});
         }
     } else {
         pgre::imgui::colored_component_255(ImGui::Text, {200, 0, 0, 255}, "File doesn't exist");
@@ -76,9 +78,10 @@ void scene_gui_layer_t::scene_window() {
         }
     }
     ImGui::Spacing();
-    if (pgre::imgui::colored_component_1(ImGui::Button, {0.3, 1.0, 0.0, 1.0}, "Add Entity", ImVec2{0, 0})) {
+    if (pgre::imgui::colored_component_1(ImGui::Button, {0.3, 1.0, 0.0, 1.0}, "Add Entity",
+                                         ImVec2{0, 0})) {
         auto new_entity = _scene_layer->scene->create_entity();
-        parent_to_selected(new_entity);   
+        parent_to_selected(new_entity);
     }
     if (ImGui::TreeNode("Import")) {
         ImGui::Text("The file may contain a full 3D scene including lights, meshes. Embedded"
@@ -97,15 +100,29 @@ void scene_gui_layer_t::scene_window() {
     ImGui::Separator();
     ImGui::InputString("Scene File Path", &scene_file_path);
     if (ImGui::SmallButton("Save Scene")) {
-        _scene_layer->save_scene("scenes"/std::filesystem::path{scene_file_path});
+        _scene_layer->save_scene("scenes" / std::filesystem::path{scene_file_path});
     }
     if (ImGui::SmallButton("Add test cubes")) {
         parent_to_selected(_scene_layer->add_test_objects());
     }
+
     ImGui::Separator();
+
     if (ImGui::SmallButton("Open Fog Settings")) {
         fog_gui.show_window();
     }
+
+    ImGui::Checkbox("Reverse Perspective", &_reverse_perspective);
+    pgre::phong_material_t::set_reverse_perspective_enabled(_reverse_perspective);
+
+    if (ImGui::SmallButton("Recompile Shaders")) {
+        try {
+            pgre::renderer::recompile_shaders();
+        } catch (const std::exception& e) {
+            spdlog::error(e.what());
+        }
+    }
+
     ImGui::End();
 }
 
@@ -130,12 +147,14 @@ void scene_gui_layer_t::entity_window() {
         ImGui::Text("Total Components: %zu", component_gui.get_component_count());
         ImGui::Spacing();
 
-        const auto add_component_button = [&scene = _scene_layer->scene, &entity = selected_entity]<typename CompTy>(const char* name){
-            if (entity->has_component<CompTy>()) return;
-            if (ImGui::SmallButton(name)){
-                entity->add_component<CompTy>();
-            }
-        };
+        const auto add_component_button
+          = [&scene = _scene_layer->scene,
+             &entity = selected_entity]<typename CompTy>(const char* name) {
+                if (entity->has_component<CompTy>()) return;
+                if (ImGui::SmallButton(name)) {
+                    entity->add_component<CompTy>();
+                }
+            };
 
         if (ImGui::TreeNode("Add component")) {
             add_component_button.template operator()<pgre::component::camera_component_t>("Camera");
@@ -152,13 +171,9 @@ void scene_gui_layer_t::entity_window() {
             ImGui::TreePop();
         }
         if (ImGui::TreeNode("Add Skybox")) {
-            const static auto cubemaps = std::array<std::string, 4>{
-                "sunsetflat",
-                "yellow",
-                "stormydays",
-                "space"
-            };
-            if (ImGui::TreeNode("Available cubemaps")){
+            const static auto cubemaps
+              = std::array<std::string, 4>{"sunsetflat", "yellow", "stormydays", "space"};
+            if (ImGui::TreeNode("Available cubemaps")) {
                 for (const auto& name : cubemaps) ImGui::Text("%s", name.c_str());
                 ImGui::TreePop();
             }
@@ -178,15 +193,17 @@ void scene_gui_layer_t::entity_window() {
 
 void scene_gui_layer_t::on_event(pgre::event_t& event) {
     pgre::event_dispatcher_t dispatcher(event);
-    auto &io = ImGui::GetIO();
-    dispatcher.dispatch<pgre::key_pressed_evt_t>([&io, this](pgre::key_pressed_evt_t&  event) {
+    auto& io = ImGui::GetIO();
+    dispatcher.dispatch<pgre::key_pressed_evt_t>([&io, this](pgre::key_pressed_evt_t& event) {
         if (event.key == GLFW_KEY_F12) {
             hidden = !hidden;
         }
-        return (!hidden && io.WantCaptureKeyboard); // if ImGui handles the event, don't pass it down the layer stack.
+        return (!hidden && io.WantCaptureKeyboard); // if ImGui handles the event, don't pass it
+                                                    // down the layer stack.
     });
-    dispatcher.dispatch<pgre::mouse_btn_down_evt_t>([&io](pgre::mouse_btn_down_evt_t&  /*event*/) {
-        return (io.WantCaptureMouse); // if ImGui handles the event, don't pass it down the layer stack.
+    dispatcher.dispatch<pgre::mouse_btn_down_evt_t>([&io](pgre::mouse_btn_down_evt_t& /*event*/) {
+        return (
+          io.WantCaptureMouse); // if ImGui handles the event, don't pass it down the layer stack.
     });
     dispatcher.dispatch<pgre::mouse_btn_up_evt_t>([&io, this](pgre::mouse_btn_up_evt_t& event) {
         if (io.WantCaptureMouse || !_scene_layer->scene) return true;
@@ -197,6 +214,5 @@ void scene_gui_layer_t::on_event(pgre::event_t& event) {
             return true;
         }
         return true;
-    }); 
+    });
 }
-

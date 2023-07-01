@@ -12,7 +12,7 @@ const std::unique_ptr<renderer_i> renderer::_instance = std::make_unique<sorting
 
 void sorting_renderer_t::init() {
     glEnable(GL_MULTISAMPLE);
-    glEnable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -22,6 +22,10 @@ void sorting_renderer_t::init() {
 
     glPointSize(10.5f);
 
+    recompile_shaders();
+}
+
+void sorting_renderer_t::recompile_shaders() {
     phong_material_t::init();
     skybox_material_t::init();
     flat_color_material_t::init();

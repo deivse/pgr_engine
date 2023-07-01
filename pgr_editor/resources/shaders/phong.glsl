@@ -197,13 +197,25 @@ layout (location = 2) in vec2 tex_coord;          // incoming texture coordinate
 uniform mat4 pvm_matrix; 
 uniform mat4 vm_matrix;
 uniform mat4 v_normal_matrix; 
+uniform bool reverse_perspective;
 
 smooth out vec2 v_tex_coord;  // texture coordinates
 smooth out vec3 v_position_cam;   // fragment coordinates
 smooth out vec3 v_normal_cam;
 
 void main() {
-  gl_Position = pvm_matrix * vec4(position, 1);
+  if (!reverse_perspective) {
+    gl_Position = pvm_matrix * vec4(position, 1);
+  } else {
+    mat4 scale;
+    float scale_factor = 1.F;
+    scale[0].x = scale_factor;
+    scale[1].y = scale_factor;
+    scale[2].z = scale_factor;
+    scale[3].w = 1;
+    gl_Position = pvm_matrix * scale * vec4(position, 1);
+    gl_Position.w = 1500 - gl_Position.w;
+  } 
 
   v_tex_coord = tex_coord;
   v_position_cam = (vm_matrix * vec4(position, 1)).xyz;

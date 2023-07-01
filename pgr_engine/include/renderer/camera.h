@@ -17,16 +17,20 @@ class perspective_camera_t
     glm::vec2 _dimensions;
     glm::mat4 _proj_m;
 
-    [[nodiscard]] glm::mat4 _calc_projection_matrix() const {
-        return glm::perspective(glm::radians(_fov_deg), _dimensions.x / _dimensions.y, _near, _far);
-    }
+    [[nodiscard]] glm::mat4 _calc_projection_matrix() const;
 
 public:
-    perspective_camera_t(float fov_deg = 90, float near = 0.01f, float far = 500.0f);
+    perspective_camera_t(float fov_deg = 90, float near = 0.01f, float far = 1500.0f);
+    
 
     ~perspective_camera_t();
 
     inline glm::mat4 get_projection_matrix() { return _proj_m; }
+    inline auto get_params() {
+        return std::tuple{_fov_deg, _near, _far};
+    }
+
+    void update_params(float fov_deg = 90, float near = 0.01f, float far = 1500.0f);
 
     /**
      * @brief Get the intersection of a ray cast from the camera and passing through the specified

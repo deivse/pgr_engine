@@ -135,7 +135,7 @@ bool component_gui_t::gui_impl(c::bounding_box_t&  comp) {
 }
 
 template<>
-bool component_gui_t::gui_impl(c::camera_component_t&  /*comp*/) {
+bool component_gui_t::gui_impl(c::camera_component_t&  comp) {
     component_title("Camera");
     ImGui::Text(_scene_layer->scene->get_active_camera_entity_handle()
                     == selected_entity->get_handle()
@@ -144,6 +144,15 @@ bool component_gui_t::gui_impl(c::camera_component_t&  /*comp*/) {
     if (ImGui::Button("Set Active")) {
         _scene_layer->scene->set_active_camera_entity(selected_entity->get_handle());
     }
+
+    auto [fov, near, far] = comp.camera->get_params();
+    bool updated = false;
+    updated |= ImGui::DragFloat("FOV", &fov, 1., 10., 280.);
+    updated |= ImGui::DragFloat("Near", &near, 0.005, 0.000001, 10.);
+    updated |= ImGui::DragFloat("Far", &far, 10, 100, 100000);
+    if (updated)
+        comp.camera->update_params(fov, near, far);
+    
     return true;
 }
 

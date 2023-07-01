@@ -31,6 +31,7 @@ void phong_material_t::use(scene::scene_t& /*scene*/) {
     _shader_program->set_uniform("material.shininess", _shininess);
     _shader_program->set_uniform("material.opacity", 1.0f - _transparency);
     _shader_program->set_uniform("time", glfwGetTime());
+    _shader_program->set_uniform("reverse_perspective", _reverse_perspective);
 
     if (_color_texture) {
         _shader_program->set_uniform("material.spritesheet", spritesheet);
@@ -39,7 +40,7 @@ void phong_material_t::use(scene::scene_t& /*scene*/) {
             _shader_program->set_uniform("material.spritesheet_frame_duration", 1.0f/static_cast<float>(spritesheet_fps));
             _shader_program->set_uniform("material.tex_coord_anim_speed", 0.0f);
         } else {
-            _shader_program->set_uniform("material.tex_coord_anim_speed", animate_texture_coords ? texcoord_anim_speed : 0.0f);
+            _shader_program->set_uniform("material.tex_coord_anim_speed", _animate_texture_coords ? texcoord_anim_speed : 0.0f);
         }
         _shader_program->set_uniform("color_tex_sampler", 1);
         

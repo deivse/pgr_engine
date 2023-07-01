@@ -34,6 +34,9 @@ namespace pgre {
          * @brief Initializes the renderer. 
          */
         void init() override;
+
+        void recompile_shaders();
+        
         void begin_scene(scene::scene_t& scene) override;
         void submit(const glm::mat4& transform, std::shared_ptr<primitives::vertex_array_t> vao,
                     std::shared_ptr<material_t> material, GLenum primitive = GL_TRIANGLES) override;

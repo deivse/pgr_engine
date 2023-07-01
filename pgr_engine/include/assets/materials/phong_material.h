@@ -24,7 +24,7 @@ struct fog_settings_t
         _settings_updated = false;
     }
 
-    template <typename Archive>
+    template<typename Archive>
     void serialize(Archive& archive) {
         archive(_enable, _color, _density);
     }
@@ -37,7 +37,8 @@ class phong_material_t : public material_t
 {
     inline static std::unique_ptr<shader_program_t> _shader_program{nullptr};
     inline static fog_settings_t _fog_settings{};
-    bool animate_texture_coords = false;
+    inline static bool _reverse_perspective;
+    bool _animate_texture_coords = false;
 
 public:
     bool spritesheet = false;
@@ -65,14 +66,13 @@ public:
         spritesheet_dims(other.spritesheet_dims),
         spritesheet_fps(other.spritesheet_fps),
         texcoord_anim_speed(other.texcoord_anim_speed),
-        animate_texture_coords(other.animate_texture_coords),
+        _animate_texture_coords(other._animate_texture_coords),
         _diffuse(other._diffuse),
         _ambient(other._ambient),
         _specular(other._specular),
         _shininess(other._shininess),
         _transparency(other._transparency),
-        _color_texture(other._color_texture)
-         {}
+        _color_texture(other._color_texture) {}
 
     explicit phong_material_t(const glm::vec3& diffuse_c, const glm::vec3& ambient_c,
                               const glm::vec3& specular_c, float shininess = 0.5f,
@@ -107,30 +107,36 @@ public:
      */
     void use(scene::scene_t& /*scene*/) override;
 
-    void toggle_texture_animation() { animate_texture_coords = !animate_texture_coords; }
+    void toggle_texture_animation() { _animate_texture_coords = !_animate_texture_coords; }
 
     /**
      * @brief Sets all scene-global uniforms (lights, fog, etc.)
-     * Should be called once per frame per scene.     
-     * 
+     * Should be called once per frame per scene.
+     *
      * @param scene the active scene.
      */
     static void set_scene_uniforms_s(scene::scene_t& scene);
 
     void set_scene_uniforms(scene::scene_t& scene) override {
-        phong_material_t::set_scene_uniforms_s
-        (scene);
+        phong_material_t::set_scene_uniforms_s(scene);
     }
 
-    void set_matrices(const glm::mat4& M, const glm::mat4& V, const glm::mat4& P, const glm::mat4& PV) override;
+    void set_matrices(const glm::mat4& M, const glm::mat4& V, const glm::mat4& P,
+                      const glm::mat4& PV) override;
 
     shader_program_t& get_shader() override {
         debug_assert(_shader_program != nullptr, "phong_material_t::init never called");
         return *_shader_program;
     }
 
-    static auto& get_fog_settings_ref() {
-        return _fog_settings;
+    static auto& get_fog_settings_ref() { return _fog_settings; }
+
+    static void set_reverse_perspective_enabled(bool enabled) {
+        _reverse_perspective = enabled;
+        if (_reverse_perspective)
+            glEnable(GL_DEPTH_CLAMP);
+        else
+            glDisable(GL_DEPTH_CLAMP);
     }
 
     static shader_program_t& get_shader_s() {
@@ -138,18 +144,15 @@ public:
         return *_shader_program;
     }
 
-    template <class Archive>
+    template<class Archive>
     void serialize(Archive& archive) {
         archive(_diffuse, _ambient, _specular, _shininess, _transparency, _color_texture,
-                _fog_settings, animate_texture_coords, texcoord_anim_speed, spritesheet,
+                _fog_settings, _animate_texture_coords, texcoord_anim_speed, spritesheet,
                 spritesheet_dims, spritesheet_fps);
     }
 
-    inline uint32_t get_material_sort_index() override {
-        return 2;
-    }
+    inline uint32_t get_material_sort_index() override { return 2; }
 };
-
 
 } // namespace pgre
 
