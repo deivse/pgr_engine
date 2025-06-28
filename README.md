@@ -1,6 +1,6 @@
 # PGREngine
 
-A school project I did many years ago. It's a simple ECC-based (using `entt`) "engine" which exclusively uses OpenGL for rendering, with random advanced features such as (de)serialization (using `cereal`), asset import, and a quite awful editor. I would have done many things differently today, but it's still slightly impressive.
+A school project I did many years ago. It's a simple ECS-based (using `entt`) "engine" which exclusively uses OpenGL for rendering, with random advanced features such as (de)serialization (using `cereal`), asset import, and a quite awful editor. I would have done many things differently today, but it's still slightly impressive.
 
 ![](screenshot.png)
 
