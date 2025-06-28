@@ -1,5 +1,9 @@
 # PGREngine
 
+A school project I did many years ago. It's a simple ECC-based (using `entt`) "engine" which exclusively uses OpenGL for rendering, with random advanced features such as (de)serialization (using `cereal`), asset import, and a quite awful editor. I would have done many things differently today, but it's still slightly impressive.
+
+![](screenshot.png)
+
 ## Building the project
 Building requires `conan` - a C++ package manager (which requires `python`) and `cmake`. The project will most likely not compile on Windows in it's current form, but compilation on Windows should be possible with minimal modifications.
 
