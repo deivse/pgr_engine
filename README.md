@@ -5,19 +5,13 @@ A school project I did many years ago. It's a simple ECS-based (using `entt`) "e
 ![](screenshot.png)
 
 ## Building the project
-Building requires `conan` - a C++ package manager (which requires `python`) and `cmake`. The project will most likely not compile on Windows in it's current form, but compilation on Windows should be possible with minimal modifications.
+Building requires `conan` - a C++ package manager (which requires `python`) and `cmake`. Currently this compiles with MSVC but may or may not compile with gcc/clang.
 
 To build the project,
 ```bash
-# first install dependencies w/ conan:
-conan install $projectdir -if $builddir --build=missing
-# then run configure cmake project
-cmake -S $projectdir -B $builddir
-#then build the project
-cd $buildir
-cmake --build .
+conan build .
 ```
-Unfortunately, there is no `cmake --install` support. To run the editor, use the `run_editor.sh` script located in the root of the project. 
+To run the editor, use the `run_editor.sh` script located in the root of the project. 
 To create a "portable" version, copy everything that is not source code from the "pgr_editor" dir along with the editor executable into a new dir. The editor uses realtive paths, so the executable has to be placed in the same dir as the "assets", "resources", and "scenes" directories.
 
 ---
