@@ -156,15 +156,23 @@ void scene_t::on_camera_component_remove(entt::registry& /*unused*/,
 }
 
 void scene_t::serialize(const std::filesystem::path& filename) {
-    std::ofstream out(filename);
+    std::filesystem::create_directories(filename.parent_path());
+    std::ofstream out(filename, std::ios::binary);
+    spdlog::info("Serializing scene to {}", filename.string());
+    if (!out.is_open()) {
+        spdlog::error("Failed to open file for serialization: {}", filename.string());
+        return;
+    }
     cereal::BinaryOutputArchive output(out);
     entt::snapshot{_registry}.entities(output).component<PGRE_COMPONENT_TYPES>(output);
     output(_active_camera_owner);
+    out.flush();
+    out.close();
 }
 
 std::shared_ptr<scene_t> scene_t::deserialize(const std::filesystem::path& filename) {
     auto retval = std::make_shared<scene_t>();
-    std::ifstream in(filename);
+    std::ifstream in(filename, std::ios::binary);
     cereal::BinaryInputArchive input(in);
     entt::snapshot_loader{retval->_registry}.entities(input).component<PGRE_COMPONENT_TYPES>(input);
     input(retval->_active_camera_owner);

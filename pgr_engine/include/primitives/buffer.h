@@ -12,7 +12,7 @@ namespace pgre::primitives {
 /**
  * @brief Thin wrapper for an OpenGL buffer object.
  */
-template <GLenum binding_target, typename DataTy>
+template<GLenum binding_target, typename DataTy>
 struct buffer_t
 {
     unsigned int _gl_id{};
@@ -27,8 +27,8 @@ struct buffer_t
 
     buffer_t(buffer_t& other) = delete;
     buffer_t(buffer_t&& other) noexcept = default;
-    buffer_t & operator = (buffer_t& other) = delete;
-    buffer_t & operator = (buffer_t&& other)  noexcept = default;
+    buffer_t& operator=(buffer_t& other) = delete;
+    buffer_t& operator=(buffer_t&& other) noexcept = default;
 
     /**
      * @brief Set all data in one call. Overwrites previous buffer data.
@@ -44,7 +44,7 @@ struct buffer_t
         _current_data_offset = size;
         _current_allocated_size = size;
     }
-    
+
     /**
      * @brief Set all data in one call. Overwrites previous buffer data.
      *
@@ -52,7 +52,8 @@ struct buffer_t
      * @param usage OpenGL usage hint
      */
     void set_data(std::vector<DataTy>& data, GLenum usage = GL_STATIC_DRAW) {
-        buffer_t::set_data(static_cast<GLsizeiptr>(data.size() * sizeof(DataTy)), data.data(), usage);
+        buffer_t::set_data(static_cast<GLsizeiptr>(data.size() * sizeof(DataTy)), data.data(),
+                           usage);
     }
 
     /**
@@ -62,7 +63,8 @@ struct buffer_t
      * @param usage OpenGL usage hint
      */
     void set_data(std::vector<DataTy>&& data, GLenum usage = GL_STATIC_DRAW) {
-        buffer_t::set_data(static_cast<GLsizeiptr>(data.size() * sizeof(DataTy)), data.data(), usage);
+        buffer_t::set_data(static_cast<GLsizeiptr>(data.size() * sizeof(DataTy)), data.data(),
+                           usage);
     }
 
     /**
@@ -125,20 +127,17 @@ struct buffer_t
      */
     [[nodiscard]] inline GLsizeiptr get_size() const { return _current_data_offset; }
 
-    [[nodiscard]] inline int get_count() const {
-        return _current_data_offset / sizeof(DataTy);
-    }
+    [[nodiscard]] inline int get_count() const { return _current_data_offset / sizeof(DataTy); }
     /**
      * @brief Get the buffer's actual size, in bytes.
      */
     inline GLsizeiptr get_allocated_size() { return _current_allocated_size; }
-
 };
 
 using vertex_buffer_t = buffer_t<GL_ARRAY_BUFFER, uint8_t>;
 using index_buffer_t = buffer_t<GL_ELEMENT_ARRAY_BUFFER, GLuint>;
 
-template <class Archive>
+template<class Archive>
 void save(Archive& archive, vertex_buffer_t const& vb) {
     std::vector<uint8_t> buffer_data(vb.get_count());
     vb.bind();
@@ -146,23 +145,24 @@ void save(Archive& archive, vertex_buffer_t const& vb) {
     archive(buffer_data);
 }
 
-template <class Archive>
+template<class Archive>
 void load(Archive& archive, vertex_buffer_t& vb) {
     std::vector<uint8_t> buffer_data;
     archive(buffer_data);
     vb.set_data(buffer_data);
 }
 
-template <class Archive>
+template<class Archive>
 void save(Archive& archive, index_buffer_t const& ib) {
     std::vector<GLuint> buffer_data(ib.get_count());
-    
+
     ib.bind();
-    glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, ib.get_size(), static_cast<void*>(buffer_data.data()));
+    glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, ib.get_size(),
+                       static_cast<void*>(buffer_data.data()));
     archive(buffer_data);
 }
 
-template <class Archive>
+template<class Archive>
 void load(Archive& archive, index_buffer_t& ib) {
     std::vector<GLuint> buffer_data;
     archive(buffer_data);

@@ -18,7 +18,6 @@ class bounding_box_t
     std::array<glm::vec3, 8> _transformed_box_vertices{};
 
     void calc_transformed_box_vertices(const glm::mat4& model_matrix){
-        #pragma unroll
         for (uint8_t i = 0; i < 8; i++) {
             _transformed_box_vertices[i] = model_matrix * _box_vertices[i];
         }

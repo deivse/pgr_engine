@@ -1,4 +1,5 @@
 #include <primitives/shader_program.h>
+#include <fmt/std.h>
 
 namespace pgre {
 shader_attrib_inactive_error::shader_attrib_inactive_error(const std::string& what)
@@ -104,7 +105,7 @@ bool shader_program_t::compile_shader_program(std::map<uint32_t, std::stringstre
 shader_program_t::shader_program_t(const std::filesystem::path& file_path) : program_id(glCreateProgram()) {
     std::ifstream shader_file(file_path);
     if (!shader_file.good()) {
-        throw std::runtime_error(fmt::format("Couldn't open shader file \"{}\" for reading.", file_path.c_str()));
+        throw std::runtime_error(fmt::format("Couldn't open shader file \"{}\" for reading.", file_path));
     }
     auto source_map = load_shader_source_from_stream(shader_file);
     if (!compile_shader_program(source_map))

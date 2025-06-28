@@ -12,8 +12,8 @@ namespace detail {
         return glfwInit() != 0;
     }
 
-    void set_required_opengl_version(uint8_t ogl_v_major, uint8_t ogl_v_minor, bool gl_forward_compat,
-                                     int32_t glfw_ogl_profile) {
+    void set_required_opengl_version(uint8_t ogl_v_major, uint8_t ogl_v_minor,
+                                     bool gl_forward_compat, int32_t glfw_ogl_profile) {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, ogl_v_major);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, ogl_v_minor);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, gl_forward_compat);
@@ -32,14 +32,15 @@ namespace detail {
         spdlog::set_pattern("%^===[ %l ]===%$ %v");
     }
 
-    constexpr auto get_app
-      = [](GLFWwindow* window) { return reinterpret_cast<app_t*>(glfwGetWindowUserPointer(window)); };
+    constexpr auto get_app = [](GLFWwindow* window) {
+        return reinterpret_cast<app_t*>(glfwGetWindowUserPointer(window));
+    };
 } // namespace detail
 
 app_t* app_t::_instance = nullptr; // NOLINT
 
-app_t::app_t(uint16_t width, uint16_t height, const std::string& title, bool vsync, uint8_t ogl_v_major,
-             uint8_t ogl_v_minor) {
+app_t::app_t(uint16_t width, uint16_t height, const std::string& title, bool vsync,
+             uint8_t ogl_v_major, uint8_t ogl_v_minor) {
     debug_assert(!_instance, "Trying to create a second app_t instance");
 
     detail::setup_spdlog(title);
@@ -53,18 +54,18 @@ app_t::app_t(uint16_t width, uint16_t height, const std::string& title, bool vsy
     detail::load_gl_funcs();
     err::setup_ogl_debug_callback();
 
-    if (vsync) glfwSwapInterval(1);
-    else glfwSwapInterval(0);
+    if (vsync)
+        glfwSwapInterval(1);
+    else
+        glfwSwapInterval(0);
 
     renderer::init();
 
     register_callbacks();
-    
+
     _instance = this;
 
-    static auto glfw_terminate_at_program_end = call_at_scope_exit_t([](){
-        glfwTerminate();
-    });
+    static auto glfw_terminate_at_program_end = call_at_scope_exit_t([]() { glfwTerminate(); });
 }
 
 void app_t::register_callbacks() {
@@ -76,29 +77,29 @@ void app_t::register_callbacks() {
         cursor_pos_evt_t evt(x, y);
         detail::get_app(window)->on_event(evt);
     });
-    glfwSetMouseButtonCallback(_window->get_native(), [](GLFWwindow* window, int btn, int action, int mods) {
-        if (action == GLFW_PRESS) {
-            mouse_btn_down_evt_t evt(btn, mods);
-            detail::get_app(window)->on_event(evt);
-        } else {
-            mouse_btn_up_evt_t evt(btn, mods);
-            detail::get_app(window)->on_event(evt);
-        }
-    });
-    glfwSetKeyCallback(_window->get_native(), [](GLFWwindow* window, int key, int scancode, int action, int mods){
-        if (action == GLFW_RELEASE) {
-            key_released_evt_t evt(key, mods);
-            detail::get_app(window)->on_event(evt);
-        } else {
-            key_pressed_evt_t evt(key, action == GLFW_REPEAT, mods);
-            detail::get_app(window)->on_event(evt);
-        }
-    });
+    glfwSetMouseButtonCallback(_window->get_native(),
+                               [](GLFWwindow* window, int btn, int action, int mods) {
+                                   if (action == GLFW_PRESS) {
+                                       mouse_btn_down_evt_t evt(btn, mods);
+                                       detail::get_app(window)->on_event(evt);
+                                   } else {
+                                       mouse_btn_up_evt_t evt(btn, mods);
+                                       detail::get_app(window)->on_event(evt);
+                                   }
+                               });
+    glfwSetKeyCallback(_window->get_native(),
+                       [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+                           if (action == GLFW_RELEASE) {
+                               key_released_evt_t evt(key, mods);
+                               detail::get_app(window)->on_event(evt);
+                           } else {
+                               key_pressed_evt_t evt(key, action == GLFW_REPEAT, mods);
+                               detail::get_app(window)->on_event(evt);
+                           }
+                       });
 }
 
-app_t::~app_t() {
-    _window.reset();
-}
+app_t::~app_t() { _window.reset(); }
 
 void app_t::push_layer(std::shared_ptr<layers::basic_layer_t> layer) {
     layer->on_attach();
@@ -131,6 +132,10 @@ void app_t::main_loop() {
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(native_window)) {
         auto delta = timer.get_interval();
+        if (delta.seconds == 0.f) { // Fix for extremely high FPS where delta.seconds becomes 0
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            delta = timer.get_interval();
+        }
         timer.reset();
         for (auto&& layer : _layers) {
             layer->on_update(delta);

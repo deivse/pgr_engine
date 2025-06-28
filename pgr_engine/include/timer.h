@@ -1,12 +1,13 @@
 #pragma once
 #include <chrono>
+#include <utility/aligned.h>
 
 namespace pgre {
 
-struct interval_t {
+struct ALIGN(16) interval_t {
     int64_t milliseconds;
     float seconds;
-} __attribute__((aligned(16)));
+};
 
 class timer_t
 {

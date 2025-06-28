@@ -7,3 +7,4 @@ scenes/
 callgrind.*
 profiling_data/
 *.svg
+CMakeUserPresets.json

@@ -23,6 +23,7 @@ void imgui_layer_t::on_gui_update(const interval_t& /*unused*/){
 
 void imgui_layer_t::begin_gui() {
     ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
     imgui::NewFrame();
 }
 

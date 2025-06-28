@@ -36,8 +36,8 @@ constexpr auto debug_assert = [](bool condition, const char* err_msg) {
 };
 
 #ifdef PGRE_DISABLE_DEBUG_CHECKS
-    #define debug_assert(x...)
-    #define debug_assert_any(x...)
+    #define debug_assert(x, y)
+    #define debug_assert_any(x, y)
 #endif
 
 } // namespace pgre

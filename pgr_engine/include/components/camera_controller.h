@@ -16,36 +16,7 @@ class camera_controller_t
     float pitch{};
     float yaw{};
 
-    void update_translation(const interval_t& delta, transform_t& transform_c) const {
-        const auto& forward_vec = glm::rotate(transform_c.orientation, glm::vec3(0.0, 0.0, 1.0));
-        const auto& right_vec = glm::rotate(transform_c.orientation, glm::vec3(1.0, 0.0, 0.0));
-        // const auto& up_vec = glm::rotate(transform_c.orientation, glm::vec3(0.0, 1.0, 0.0));
-        glm::vec3 translation_vec{0}; 
-        if (input::key_down(GLFW_KEY_W)) {
-            translation_vec -= forward_vec;
-        }
-        if (input::key_down(GLFW_KEY_S)) {
-            translation_vec += forward_vec;
-        }
-        if (input::key_down(GLFW_KEY_D)) {
-            translation_vec += right_vec;
-        }
-        if (input::key_down(GLFW_KEY_A)) {
-            translation_vec -= right_vec;
-        }
-        if (input::key_down(GLFW_KEY_SPACE)) {
-            translation_vec.z += 1;
-        }
-        if (input::key_down(GLFW_KEY_LEFT_SHIFT)) {
-            translation_vec.z -= 1;
-        }
-        if (translation_vec == glm::vec3(0)) return;
-        transform_c.translation
-          += glm::normalize(translation_vec)
-             * (input::key_down(GLFW_KEY_LEFT_CONTROL) ? 2.5f * move_speed : move_speed)
-             * delta.seconds;
-    }
-
+    void update_translation(const interval_t& delta, transform_t& transform_c) const;
     void update_orientation(const interval_t& delta, transform_t& transform_c);
 
 public:
@@ -53,7 +24,7 @@ public:
 
     camera_controller_t() = default;
 
-    void on_event(pgre::event_t& event, scene::entity_t&& entity){
+    void on_event(pgre::event_t& event, scene::entity_t&& entity) {
         pgre::event_dispatcher_t dispatcher(event);
         dispatcher.dispatch<key_released_evt_t>([this, &entity](key_released_evt_t& event) {
             if (event.key == GLFW_KEY_M) {
@@ -68,7 +39,7 @@ public:
                     auto cursor_pos = app_t::get_window().get_cursor_pos_origin_bottom_left();
                     last.x = cursor_pos.x;
                     last.y = cursor_pos.y;
-                    auto orient_eul =  entity.get_component<transform_t>().get_orientation_euler();
+                    auto orient_eul = entity.get_component<transform_t>().get_orientation_euler();
                     pitch = orient_eul.x;
                     yaw = orient_eul.z;
                     mouse_input_enabled = true;

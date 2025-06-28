@@ -18,7 +18,7 @@ void texture2D_t::load_from_file() {
     int width{}, height{};
     int channels{};
 
-    unsigned char* data = stbi_load(_path.c_str(), &width, &height, &channels, 0);
+    unsigned char* data = stbi_load(_path.string().c_str(), &width, &height, &channels, 0);
     if (!data) throw image_loading_error(fmt::format("Failed to load image at path {}", _path.string()));
     _width = width;
     _height = height;

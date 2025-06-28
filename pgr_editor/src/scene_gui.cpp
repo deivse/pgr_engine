@@ -13,7 +13,8 @@ scene_gui_layer_t::scene_gui_layer_t(std::shared_ptr<scene_layer_t> scene_layer)
 std::optional<pgre::scene::entity_t> scene_gui_layer_t::draw_entity(pgre::scene::entity_t& entity) {
     if (entity.get_num_children() != 0) {
         if (ImGui::TreeNode(reinterpret_cast<void*>(entity.get_handle()), "%s [%u]",
-                            entity.get_name().c_str(), static_cast<uint>(entity.get_handle()))) {
+                            entity.get_name().c_str(),
+                            static_cast<unsigned int>(entity.get_handle()))) {
             std::optional<pgre::scene::entity_t> retval = std::nullopt;
             if (ImGui::IsItemActive() || ImGui::IsItemFocused()) retval = entity;
 
@@ -26,7 +27,9 @@ std::optional<pgre::scene::entity_t> scene_gui_layer_t::draw_entity(pgre::scene:
             return retval;
         }
     } else {
-        if (ImGui::Button(fmt::format("{} [{}]", entity.get_name(), entity.get_handle()).c_str())) {
+        if (ImGui::Button(fmt::format("{} [{}]", entity.get_name(),
+                                      static_cast<ENTT_ID_TYPE>(entity.get_handle()))
+                            .c_str())) {
             return entity;
         }
         if (ImGui::IsItemActive() || ImGui::IsItemFocused()) return entity;
@@ -52,7 +55,7 @@ void scene_gui_layer_t::scene_open_create_window() {
     ImGui::InputString("Scene File Path", &scene_file_path);
     if (std::filesystem::is_regular_file("scenes/" + scene_file_path)) {
         if (ImGui::Button("Load Scene")) {
-            _scene_layer->open_scene("scenes" / std::filesystem::path{scene_file_path});
+            _scene_layer->open_scene(("scenes" / std::filesystem::path{scene_file_path}).string());
         }
     } else {
         pgre::imgui::colored_component_255(ImGui::Text, {200, 0, 0, 255}, "File doesn't exist");
@@ -100,7 +103,7 @@ void scene_gui_layer_t::scene_window() {
     ImGui::Separator();
     ImGui::InputString("Scene File Path", &scene_file_path);
     if (ImGui::SmallButton("Save Scene")) {
-        _scene_layer->save_scene("scenes" / std::filesystem::path{scene_file_path});
+        _scene_layer->save_scene(("scenes" / std::filesystem::path{scene_file_path}).string());
     }
     if (ImGui::SmallButton("Add test cubes")) {
         parent_to_selected(_scene_layer->add_test_objects());
@@ -171,16 +174,13 @@ void scene_gui_layer_t::entity_window() {
             ImGui::TreePop();
         }
         if (ImGui::TreeNode("Add Skybox")) {
-            const static auto cubemaps
-              = std::array<std::string, 4>{"sunsetflat", "yellow", "stormydays", "space"};
-            if (ImGui::TreeNode("Available cubemaps")) {
-                for (const auto& name : cubemaps) ImGui::Text("%s", name.c_str());
-                ImGui::TreePop();
-            }
             ImGui::InputString("Cubemap name", &skybox_name);
-            if (std::ranges::find(cubemaps, skybox_name) != cubemaps.end()
-                && ImGui::SmallButton("Add")) {
-                _scene_layer->add_skybox(skybox_name, *selected_entity);
+            if (ImGui::SmallButton("Add")) {
+                try {
+                    _scene_layer->add_skybox(skybox_name, *selected_entity);
+                } catch (std::exception& e) {
+                    spdlog::error("Failed to add skybox: {}", e.what());
+                }
             }
             ImGui::TreePop();
         }

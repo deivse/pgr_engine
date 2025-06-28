@@ -50,9 +50,9 @@ template<>
 bool component_gui_t::gui_impl(c::hierarchy_t&  /*comp*/) {
     component_title("Hierarchy");
     if (selected_entity->get_parent() == entt::null) {
-        ImGui::Text("Parent: None; Children: %lu", selected_entity->get_num_children());
+        ImGui::Text("Parent: None; Children: %zu", selected_entity->get_num_children());
     } else {
-        ImGui::Text("Parent: [%u]; Children: %lu", static_cast<uint>(selected_entity->get_parent()),
+        ImGui::Text("Parent: [%u]; Children: %zu", static_cast<unsigned int>(selected_entity->get_parent()),
                     selected_entity->get_num_children());
     }
     return false;
@@ -107,7 +107,7 @@ bool component_gui_t::gui_impl(c::mesh_t& comp) {
                     }
                     float size_mult
                       = ImGui::GetWindowWidth() / material->_color_texture->get_width();
-                    ImGui::Image(reinterpret_cast<void*>(material->_color_texture->get_gl_id()),
+                    ImGui::Image(reinterpret_cast<void*>(static_cast<size_t>(material->_color_texture->get_gl_id())),
                                  {material->_color_texture->get_width() * size_mult,
                                   material->_color_texture->get_height() * size_mult});
                     ImGui::TreePop();
@@ -116,7 +116,7 @@ bool component_gui_t::gui_impl(c::mesh_t& comp) {
                 ImGui::InputString("Texture path", &tex_path);
                 if (!tex_path.empty() && std::filesystem::is_regular_file(tex_path) && ImGui::Button("Add Texture")) {
                     material->_color_texture
-                      = std::make_shared<pgre::texture2D_t>(std::filesystem::absolute(tex_path));
+                      = std::make_shared<pgre::texture2D_t>(std::filesystem::absolute(tex_path).string());
                 }
             }
         } else {
